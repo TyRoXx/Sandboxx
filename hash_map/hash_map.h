@@ -2,9 +2,7 @@
 #define HASH_MAP_H
 
 
-#include <string.h>
 #include <stddef.h>
-#include <stdlib.h>
 
 
 typedef size_t hash_t;

@@ -1,5 +1,6 @@
 #include "hash_map.h"
 #include <stdio.h>
+#include <string.h>
 
 
 typedef int key_t;

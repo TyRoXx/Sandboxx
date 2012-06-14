@@ -1,4 +1,6 @@
 #include "hash_map.h"
+#include <string.h>
+#include <stdlib.h>
 
 
 int hash_map_entry_create(hash_map_entry *entry,
