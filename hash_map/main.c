@@ -3,14 +3,14 @@
 #include <string.h>
 
 
-typedef int key_t;
+typedef long long key_t;
 typedef char value_t;
 
 static hash_t hash(const void *key, void *user_data)
 {
 	key_t original;
 	memcpy(&original, key, sizeof(original));
-	return original * 1337;
+	return (hash_t)(original * 1337);
 }
 
 static void print_map(hash_map *map)
@@ -22,7 +22,7 @@ static void print_map(hash_map *map)
 		value_t value;
 		memcpy(&key, hash_map_iterator_key(&i), sizeof(key));
 		memcpy(&value, hash_map_iterator_value(&i), sizeof(value));
-		printf("%d -> %c\n", key, value);
+		printf("%d -> %c\n", (int)key, (char)value);
 	}
 }
 
