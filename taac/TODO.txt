@@ -1,0 +1,5 @@
+"null"-Ausgabe beim Kompilieren möglich, muss noch untersucht werden (kommt nach UnexpectedCharExcept vor)
+float
+jsr, rts
+jumpProc, returnProc
+get
