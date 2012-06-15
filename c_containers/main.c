@@ -76,6 +76,7 @@ static void test_hash_map()
 	printf("\n");
 	print_set(&set);
 
+	hash_set_destroy(&set);
 	hash_map_destroy(&map);
 }
 
@@ -112,13 +113,15 @@ static void test_queue()
 	typedef unsigned element_t;
 
 	size_t i;
+	size_t size;
 	element_t e;
 	queue q;
 	queue_create(&q, sizeof(e));
 
 	for (e = 0, i = 0; i < 10; ++i)
 	{
-		ENSURE(queue_size(&q) == i / 2);
+		size = queue_size(&q);
+		ENSURE(size == (i + 1) / 2);
 		ENSURE(queue_push(&q, &e));
 
 		if (i % 2)
@@ -129,9 +132,13 @@ static void test_queue()
 
 	for (i = 0; i < 5; ++i)
 	{
-		ENSURE(queue_size(&q) == 5 - i);
+		size = queue_size(&q);
+		ENSURE(size == 5 - i);
+
 		queue_pop(&q);
-		ENSURE(queue_size(&q) == 4 - i);
+
+		size = queue_size(&q);
+		ENSURE(size == 4 - i);
 	}
 
 	ENSURE(queue_empty(&q));
@@ -144,5 +151,6 @@ int main()
 {
 	test_hash_map();
 	test_vector();
+	test_queue();
 	return 0;
 }

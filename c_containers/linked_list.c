@@ -49,6 +49,14 @@ int linked_list_push_front(linked_list *list, const void *value)
 	}
 	entry->previous = 0;
 	entry->next = list->first;
+	if (list->first)
+	{
+		list->first->previous = entry;
+	}
+	else
+	{
+		list->last = entry;
+	}
 	list->first = entry;
 	return 1;
 }
@@ -65,6 +73,10 @@ int linked_list_push_back(linked_list *list, const void *value)
 	if (list->last)
 	{
 		list->last->next = entry;
+	}
+	else
+	{
+		list->first = entry;
 	}
 	list->last = entry;
 	return 1;
@@ -89,11 +101,14 @@ void linked_list_pop_front(linked_list *list)
 	new_first = list->first->next;
 	deallocate_entry(list->first);
 	list->first = new_first;
-	if (!new_first)
+	if (new_first)
+	{
+		new_first->previous = 0;
+	}
+	else
 	{
 		list->last = 0;
 	}
-	new_first->previous = 0;
 }
 
 void linked_list_pop_back(linked_list *list)
@@ -105,11 +120,14 @@ void linked_list_pop_back(linked_list *list)
 	new_last = list->last->previous;
 	deallocate_entry(list->last);
 	list->last = new_last;
-	if (!new_last)
+	if (new_last)
+	{
+		new_last->next = 0;
+	}
+	else
 	{
 		list->first = 0;
 	}
-	new_last->next = 0;
 }
 
 int linked_list_empty(const linked_list *list)
@@ -128,7 +146,7 @@ size_t linked_list_size(const linked_list *list)
 {
 	size_t size = 0;
 	linked_list_entry *e;
-	for (e = list->first; e != list->last; e = e->next)
+	for (e = list->first; e; e = e->next)
 	{
 		++size;
 	}
