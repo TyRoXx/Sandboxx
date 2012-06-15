@@ -1,5 +1,6 @@
 #include "hash_map.h"
 #include "hash_set.h"
+#include "queue.h"
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
