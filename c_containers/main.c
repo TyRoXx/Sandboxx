@@ -4,6 +4,7 @@
 #include "linked_list.h"
 #include "vector.h"
 #include "stack.h"
+#include "tree_map.h"
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
@@ -200,6 +201,34 @@ static void test_stack()
 	stack_destroy(&s);
 }
 
+static int compare_uchar(const void *left, const void *right, void *user)
+{
+	return memcmp(left, right, 1);
+}
+
+static void test_tree_map()
+{
+	typedef unsigned char key_t;
+	typedef double value_t;
+
+	size_t j;
+	key_t key;
+	value_t value;
+	tree_map map;
+	tree_map_create(&map, sizeof(key), sizeof(value), compare_uchar, 0);
+
+	for (j = 0; j < 3; ++j)
+	{
+		for (key = 'a'; key < 'z'; ++key)
+		{
+			value = key * -123;
+			ENSURE(tree_map_insert(&map, &key, &value));
+		}
+	}
+
+	tree_map_destroy(&map);
+}
+
 int main()
 {
 	size_t i;
@@ -210,6 +239,7 @@ int main()
 		test_vector();
 		test_queue();
 		test_stack();
+		test_tree_map();
 	}
 
 	return 0;
