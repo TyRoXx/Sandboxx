@@ -48,6 +48,7 @@ int hash_map_insert(hash_map *map, const void *key, const void *value);
 const void *hash_map_find(const hash_map *map, const void *key);
 int hash_map_erase(hash_map *map, const void *key);
 size_t hash_map_size(const hash_map *map);
+void hash_map_clear(hash_map *map);
 
 
 #endif

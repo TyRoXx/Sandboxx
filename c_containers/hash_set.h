@@ -29,6 +29,7 @@ int hash_set_insert(hash_set *set, const void *key);
 int hash_set_contains(const hash_set *set, const void *key);
 int hash_set_erase(hash_set *set, const void *key);
 size_t hash_set_size(hash_set *set);
+void hash_set_clear(hash_set *set);
 
 
 #endif

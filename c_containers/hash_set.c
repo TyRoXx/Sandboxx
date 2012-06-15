@@ -59,3 +59,8 @@ size_t hash_set_size(hash_set *set)
 {
 	return hash_map_size(&set->map);
 }
+
+void hash_set_clear(hash_set *set)
+{
+	hash_map_clear(&set->map);
+}

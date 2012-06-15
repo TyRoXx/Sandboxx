@@ -47,35 +47,37 @@ static void print_set(hash_set *set)
 
 static void test_hash_map()
 {
-	key_t key;
-	value_t value;
+	size_t j;
 
 	hash_map map;
 	hash_set set;
 	hash_map_create(&map, sizeof(key_t), sizeof(value_t), hash, 0);
 	hash_set_create(&set, sizeof(key_t), hash, 0);
 
-	key = 0;
-	value = 'A';
-	for (; key < 26; ++key)
+	for (j = 0; j < 3; ++j)
 	{
-		ENSURE(hash_map_insert(&map, &key, &value));
-		ENSURE(hash_set_insert(&set, &key));
+		key_t key = 0;
+		value_t value = 'A';
 
-		++value;
+		hash_map_clear(&map);
+		hash_set_clear(&set);
+
+		for (; key < 26; ++key)
+		{
+			ENSURE(hash_map_insert(&map, &key, &value));
+			ENSURE(hash_set_insert(&set, &key));
+
+			++value;
+		}
+
+		for (key = 0; key < 26; key += 2)
+		{
+			hash_map_erase(&map, &key);
+		}
+
+		ENSURE(hash_map_size(&map) == 13);
+		ENSURE(hash_set_size(&set) == 26);
 	}
-
-	for (key = 0; key < 26; key += 2)
-	{
-		hash_map_erase(&map, &key);
-	}
-
-	ENSURE(hash_map_size(&map) == 13);
-	ENSURE(hash_set_size(&set) == 26);
-
-	print_map(&map);
-	printf("\n");
-	print_set(&set);
 
 	hash_set_destroy(&set);
 	hash_map_destroy(&map);
@@ -85,25 +87,31 @@ static void test_vector()
 {
 	typedef unsigned element_t;
 
+	size_t j;
 	element_t e;
 	vector_iterator i, end;
 	vector v;
 	vector_create(&v, sizeof(e));
 
-	ENSURE(vector_size(&v) == 0);
-
-	for (e = 0; e < 10; ++e)
+	for (j = 0; j < 3; ++j)
 	{
-		ENSURE(vector_push_back(&v, &e));
-	}
+		vector_clear(&v);
 
-	ENSURE(vector_size(&v) == 10);
-	ENSURE(vector_capacity(&v) >= 10);
+		ENSURE(vector_size(&v) == 0);
 
-	for (i = vector_begin(&v), end = vector_end(&v); i != end; vector_next(&v, &i))
-	{
-		e = *(const element_t *)vector_deref(i);
-		ENSURE(e == vector_distance(&v, vector_begin(&v), i));
+		for (e = 0; e < 10; ++e)
+		{
+			ENSURE(vector_push_back(&v, &e));
+		}
+
+		ENSURE(vector_size(&v) == 10);
+		ENSURE(vector_capacity(&v) >= 10);
+
+		for (i = vector_begin(&v), end = vector_end(&v); i != end; vector_next(&v, &i))
+		{
+			e = *(const element_t *)vector_deref(i);
+			ENSURE(e == vector_distance(&v, vector_begin(&v), i));
+		}
 	}
 
 	vector_destroy(&v);
@@ -113,37 +121,43 @@ static void test_queue()
 {
 	typedef unsigned element_t;
 
+	size_t j;
 	size_t i;
 	size_t size;
 	element_t e;
 	queue q;
 	queue_create(&q, sizeof(e));
 
-	for (e = 0, i = 0; i < 10; ++i)
+	for (j = 0; j < 3; ++j)
 	{
-		size = queue_size(&q);
-		ENSURE(size == (i + 1) / 2);
-		ENSURE(queue_push(&q, &e));
+		queue_clear(&q);
 
-		if (i % 2)
+		for (e = 0, i = 0; i < 10; ++i)
 		{
-			queue_pop(&q);
+			size = queue_size(&q);
+			ENSURE(size == (i + 1) / 2);
+			ENSURE(queue_push(&q, &e));
+
+			if (i % 2)
+			{
+				queue_pop(&q);
+			}
 		}
+
+		for (i = 0; i < 5; ++i)
+		{
+			size = queue_size(&q);
+			ENSURE(size == 5 - i);
+
+			queue_pop(&q);
+
+			size = queue_size(&q);
+			ENSURE(size == 4 - i);
+		}
+
+		ENSURE(queue_empty(&q));
+		ENSURE(queue_size(&q) == 0);
 	}
-
-	for (i = 0; i < 5; ++i)
-	{
-		size = queue_size(&q);
-		ENSURE(size == 5 - i);
-
-		queue_pop(&q);
-
-		size = queue_size(&q);
-		ENSURE(size == 4 - i);
-	}
-
-	ENSURE(queue_empty(&q));
-	ENSURE(queue_size(&q) == 0);
 
 	queue_destroy(&q);
 }
@@ -152,30 +166,37 @@ static void test_stack()
 {
 	typedef long long element_t;
 
+	size_t j;
 	element_t e;
 	element_t d;
 	stack s;
 	stack_create(&s, sizeof(e));
 
-	ENSURE(stack_empty(&s));
-
-	for (e = 0; e < 20; ++e)
+	for (j = 0; j < 3; ++j)
 	{
-		ENSURE(stack_push(&s, &e));
+		stack_clear(&s);
+
+		ENSURE(stack_empty(&s));
+
+		for (e = 0; e < 20; ++e)
+		{
+			ENSURE(stack_push(&s, &e));
+		}
+
+		ENSURE(!stack_empty(&s));
+
+		while (!stack_empty(&s))
+		{
+			d = *(const element_t *)stack_top(&s);
+			--e;
+			ENSURE(d == e);
+			stack_pop(&s);
+		}
+
+		ENSURE(stack_empty(&s));
 	}
 
-	ENSURE(!stack_empty(&s));
-
-	while (!stack_empty(&s))
-	{
-		d = *(const element_t *)stack_top(&s);
-		--e;
-		ENSURE(d == e);
-		stack_pop(&s);
-	}
-
-	ENSURE(stack_empty(&s));
-
+	ENSURE(stack_push(&s, &e));
 	stack_destroy(&s);
 }
 

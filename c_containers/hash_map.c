@@ -90,6 +90,14 @@ static int hash_map_bucket_add(
 	return 1;
 }
 
+static void hash_map_bucket_clear(
+	hash_map_bucket *bucket)
+{
+	free(bucket->entries);
+	bucket->entries = 0;
+	bucket->count = 0;
+}
+
 
 hash_map_iterator hash_map_iterate(const hash_map *map)
 {
@@ -302,4 +310,15 @@ int hash_map_erase(hash_map *map, const void *key)
 size_t hash_map_size(const hash_map *map)
 {
 	return map->elements;
+}
+
+void hash_map_clear(hash_map *map)
+{
+	size_t b;
+	for (b = 0; b < map->bucket_count; ++b)
+	{
+		hash_map_bucket *bucket = map->buckets + b;
+		hash_map_bucket_clear(bucket);
+	}
+	map->elements = 0;
 }
