@@ -2,17 +2,16 @@
 #define QUEUE_H
 
 
-#include <stddef.h>
+#include "linked_list.h"
 
 
-typedef struct queue queue;
+typedef linked_list queue;
 
 
-void queue_create(queue *q, size_t element_size);
+void queue_create(queue *q, size_t value_size);
 void queue_destroy(queue *q);
 void queue_push(queue *q, const void *element);
 const void *queue_front(const queue *q);
-const void *queue_back(const queue *q);
 void queue_pop(queue *q);
 void queue_clear(queue *q);
 
