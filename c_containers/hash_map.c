@@ -183,10 +183,15 @@ int hash_map_resize(hash_map *map, size_t bucket_count)
 	hash_map resized;
 	size_t i;
 	hash_map_iterator iterator;
+
+	assert(map);
+	assert(bucket_count > 0);
+
 	hash_map_create(&resized, map->key_size, map->value_size, map->hash, map->hash_user_data);
 	resized.buckets = malloc(sizeof(*resized.buckets) * bucket_count);
 	if (!resized.buckets)
 	{
+		hash_map_destroy(&resized);
 		return 0;
 	}
 	for (i = 0; i < bucket_count; ++i)
@@ -218,6 +223,8 @@ int hash_map_grow(hash_map *map)
 	if (map->elements >= map->bucket_count)
 	{
 		size_t new_size = map->elements * 2;
+		assert(!new_size || (new_size > map->elements));
+
 		if (new_size < 4)
 		{
 			new_size = 4; 

@@ -202,9 +202,15 @@ static void test_stack()
 
 int main()
 {
-	test_hash_map();
-	test_vector();
-	test_queue();
-	test_stack();
+	size_t i;
+
+	for (i = 0; i < 4; ++i)
+	{
+		test_hash_map();
+		test_vector();
+		test_queue();
+		test_stack();
+	}
+
 	return 0;
 }
