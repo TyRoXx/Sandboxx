@@ -89,6 +89,10 @@ void linked_list_pop_front(linked_list *list)
 	new_first = list->first->next;
 	deallocate_entry(list->first);
 	list->first = new_first;
+	if (!new_first)
+	{
+		list->last = 0;
+	}
 	new_first->previous = 0;
 }
 
@@ -101,6 +105,10 @@ void linked_list_pop_back(linked_list *list)
 	new_last = list->last->previous;
 	deallocate_entry(list->last);
 	list->last = new_last;
+	if (!new_last)
+	{
+		list->first = 0;
+	}
 	new_last->next = 0;
 }
 
