@@ -25,6 +25,13 @@ void linked_list_pop_front(linked_list *list);
 void linked_list_pop_back(linked_list *list);
 int linked_list_empty(const linked_list *list);
 void linked_list_clear(linked_list *list);
+size_t linked_list_size(const linked_list *list);
+
+typedef linked_list_entry *linked_list_iterator;
+
+linked_list_iterator linked_list_first(const linked_list *list);
+linked_list_iterator linked_list_last(const linked_list *list);
+void linked_list_next(linked_list_iterator *iterator);
 
 
 #endif

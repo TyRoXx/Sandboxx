@@ -9,29 +9,13 @@ struct hash_map_entry
 	void *data;
 };
 
-int hash_map_entry_create(hash_map_entry *entry,
-	const void *key, size_t key_size,
-	const void *value, size_t value_size);
-void hash_map_entry_destroy(hash_map_entry *entry);
-
 struct hash_map_bucket
 {
 	hash_map_entry *entries;
 	size_t count;
 };
 
-void hash_map_bucket_create(hash_map_bucket *bucket);
-void hash_map_bucket_destroy(hash_map_bucket *bucket);
-hash_map_entry *hash_map_bucket_get(hash_map_bucket *bucket, const void *key, size_t key_size);
-int hash_map_bucket_add(
-	hash_map_bucket *bucket,
-	const void *key,
-	size_t key_size,
-	const void *value,
-	size_t value_size);
-
-
-int hash_map_entry_create(hash_map_entry *entry,
+static int hash_map_entry_create(hash_map_entry *entry,
 	const void *key, size_t key_size,
 	const void *value, size_t value_size)
 {
@@ -45,18 +29,18 @@ int hash_map_entry_create(hash_map_entry *entry,
 	return 1;
 }
 
-void hash_map_entry_destroy(hash_map_entry *entry)
+static void hash_map_entry_destroy(hash_map_entry *entry)
 {
 	free(entry->data);
 }
 
-void hash_map_bucket_create(hash_map_bucket *bucket)
+static void hash_map_bucket_create(hash_map_bucket *bucket)
 {
 	bucket->entries = 0;
 	bucket->count = 0;
 }
 
-void hash_map_bucket_destroy(hash_map_bucket *bucket)
+static void hash_map_bucket_destroy(hash_map_bucket *bucket)
 {
 	size_t i;
 	for (i = 0; i < bucket->count; ++i)
@@ -66,7 +50,7 @@ void hash_map_bucket_destroy(hash_map_bucket *bucket)
 	free(bucket->entries);
 }
 
-hash_map_entry *hash_map_bucket_get(hash_map_bucket *bucket, const void *key, size_t key_size)
+static hash_map_entry *hash_map_bucket_get(hash_map_bucket *bucket, const void *key, size_t key_size)
 {
 	size_t i;
 	for (i = 0; i < bucket->count; ++i)
@@ -80,7 +64,7 @@ hash_map_entry *hash_map_bucket_get(hash_map_bucket *bucket, const void *key, si
 	return 0;
 }
 
-int hash_map_bucket_add(
+static int hash_map_bucket_add(
 	hash_map_bucket *bucket,
 	const void *key,
 	size_t key_size,
@@ -105,6 +89,7 @@ int hash_map_bucket_add(
 	++(bucket->count);
 	return 1;
 }
+
 
 hash_map_iterator hash_map_iterate(const hash_map *map)
 {

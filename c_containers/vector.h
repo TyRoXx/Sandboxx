@@ -30,10 +30,19 @@ int vector_reserve(vector *v, size_t capacity);
 void vector_fill(vector *v, const void *fill);
 void vector_erase(vector *v, size_t position);
 void vector_erase_n(vector *v, size_t begin, size_t end);
-void vector_insert(vector *v, size_t position, const void *element);
-void vector_insert_n(vector *v, size_t position, const void *elements, size_t count);
-size_t vector_find_first(const vector *v, const void *element);
-size_t vector_find_last(const vector *v, const void *element);
+int vector_insert(vector *v, size_t position, const void *element);
+int vector_insert_n(vector *v, size_t position, const void *elements, size_t count);
+void *vector_data(const vector *v);
+
+typedef void *vector_iterator;
+
+vector_iterator vector_begin(const vector *v);
+vector_iterator vector_end(const vector *v);
+void vector_advance(const vector *v, vector_iterator *i, ptrdiff_t n);
+void vector_next(const vector *v, vector_iterator *i);
+ptrdiff_t vector_distance(const vector *v, vector_iterator begin, vector_iterator end);
+vector_iterator vector_at(const vector *v, size_t index);
+void *vector_deref(vector_iterator iterator);
 
 
 #endif

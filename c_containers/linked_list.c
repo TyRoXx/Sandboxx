@@ -123,3 +123,31 @@ void linked_list_clear(linked_list *list)
 	linked_list_destroy(list);
 	linked_list_create(list, value_size);
 }
+
+size_t linked_list_size(const linked_list *list)
+{
+	size_t size = 0;
+	linked_list_entry *e;
+	for (e = list->first; e != list->last; e = e->next)
+	{
+		++size;
+	}
+	return size;
+}
+
+linked_list_iterator linked_list_first(const linked_list *list)
+{
+	return list->first;
+}
+
+linked_list_iterator linked_list_last(const linked_list *list)
+{
+	return list->last;
+}
+
+void linked_list_next(linked_list_iterator *iterator)
+{
+	assert(iterator);
+	assert(*iterator);
+	*iterator = (*iterator)->next;
+}

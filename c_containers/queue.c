@@ -11,9 +11,9 @@ void queue_destroy(queue *q)
 	linked_list_destroy(q);
 }
 
-void queue_push(queue *q, const void *element)
+int queue_push(queue *q, const void *element)
 {
-	linked_list_push_back(q, element);
+	return linked_list_push_back(q, element);
 }
 
 const void *queue_front(const queue *q)
@@ -29,4 +29,14 @@ void queue_pop(queue *q)
 void queue_clear(queue *q)
 {
 	linked_list_clear(q);
+}
+
+size_t queue_size(const queue *q)
+{
+	return linked_list_size(q);
+}
+
+int queue_empty(const queue *q)
+{
+	return linked_list_empty(q);
 }

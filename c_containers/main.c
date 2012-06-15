@@ -8,6 +8,8 @@
 #include <string.h>
 
 
+#define ENSURE(x) { const int s = (x); assert(s); }
+
 typedef long long key_t;
 typedef char value_t;
 
@@ -42,7 +44,7 @@ static void print_set(hash_set *set)
 	}
 }
 
-int main()
+static void test_hash_map()
 {
 	key_t key;
 	value_t value;
@@ -56,13 +58,9 @@ int main()
 	value = 'A';
 	for (; key < 26; ++key)
 	{
-		if (!hash_map_insert(&map, &key, &value) ||
-			!hash_set_insert(&set, &key))
-		{
-			printf("failed\n");
-			break;
-		}
-		
+		ENSURE(hash_map_insert(&map, &key, &value));
+		ENSURE(hash_set_insert(&set, &key));
+
 		++value;
 	}
 
@@ -71,13 +69,80 @@ int main()
 		hash_map_erase(&map, &key);
 	}
 
-	assert(hash_map_size(&map) == 13);
-	assert(hash_set_size(&set) == 26);
-	
+	ENSURE(hash_map_size(&map) == 13);
+	ENSURE(hash_set_size(&set) == 26);
+
 	print_map(&map);
 	printf("\n");
 	print_set(&set);
 
 	hash_map_destroy(&map);
+}
+
+static void test_vector()
+{
+	typedef unsigned element_t;
+
+	element_t e;
+	vector_iterator i, end;
+	vector v;
+	vector_create(&v, sizeof(e));
+
+	ENSURE(vector_size(&v) == 0);
+
+	for (e = 0; e < 10; ++e)
+	{
+		ENSURE(vector_push_back(&v, &e));
+	}
+
+	ENSURE(vector_size(&v) == 10);
+	ENSURE(vector_capacity(&v) >= 10);
+
+	for (i = vector_begin(&v), end = vector_end(&v); i != end; vector_next(&v, &i))
+	{
+		e = *(const element_t *)vector_deref(i);
+		ENSURE(e == vector_distance(&v, vector_begin(&v), i));
+	}
+
+	vector_destroy(&v);
+}
+
+static void test_queue()
+{
+	typedef unsigned element_t;
+
+	size_t i;
+	element_t e;
+	queue q;
+	queue_create(&q, sizeof(e));
+
+	for (e = 0, i = 0; i < 10; ++i)
+	{
+		ENSURE(queue_size(&q) == i / 2);
+		ENSURE(queue_push(&q, &e));
+
+		if (i % 2)
+		{
+			queue_pop(&q);
+		}
+	}
+
+	for (i = 0; i < 5; ++i)
+	{
+		ENSURE(queue_size(&q) == 5 - i);
+		queue_pop(&q);
+		ENSURE(queue_size(&q) == 4 - i);
+	}
+
+	ENSURE(queue_empty(&q));
+	ENSURE(queue_size(&q) == 0);
+
+	queue_destroy(&q);
+}
+
+int main()
+{
+	test_hash_map();
+	test_vector();
 	return 0;
 }
