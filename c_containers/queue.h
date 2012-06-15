@@ -5,7 +5,11 @@
 #include "linked_list.h"
 
 
-typedef linked_list queue;
+typedef struct queue
+{
+	linked_list list;
+}
+queue;
 
 
 void queue_create(queue *q, size_t value_size);

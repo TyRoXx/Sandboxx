@@ -5,7 +5,12 @@
 #include "hash_map.h"
 
 
-typedef hash_map hash_set;
+typedef struct hash_set
+{
+	hash_map map;
+}
+hash_set;
+
 typedef hash_map_iterator hash_set_iterator;
 
 
