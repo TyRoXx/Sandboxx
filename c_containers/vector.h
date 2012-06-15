@@ -27,12 +27,16 @@ void vector_pop_front(vector *v);
 void *vector_get(vector *v, size_t index);
 int vector_resize(vector *v, size_t size, const void *fill);
 int vector_reserve(vector *v, size_t capacity);
+void vector_clear(vector *v);
 void vector_fill(vector *v, const void *fill);
 void vector_erase(vector *v, size_t position);
 void vector_erase_n(vector *v, size_t begin, size_t end);
 int vector_insert(vector *v, size_t position, const void *element);
 int vector_insert_n(vector *v, size_t position, const void *elements, size_t count);
 void *vector_data(const vector *v);
+void *vector_front(const vector *v);
+void *vector_back(const vector *v);
+
 
 typedef void *vector_iterator;
 

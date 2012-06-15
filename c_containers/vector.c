@@ -110,6 +110,11 @@ int vector_reserve(vector *v, size_t capacity)
 	return 1;
 }
 
+void vector_clear(vector *v)
+{
+	v->size = 0;
+}
+
 void vector_fill(vector *v, const void *fill)
 {
 	char *p = v->elements;
@@ -179,6 +184,16 @@ int vector_insert_n(vector *v, size_t position, const void *elements, size_t cou
 void *vector_data(const vector *v)
 {
 	return v->elements;
+}
+
+void *vector_front(const vector *v)
+{
+	return v->elements;
+}
+
+void *vector_back(const vector *v)
+{
+	return ((char *)v->elements) + ((v->size - 1) * v->element_size);
 }
 
 

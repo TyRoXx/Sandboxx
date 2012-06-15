@@ -3,12 +3,13 @@
 #include "queue.h"
 #include "linked_list.h"
 #include "vector.h"
+#include "stack.h"
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
 
 
-#define ENSURE(x) { const int s = (x); assert(s); }
+#define ENSURE(x) { const int ensure_success_variable = (x); assert(ensure_success_variable); }
 
 typedef long long key_t;
 typedef char value_t;
@@ -147,10 +148,42 @@ static void test_queue()
 	queue_destroy(&q);
 }
 
+static void test_stack()
+{
+	typedef long long element_t;
+
+	element_t e;
+	element_t d;
+	stack s;
+	stack_create(&s, sizeof(e));
+
+	ENSURE(stack_empty(&s));
+
+	for (e = 0; e < 20; ++e)
+	{
+		ENSURE(stack_push(&s, &e));
+	}
+
+	ENSURE(!stack_empty(&s));
+
+	while (!stack_empty(&s))
+	{
+		d = *(const element_t *)stack_top(&s);
+		--e;
+		ENSURE(d == e);
+		stack_pop(&s);
+	}
+
+	ENSURE(stack_empty(&s));
+
+	stack_destroy(&s);
+}
+
 int main()
 {
 	test_hash_map();
 	test_vector();
 	test_queue();
+	test_stack();
 	return 0;
 }
