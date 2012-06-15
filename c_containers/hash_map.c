@@ -1,6 +1,10 @@
 #include "hash_map.h"
 #include <string.h>
+#include <assert.h>
 #include <stdlib.h>
+
+
+typedef size_t hash_t;
 
 
 int hash_map_entry_create(hash_map_entry *entry,
@@ -78,7 +82,7 @@ int hash_map_bucket_add(
 	return 1;
 }
 
-hash_map_iterator hash_map_iterate(hash_map *map)
+hash_map_iterator hash_map_iterate(const hash_map *map)
 {
 	hash_map_iterator iterator;
 	iterator.map = map;
@@ -87,12 +91,12 @@ hash_map_iterator hash_map_iterate(hash_map *map)
 	return iterator;
 }
 
-const void *hash_map_iterator_key(hash_map_iterator *iterator)
+const void *hash_map_iterator_key(const hash_map_iterator *iterator)
 {
 	return iterator->entry->data;
 }
 
-const void *hash_map_iterator_value(hash_map_iterator *iterator)
+const void *hash_map_iterator_value(const hash_map_iterator *iterator)
 {
 	return ((const char *)iterator->entry->data) + iterator->map->key_size;
 }
@@ -281,5 +285,12 @@ int hash_map_erase(hash_map *map, const void *key)
 	}
 	bucket->entries = new_entries;
 	--(bucket->count);
+	assert(map->elements);
+	--(map->elements);
 	return 1;
+}
+
+size_t hash_map_size(const hash_map *map)
+{
+	return map->elements;
 }

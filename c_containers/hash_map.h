@@ -51,15 +51,15 @@ hash_map;
 
 typedef struct hash_map_iterator
 {
-	hash_map *map;
-	hash_map_bucket *bucket;
-	hash_map_entry *entry;
+	const hash_map *map;
+	const hash_map_bucket *bucket;
+	const hash_map_entry *entry;
 }
 hash_map_iterator;
 
-hash_map_iterator hash_map_iterate(hash_map *map);
-const void *hash_map_iterator_key(hash_map_iterator *iterator);
-const void *hash_map_iterator_value(hash_map_iterator *iterator);
+hash_map_iterator hash_map_iterate(const hash_map *map);
+const void *hash_map_iterator_key(const hash_map_iterator *iterator);
+const void *hash_map_iterator_value(const hash_map_iterator *iterator);
 int hash_map_iterator_next(hash_map_iterator *iterator);
 void hash_map_create(
 	hash_map *map,
@@ -74,6 +74,7 @@ hash_map_bucket *hash_map_find_bucket(const hash_map *map, const void *key);
 int hash_map_insert(hash_map *map, const void *key, const void *value);
 const void *hash_map_find(const hash_map *map, const void *key);
 int hash_map_erase(hash_map *map, const void *key);
+size_t hash_map_size(const hash_map *map);
 
 
 #endif

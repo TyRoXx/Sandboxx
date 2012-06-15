@@ -1,5 +1,7 @@
 #include "hash_map.h"
+#include "hash_set.h"
 #include <stdio.h>
+#include <assert.h>
 #include <string.h>
 
 
@@ -26,23 +28,38 @@ static void print_map(hash_map *map)
 	}
 }
 
+static void print_set(hash_set *set)
+{
+	hash_set_iterator i = hash_set_iterate(set);
+	while (hash_set_iterator_next(&i))
+	{
+		key_t key;
+		memcpy(&key, hash_set_iterator_key(&i), sizeof(key));
+		printf("%d\n", (int)key);
+	}
+}
+
 int main()
 {
 	key_t key;
 	value_t value;
 
 	hash_map map;
+	hash_set set;
 	hash_map_create(&map, sizeof(key_t), sizeof(value_t), hash, 0);
+	hash_set_create(&set, sizeof(key_t), hash, 0);
 
 	key = 0;
 	value = 'A';
 	for (; key < 26; ++key)
 	{
-		if (!hash_map_insert(&map, &key, &value))
+		if (!hash_map_insert(&map, &key, &value) ||
+			!hash_set_insert(&set, &key))
 		{
 			printf("failed\n");
 			break;
 		}
+		
 		++value;
 	}
 
@@ -50,8 +67,13 @@ int main()
 	{
 		hash_map_erase(&map, &key);
 	}
+
+	assert(hash_map_size(&map) == 13);
+	assert(hash_set_size(&set) == 26);
 	
 	print_map(&map);
+	printf("\n");
+	print_set(&set);
 
 	hash_map_destroy(&map);
 	return 0;
