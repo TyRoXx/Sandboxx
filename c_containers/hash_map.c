@@ -15,7 +15,8 @@ struct hash_map_bucket
 	size_t count;
 };
 
-static int hash_map_entry_create(hash_map_entry *entry,
+static int hash_map_entry_create(
+	hash_map_entry *entry,
 	const void *key, size_t key_size,
 	const void *value, size_t value_size)
 {
@@ -45,7 +46,8 @@ static void hash_map_bucket_destroy(hash_map_bucket *bucket)
 	size_t i;
 	for (i = 0; i < bucket->count; ++i)
 	{
-		hash_map_entry_destroy(bucket->entries + i);
+		hash_map_entry *entry = bucket->entries + i;
+		hash_map_entry_destroy(entry);
 	}
 	free(bucket->entries);
 }
@@ -93,7 +95,7 @@ static int hash_map_bucket_add(
 static void hash_map_bucket_clear(
 	hash_map_bucket *bucket)
 {
-	free(bucket->entries);
+	hash_map_bucket_destroy(bucket);
 	bucket->entries = 0;
 	bucket->count = 0;
 }
