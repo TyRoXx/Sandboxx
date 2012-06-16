@@ -158,3 +158,14 @@ int tree_map_insert(tree_map *map, const void *key, const void *value)
 		return 1;
 	}
 }
+
+void tree_map_clear(tree_map *map)
+{
+	size_t key_size = map->key_size;
+	size_t value_size = map->value_size;
+	tree_key_comparator_t comparator = map->comparator;
+	void *user_data = map->user_data;
+
+	tree_map_destroy(map);
+	tree_map_create(map, key_size, value_size, comparator, user_data);
+}

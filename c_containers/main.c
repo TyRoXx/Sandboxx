@@ -242,6 +242,8 @@ static void test_tree_map()
 
 	for (j = 0; j < 3; ++j)
 	{
+		tree_map_clear(&map);
+
 		for (key = 'a'; key < 'z'; ++key)
 		{
 			value = key * -123;
