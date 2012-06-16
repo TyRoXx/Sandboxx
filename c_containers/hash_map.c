@@ -309,6 +309,7 @@ int hash_map_erase(hash_map *map, const void *key)
 		*back = entry_copy;
 		return 0;
 	}
+	hash_map_entry_destroy(&entry_copy);
 	bucket->entries = new_entries;
 	--(bucket->count);
 	assert(map->elements);

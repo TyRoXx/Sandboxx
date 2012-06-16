@@ -51,9 +51,7 @@ static void test_hash_map()
 	size_t j;
 
 	hash_map map;
-	hash_set set;
 	hash_map_create(&map, sizeof(key_t), sizeof(value_t), hash, 0);
-	hash_set_create(&set, sizeof(key_t), hash, 0);
 
 	for (j = 0; j < 3; ++j)
 	{
@@ -61,12 +59,10 @@ static void test_hash_map()
 		value_t value = 'A';
 
 		hash_map_clear(&map);
-		hash_set_clear(&set);
 
 		for (; key < 26; ++key)
 		{
 			ENSURE(hash_map_insert(&map, &key, &value));
-			ENSURE(hash_set_insert(&set, &key));
 
 			++value;
 		}
@@ -77,11 +73,38 @@ static void test_hash_map()
 		}
 
 		ENSURE(hash_map_size(&map) == 13);
-		ENSURE(hash_set_size(&set) == 26);
+	}
+
+	hash_map_destroy(&map);
+}
+
+static void test_hash_set()
+{
+	size_t j;
+
+	hash_set set;
+	hash_set_create(&set, sizeof(key_t), hash, 0);
+
+	for (j = 0; j < 3; ++j)
+	{
+		key_t key = 0;
+
+		hash_set_clear(&set);
+
+		for (; key < 26; ++key)
+		{
+			ENSURE(hash_set_insert(&set, &key));
+		}
+
+		for (key = 0; key < 26; key += 2)
+		{
+			hash_set_erase(&set, &key);
+		}
+
+		ENSURE(hash_set_size(&set) == 13);
 	}
 
 	hash_set_destroy(&set);
-	hash_map_destroy(&map);
 }
 
 static void test_vector()
@@ -236,6 +259,7 @@ int main()
 	for (i = 0; i < 4; ++i)
 	{
 		test_hash_map();
+		test_hash_set();
 		test_vector();
 		test_queue();
 		test_stack();
