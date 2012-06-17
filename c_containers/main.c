@@ -10,7 +10,7 @@
 #include <string.h>
 
 
-#define ENSURE(x) { const int ensure_success_variable = (x); assert(ensure_success_variable); }
+#define ENSURE(x) { const int ensure_success_variable = !!(x); assert(ensure_success_variable); }
 
 typedef long long key_t;
 typedef char value_t;
@@ -237,6 +237,7 @@ static void test_tree_map()
 	size_t j;
 	key_t key;
 	value_t value;
+	void *found;
 	tree_map map;
 	tree_map_create(&map, sizeof(key), sizeof(value), compare_uchar, 0);
 
@@ -248,6 +249,14 @@ static void test_tree_map()
 		{
 			value = key * -123;
 			ENSURE(tree_map_insert(&map, &key, &value));
+		}
+
+		for (key = 'a'; key < 'z'; ++key)
+		{
+			value = key * -123;
+			found = tree_map_find(&map, &key);
+			ENSURE(found);
+			ENSURE(!memcmp(found, &value, sizeof(value)));
 		}
 	}
 

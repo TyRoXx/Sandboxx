@@ -159,6 +159,47 @@ int tree_map_insert(tree_map *map, const void *key, const void *value)
 	}
 }
 
+static tree_node *find_node(tree_node *node, tree_map *map, const void *key)
+{
+	assert(node);
+	assert(map);
+	assert(key);
+
+	do
+	{
+		int relation = map->comparator(
+			key,
+			node_get_key(node),
+			map->user_data
+			);
+
+		if (relation == 0)
+		{
+			break;
+		}
+		else
+		{
+			node = node->children[relationToChild(relation)];
+		}
+	}
+	while (node);
+	return node;
+}
+
+void *tree_map_find(tree_map *map, const void *key)
+{
+	tree_node *root = map->root;
+	tree_node *found;
+	if (!root)
+	{
+		return 0;
+	}
+	found = find_node(root, map, key);
+	return found ?
+		node_get_value(found, map) :
+		0;
+}
+
 void tree_map_clear(tree_map *map)
 {
 	size_t key_size = map->key_size;

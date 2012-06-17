@@ -29,7 +29,7 @@ void tree_map_create(
 void tree_map_destroy(tree_map *map);
 int tree_map_insert(tree_map *map, const void *key, const void *value);
 void tree_map_erase(tree_map *map, const void *key);
-const void *tree_map_find(tree_map *map, const void *key);
+void *tree_map_find(tree_map *map, const void *key);
 void tree_map_clear(tree_map *map);
 
 
