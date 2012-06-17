@@ -257,6 +257,11 @@ static void test_tree_map()
 			found = tree_map_find(&map, &key);
 			ENSURE(found);
 			ENSURE(!memcmp(found, &value, sizeof(value)));
+
+#if 0
+			tree_map_erase(&map, &key);
+			ENSURE(!tree_map_find(&map, &key));
+#endif
 		}
 	}
 

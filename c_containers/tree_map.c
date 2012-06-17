@@ -67,6 +67,52 @@ static void *node_get_value(tree_node *node, const tree_map *map)
 	return ((char *)node->storage) + map->key_size;
 }
 
+static tree_node *find_node(tree_node *node, tree_map *map, const void *key)
+{
+	assert(node);
+	assert(map);
+	assert(key);
+
+	do
+	{
+		int relation = map->comparator(
+			key,
+			node_get_key(node),
+			map->user_data
+			);
+
+		if (relation == 0)
+		{
+			break;
+		}
+		else
+		{
+			node = node->children[relationToChild(relation)];
+		}
+	}
+	while (node);
+	return node;
+}
+
+static void node_remove_from_optional_parent(tree_node *node)
+{
+	tree_node *parent = node->parent;
+	if (parent)
+	{
+		size_t i;
+		for (i = 0; i < 2; ++i)
+		{
+			if (parent->children[i] == node)
+			{
+				parent->children[i] = 0;
+				return;
+			}
+		}
+		assert(!"broken parent/child relationship");
+	}
+}
+
+
 void tree_map_create(
 	tree_map *map,
 	size_t key_size,
@@ -134,6 +180,8 @@ int tree_map_insert(tree_map *map, const void *key, const void *value)
 					memmove(node_get_value(child, map), value, map->value_size);
 
 					node->children[childId] = child;
+
+					//TODO: balancing
 					break;
 				}
 			}
@@ -159,31 +207,20 @@ int tree_map_insert(tree_map *map, const void *key, const void *value)
 	}
 }
 
-static tree_node *find_node(tree_node *node, tree_map *map, const void *key)
+void tree_map_erase(tree_map *map, const void *key)
 {
-	assert(node);
-	assert(map);
-	assert(key);
-
-	do
+	tree_node *root = map->root;
+	tree_node *found;
+	if (!root)
 	{
-		int relation = map->comparator(
-			key,
-			node_get_key(node),
-			map->user_data
-			);
-
-		if (relation == 0)
-		{
-			break;
-		}
-		else
-		{
-			node = node->children[relationToChild(relation)];
-		}
+		return;
 	}
-	while (node);
-	return node;
+	found = find_node(root, map, key);
+	if (found)
+	{
+		//TODO
+		//TODO: balancing
+	}
 }
 
 void *tree_map_find(tree_map *map, const void *key)
