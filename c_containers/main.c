@@ -63,13 +63,18 @@ static void test_hash_map()
 		for (; key < 26; ++key)
 		{
 			ENSURE(hash_map_insert(&map, &key, &value));
+			ENSURE(hash_map_find_bucket(&map, &key));
+			ENSURE(hash_map_find(&map, &key));
 
 			++value;
 		}
 
 		for (key = 0; key < 26; key += 2)
 		{
+			ENSURE(hash_map_find_bucket(&map, &key));
+			ENSURE(hash_map_find(&map, &key));
 			hash_map_erase(&map, &key);
+			ENSURE(!hash_map_find(&map, &key));
 		}
 
 		ENSURE(hash_map_size(&map) == 13);
@@ -94,11 +99,14 @@ static void test_hash_set()
 		for (; key < 26; ++key)
 		{
 			ENSURE(hash_set_insert(&set, &key));
+			ENSURE(hash_set_contains(&set, &key));
 		}
 
 		for (key = 0; key < 26; key += 2)
 		{
+			ENSURE(hash_set_contains(&set, &key));
 			hash_set_erase(&set, &key);
+			ENSURE(!hash_set_contains(&set, &key));
 		}
 
 		ENSURE(hash_set_size(&set) == 13);

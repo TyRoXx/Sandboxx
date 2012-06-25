@@ -276,7 +276,16 @@ int hash_map_insert(hash_map *map, const void *key, const void *value)
 const void *hash_map_find(const hash_map *map, const void *key)
 {
 	hash_map_bucket *bucket = hash_map_find_bucket(map, key);
-	hash_map_entry *entry = hash_map_bucket_get(bucket, key, map->key_size);
+	hash_map_entry *entry;
+	if (!bucket)
+	{
+		return 0;
+	}
+	entry = hash_map_bucket_get(bucket, key, map->key_size);
+	if (!entry)
+	{
+		return 0;
+	}
 	return ((char *)entry->data) + map->key_size;
 }
 
