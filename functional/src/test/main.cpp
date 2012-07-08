@@ -175,7 +175,8 @@ BOOST_AUTO_TEST_CASE(interpreter_less_than)
 
 BOOST_AUTO_TEST_CASE(interpreter_lambda)
 {
-	const auto greaterEqualTest = [](Integer::Value left, Integer::Value right, bool expected)
+	const auto greaterEqualTest =
+		[](Integer::Value left, Integer::Value right, bool expected)
 	{
 		const std::string source = (boost::format(
 			"define(greater-equal "
@@ -205,4 +206,63 @@ BOOST_AUTO_TEST_CASE(interpreter_lambda)
 	greaterEqualTest(1, 1, true);
 	greaterEqualTest(3, 10, false);
 	greaterEqualTest(5, 100, false);
+}
+
+namespace
+{
+	Integer::Value fibonacci(Integer::Value n)
+	{
+		return n <= 1 ?
+			n : (fibonacci(n - 2) + fibonacci(n - 1));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(interpreter_recursion)
+{
+	const auto fibTest =
+		[](Integer::Value n)
+	{
+		const std::string source = (boost::format(
+			"define(fib "
+			"    lambda(n"
+			"        if(less(n 2)"
+			"            n"
+			"            add(fib(sub(n 2)) fib(sub(n 1)))"
+			"        )"
+			"    )"
+			"    fib(%1%)"
+			")")
+			% n).str();
+
+		const Tree program = Parser::parse(Scanner::scan(source));
+
+		Interpreter interpreter;
+		interpreter.pushSymbol("define", std::unique_ptr<Object>(new Define));
+		interpreter.pushSymbol("if", std::unique_ptr<Object>(new If));
+		interpreter.pushSymbol("not", std::unique_ptr<Object>(new Not));
+		interpreter.pushSymbol("lambda", std::unique_ptr<Object>(new MakeLambda));
+		interpreter.pushSymbol("less", std::unique_ptr<Object>(new LessThan));
+		interpreter.pushSymbol("add", std::unique_ptr<Object>(new Add));
+		interpreter.pushSymbol("sub", std::unique_ptr<Object>(new Subtract));
+
+		const auto result = interpreter.evaluate(program);
+		BOOST_REQUIRE(result != 0);
+
+		const auto expected = fibonacci(n);
+		BOOST_REQUIRE_EQUAL(*result, Integer(expected));
+	};
+
+	BOOST_REQUIRE_EQUAL(fibonacci(0), 0);
+	BOOST_REQUIRE_EQUAL(fibonacci(1), 1);
+	BOOST_REQUIRE_EQUAL(fibonacci(2), 1);
+	BOOST_REQUIRE_EQUAL(fibonacci(3), 2);
+	BOOST_REQUIRE_EQUAL(fibonacci(4), 3);
+	BOOST_REQUIRE_EQUAL(fibonacci(5), 5);
+	BOOST_REQUIRE_EQUAL(fibonacci(6), 8);
+	BOOST_REQUIRE_EQUAL(fibonacci(7), 13);
+
+	for (Integer::Value n = 0; n < 10; ++n)
+	{
+		fibTest(n);
+	}
 }

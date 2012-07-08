@@ -95,6 +95,26 @@ namespace fct
 	};
 
 
+	struct Add : Object
+	{
+		virtual void print(std::ostream &os) const;
+		virtual std::unique_ptr<Object> evaluate(
+			Interpreter &interpreter,
+			const std::vector<Tree> &arguments) const;
+		virtual bool equals(const Object &other) const;
+	};
+
+
+	struct Subtract : Object
+	{
+		virtual void print(std::ostream &os) const;
+		virtual std::unique_ptr<Object> evaluate(
+			Interpreter &interpreter,
+			const std::vector<Tree> &arguments) const;
+		virtual bool equals(const Object &other) const;
+	};
+
+
 	struct Function : Object
 	{
 		explicit Function(Tree value, std::vector<std::string> arguments);

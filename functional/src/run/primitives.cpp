@@ -221,6 +221,62 @@ namespace fct
 	}
 
 
+	void Add::print(std::ostream &os) const
+	{
+		os << "add";
+	}
+
+	std::unique_ptr<Object> Add::evaluate(
+		Interpreter &interpreter,
+		const std::vector<Tree> &arguments) const
+	{
+		if (arguments.size() != 2)
+		{
+			throw std::runtime_error("Add takes exactly two arguments");
+		}
+
+		const auto left = interpreter.evaluate(arguments[0]);
+		const auto right = interpreter.evaluate(arguments[1]);
+		return std::unique_ptr<Object>(new Integer(
+			dynamic_cast<const Integer &>(*left).getValue() +
+			dynamic_cast<const Integer &>(*right).getValue()
+			));
+	}
+
+	bool Add::equals(const Object &other) const
+	{
+		return dynamic_cast<const Add *>(&other) != 0;
+	}
+
+
+	void Subtract::print(std::ostream &os) const
+	{
+		os << "sub";
+	}
+
+	std::unique_ptr<Object> Subtract::evaluate(
+		Interpreter &interpreter,
+		const std::vector<Tree> &arguments) const
+	{
+		if (arguments.size() != 2)
+		{
+			throw std::runtime_error("Add takes exactly two arguments");
+		}
+
+		const auto left = interpreter.evaluate(arguments[0]);
+		const auto right = interpreter.evaluate(arguments[1]);
+		return std::unique_ptr<Object>(new Integer(
+			dynamic_cast<const Integer &>(*left).getValue() -
+			dynamic_cast<const Integer &>(*right).getValue()
+			));
+	}
+
+	bool Subtract::equals(const Object &other) const
+	{
+		return dynamic_cast<const Subtract *>(&other) != 0;
+	}
+
+
 	Function::Function(Tree value, std::vector<std::string> arguments)
 		: m_value(std::move(value))
 		, m_arguments(std::move(arguments))
