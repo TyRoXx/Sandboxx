@@ -15,6 +15,7 @@ namespace fct
 		void pushSymbol(std::string name, std::unique_ptr<Object> value);
 		void popSymbol();
 		Object *findSymbol(const std::string &name) const;
+		size_t getSymbolCount() const;
 
 	private:
 

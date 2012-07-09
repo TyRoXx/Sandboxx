@@ -29,6 +29,11 @@ namespace fct
 	void Interpreter::pushSymbol(std::string name, std::unique_ptr<Object> value)
 	{
 		m_symbols.push_back(std::make_pair(std::move(name), std::move(value)));
+
+		if (m_symbols.size() > 33)
+		{
+			throw std::runtime_error("Suspicious symbol count");
+		}
 	}
 
 	void Interpreter::popSymbol()
@@ -45,5 +50,10 @@ namespace fct
 		});
 
 		return (i == m_symbols.rend() ? 0 : i->second.get());
+	}
+
+	size_t Interpreter::getSymbolCount() const
+	{
+		return m_symbols.size();
 	}
 }

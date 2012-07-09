@@ -223,15 +223,15 @@ BOOST_AUTO_TEST_CASE(interpreter_recursion)
 		[](Integer::Value n)
 	{
 		const std::string source = (boost::format(
-			"define(fib "
-			"    lambda(n"
-			"        if(less(n 2)"
-			"            n"
-			"            add(fib(sub(n 2)) fib(sub(n 1)))"
-			"        )"
-			"    )"
-			"    fib(%1%)"
-			")")
+			"define(fib\n"
+			"    lambda(n\n"
+			"        if(less(n 2)\n"
+			"            n\n"
+			"            add(fib(sub(n 2)) fib(sub(n 1)))\n"
+			"        )\n"
+			"    )\n"
+			"    fib(%1%)\n"
+			")\n")
 			% n).str();
 
 		const Tree program = Parser::parse(Scanner::scan(source));
@@ -245,8 +245,10 @@ BOOST_AUTO_TEST_CASE(interpreter_recursion)
 		interpreter.pushSymbol("add", std::unique_ptr<Object>(new Add));
 		interpreter.pushSymbol("sub", std::unique_ptr<Object>(new Subtract));
 
+		const auto symbolCount = interpreter.getSymbolCount();
 		const auto result = interpreter.evaluate(program);
 		BOOST_REQUIRE(result != 0);
+		BOOST_REQUIRE_EQUAL(symbolCount, interpreter.getSymbolCount());
 
 		const auto expected = fibonacci(n);
 		BOOST_REQUIRE_EQUAL(*result, Integer(expected));

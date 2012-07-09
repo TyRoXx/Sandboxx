@@ -7,17 +7,7 @@ namespace fct
 	{
 		bool isSpace(char c)
 		{
-			switch (c)
-			{
-			case ' ':
-			case '\t':
-			case '\n':
-			case '\r':
-				return true;
-
-			default:
-				return false;
-			}
+			return (c >= '\0') && (c <= ' ');
 		}
 
 		bool isOperator(char c)

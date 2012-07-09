@@ -2,6 +2,7 @@
 #include "run/interpreter.hpp"
 #include "run/primitives.hpp"
 #include <iostream>
+#include <fstream>
 using namespace fct;
 using namespace std;
 
@@ -18,18 +19,13 @@ namespace
 		interpreter.pushSymbol("add", std::unique_ptr<Object>(new Add));
 		interpreter.pushSymbol("sub", std::unique_ptr<Object>(new Subtract));
 	}
-}
 
-int main()
-{
-	std::string line;
-	while (getline(cin, line) &&
-		!line.empty())
+	void run(const std::string &code)
 	{
 		try
 		{
 			const auto program = Parser::parse(
-				Scanner::scan(line));
+				Scanner::scan(code));
 
 			Interpreter interpreter;
 			addPrimitives(interpreter);
@@ -47,5 +43,33 @@ int main()
 		{
 			cerr << e.what() << endl;
 		}
+	}
+}
+
+int main(int argc, const char **argv)
+{
+	if (argc >= 2)
+	{
+		for (size_t i = 1; i < static_cast<size_t>(argc); ++i)
+		{
+			const std::string fileName = argv[i];
+			std::ifstream file(fileName, std::ios::binary);
+			if (!file)
+			{
+				cerr << "Cannot open file " << fileName << endl;
+				return 1;
+			}
+
+			const std::string code((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+			run(code);
+		}
+		return 0;
+	}
+
+	std::string line;
+	while (getline(cin, line) &&
+		!line.empty())
+	{
+		run(line);
 	}
 }
