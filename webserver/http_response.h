@@ -21,6 +21,9 @@ typedef struct http_header_t
 http_header_t;
 
 
+void http_header_destroy(http_header_t *header);
+
+
 typedef struct http_response_t
 {
 	http_status_t status;

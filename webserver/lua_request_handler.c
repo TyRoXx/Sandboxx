@@ -11,6 +11,7 @@ typedef struct execution_context_t
 {
 	const http_request_t *request;
 	http_response_t *response;
+	buffer_t headers;
 }
 execution_context_t;
 
@@ -45,6 +46,43 @@ static int script_echo(lua_State *L)
 	return 0;
 }
 
+static int script_add_header(lua_State *L)
+{
+	execution_context_t * const execution =
+		lua_touserdata(L, lua_upvalueindex(1));
+	const char *key = lua_tostring(L, -2);
+	const char *value = lua_tostring(L, -1);
+	http_header_t header;
+
+	if (!key ||
+		!value)
+	{
+		return 0;
+	}
+
+	header.key = strdup(key);
+	header.value = strdup(value);
+
+	if (!header.key ||
+		!header.value ||
+		!buffer_append(&execution->headers, &header, sizeof(header)))
+	{
+		http_header_destroy(&header);
+		return 0;
+	}
+
+	return 0;
+}
+
+static void move_headers(buffer_t *from, http_response_t *to)
+{
+	to->header_count = (from->size / sizeof(*to->headers));
+	to->headers = (http_header_t *)from->data;
+	from->data = 0;
+	from->size = 0;
+	from->capacity = 0;
+}
+
 bool handle_lua_request(
 	const struct http_request_t *request,
 	struct http_response_t *response,
@@ -60,6 +98,8 @@ bool handle_lua_request(
 		return false;
 	}
 
+	buffer_create(&execution.headers);
+
 	lua_pushlightuserdata(L, &execution);
 	lua_pushcclosure(L, script_get_url, 1);
 	lua_setglobal(L, "GetURL");
@@ -68,13 +108,19 @@ bool handle_lua_request(
 	lua_pushcclosure(L, script_echo, 1);
 	lua_setglobal(L, "Echo");
 
+	lua_pushlightuserdata(L, &execution);
+	lua_pushcclosure(L, script_add_header, 1);
+	lua_setglobal(L, "AddHeader");
+
 	if (luaL_loadbuffer(L, handler->script.data, handler->script.size, "script") == LUA_OK &&
 		lua_pcall(L, 0, LUA_MULTRET, 0) == LUA_OK)
 	{
 		result = true;
 	}
 
+	move_headers(&execution.headers, response);
+
 	lua_close(L);
+	buffer_destroy(&execution.headers);
 	return result;
 }
-

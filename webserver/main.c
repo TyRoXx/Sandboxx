@@ -20,16 +20,20 @@ static bool load_buffer_from_file_name(buffer_t *content, const char *file_name)
 
 	for (;;)
 	{
+		size_t just_read;
+
 		if (!buffer_resize(content, total_read + Growth))
 		{
 			fclose(file);
 			return 0;
 		}
-		const size_t just_read = fread(content->data + total_read, 1, Growth, file);
+
+		just_read = fread(content->data + total_read, 1, Growth, file);
 		if (just_read == 0)
 		{
 			break;
 		}
+
 		total_read += just_read;
 	}
 
@@ -51,18 +55,32 @@ static void handle_request(socket_t client, const http_request_t *request)
 
 	if (handle_lua_request(request, &response, &lua_context))
 	{
+		char buffer[8192];
+		size_t i;
+
 		fprintf(stderr, "Sending response\n");
 
-		char header[8192];
-		sprintf(header,
+		sprintf(buffer,
 			"HTTP/1.1 OK 200\r\n"
 			"Content-Length: %u\r\n"
-			"Content-Type: text/html\r\n"
 			"Connection: close\r\n"
-			"\r\n",
+			,
 			(unsigned)response.body.size);
 
-		socket_send(client, header, strlen(header));
+		socket_send(client, buffer, strlen(buffer));
+
+		for (i = 0; i < response.header_count; ++i)
+		{
+			const http_header_t *header = response.headers + i;
+			sprintf(buffer,
+				"%s: %s\r\n",
+				header->key,
+				header->value);
+
+			socket_send(client, buffer, strlen(buffer));
+		}
+
+		socket_send(client, "\r\n", 2);
 		socket_send(client, response.body.data, response.body.size);
 	}
 

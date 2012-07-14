@@ -20,7 +20,7 @@ void buffer_destroy(buffer_t *b);
 bool buffer_reserve(buffer_t *b, size_t capacity);
 bool buffer_resize(buffer_t *b, size_t size);
 bool buffer_push_back(buffer_t *b, char c);
-bool buffer_append(buffer_t *b, const char *data, size_t length);
+bool buffer_append(buffer_t *b, const void *data, size_t length);
 
 
 #endif

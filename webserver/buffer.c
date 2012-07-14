@@ -61,7 +61,7 @@ bool buffer_push_back(buffer_t *b, char c)
 	return true;
 }
 
-bool buffer_append(buffer_t *b, const char *data, size_t length)
+bool buffer_append(buffer_t *b, const void *data, size_t length)
 {
 	const size_t new_size = b->size + length;
 	if (!buffer_reserve(b, new_size))

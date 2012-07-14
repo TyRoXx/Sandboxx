@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 
-static void http_header_destroy(http_header_t *header)
+void http_header_destroy(http_header_t *header)
 {
 	free(header->key);
 	free(header->value);
