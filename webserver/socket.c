@@ -1,7 +1,12 @@
 #include "socket.h"
 
+#ifdef WS_UNIX
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#endif
 
-static const SOCKET InvalidSocket =
+
+static const socket_t InvalidSocket =
 #ifdef WS_WIN32
 	INVALID_SOCKET
 #else

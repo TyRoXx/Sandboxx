@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include <stdint.h>
+#include <stddef.h>
 
 
 #ifdef WS_WIN32

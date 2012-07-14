@@ -9,7 +9,8 @@
 #include <Windows.h>
 typedef HANDLE thread_t;
 #else
-
+#include <pthread.h>
+typedef pthread_t thread_t;
 #endif
 
 
