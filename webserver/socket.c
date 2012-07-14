@@ -27,17 +27,18 @@ void socket_destroy(socket_t socket)
 {
 #ifdef WS_WIN32
 	closesocket(socket);
+	WSACleanup();
 #else
 	close(socket);
 #endif
 }
 
-bool socket_bind(socket_t socket, unsigned port)
+bool socket_bind(socket_t socket, uint16_t port)
 {
 	struct sockaddr_in address = {0};
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons((unsigned short)port);
+	address.sin_port = htons(port);
 
 	return
 		(bind(socket, (struct sockaddr *)&address, sizeof(address)) == 0) &&

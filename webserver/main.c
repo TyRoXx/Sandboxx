@@ -3,7 +3,20 @@
 #include "http_request.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
+
+static void handle_request(socket_t client, const http_request_t *request)
+{
+	const char *response =
+		"HTTP/1.1 OK 200\r\n"
+		"Content-Length: 68\r\n"
+		"Content-Type: text/html\r\n"
+		"Connection: close\r\n"
+		"\r\n"
+		"<html><head><title>WebServer</title></head><body>Hallo</body></html>";
+	socket_send(client, response, strlen(response));
+}
 
 static int receive_char(void *client_ptr)
 {
@@ -20,7 +33,7 @@ static int receive_char(void *client_ptr)
 	}
 }
 
-static void serve_client(socket_t client)
+static void receive_request(socket_t client)
 {
 	http_request_t request;
 
@@ -33,17 +46,34 @@ static void serve_client(socket_t client)
 	}
 
 	fprintf(stderr, "%d %s %s\n", request.method, request.host, request.url);
+	handle_request(client, &request);
 
 	http_request_destroy(&request);
+}
+
+static void wait_for_disconnect(socket_t client)
+{
+	char c;
+	size_t received;
+
+	while (socket_receive(client, &c, 1, &received))
+	{
+	}
+}
+
+static void serve_client(socket_t client)
+{
+	receive_request(client);
+	wait_for_disconnect(client);
+	socket_destroy(client);
 }
 
 static void client_thread_proc(void *client_ptr)
 {
 	socket_t client = *(socket_t *)client_ptr;
 	free(client_ptr);
-	serve_client(client);
 
-	socket_destroy(client);
+	serve_client(client);
 	thread_quit();
 }
 
