@@ -32,6 +32,7 @@ http_response_t;
 
 
 void http_response_destroy(http_response_t *response);
+http_header_t *http_response_header(http_response_t *response, const char *key);
 
 
 #endif
