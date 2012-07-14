@@ -38,7 +38,15 @@ bool socket_create(socket_t *socket_)
 #endif
 
 	*socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	return (*socket_ != InvalidSocket);
+	if (*socket_ == InvalidSocket)
+	{
+#ifdef WS_WIN32
+		wsa_decrement();
+#endif
+		return false;
+	}
+
+	return true;
 }
 
 void socket_destroy(socket_t socket)
