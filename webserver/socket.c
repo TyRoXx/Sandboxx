@@ -9,11 +9,23 @@ static const SOCKET InvalidSocket =
 #endif
 	;
 
+#ifdef WS_WIN32
+static bool wsa_increment()
+{
+	WSADATA wsa;
+	return WSAStartup(MAKEWORD(2, 2), &wsa) == 0;
+}
+
+static void wsa_decrement()
+{
+	WSACleanup();
+}
+#endif
+
 bool socket_create(socket_t *socket_)
 {
 #ifdef WS_WIN32
-	WSADATA wsa;
-	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
+	if (!wsa_increment())
 	{
 		return false;
 	}
@@ -27,7 +39,7 @@ void socket_destroy(socket_t socket)
 {
 #ifdef WS_WIN32
 	closesocket(socket);
-	WSACleanup();
+	wsa_decrement();
 #else
 	close(socket);
 #endif
@@ -48,7 +60,19 @@ bool socket_bind(socket_t socket, uint16_t port)
 bool socket_accept(socket_t socket, socket_t *accepted)
 {
 	*accepted = accept(socket, 0, 0);
-	return (*accepted != InvalidSocket);
+	if (*accepted == InvalidSocket)
+	{
+		return false;
+	}
+
+#ifdef WS_WIN32
+	if (!wsa_increment())
+	{
+		return false;
+	}
+#endif
+
+	return true;
 }
 
 bool socket_receive(socket_t socket, void *data, size_t size, size_t *received)
