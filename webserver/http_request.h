@@ -14,21 +14,11 @@ typedef enum http_method_t
 http_method_t;
 
 
-typedef struct http_header_t
-{
-	char *key;
-	char *value;
-}
-http_header_t;
-
-
 typedef struct http_request_t
 {
 	http_method_t method;
-	char *path;
-	char *search;
-	http_header_t *headers;
-	size_t header_count;
+	char *url;
+	char *host;
 }
 http_request_t;
 

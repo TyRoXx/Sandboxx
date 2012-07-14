@@ -5,11 +5,36 @@
 #include <stdlib.h>
 
 
+static int receive_char(void *client_ptr)
+{
+	socket_t client = *(socket_t *)client_ptr;
+	char r;
+	size_t received;
+	if (socket_receive(client, &r, 1, &received))
+	{
+		return r;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
 static void serve_client(socket_t client)
 {
-	fprintf(stdout, "Serving client\n");
+	http_request_t request;
 
+	fprintf(stderr, "Serving client\n");
 
+	if (!http_request_parse(&request, receive_char, &client))
+	{
+		fprintf(stderr, "Invalid request\n");
+		return;
+	}
+
+	fprintf(stderr, "%d %s %s\n", request.method, request.host, request.url);
+
+	http_request_destroy(&request);
 }
 
 static void client_thread_proc(void *client_ptr)
