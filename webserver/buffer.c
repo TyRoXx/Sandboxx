@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include <stdlib.h>
+#include <string.h>
 
 
 void buffer_create(buffer_t *b)
@@ -17,7 +18,7 @@ bool buffer_reserve(buffer_t *b, size_t capacity)
 {
 	char *new;
 
-	if (capacity <= b->capacity)
+	if (b->capacity >= capacity)
 	{
 		return 1;
 	}
@@ -57,5 +58,17 @@ bool buffer_push_back(buffer_t *b, char c)
 	}
 
 	b->data[b->size - 1] = c;
+	return true;
+}
+
+bool buffer_append(buffer_t *b, const char *data, size_t length)
+{
+	const size_t new_size = b->size + length;
+	if (!buffer_reserve(b, new_size))
+	{
+		return false;
+	}
+	memcpy(b->data + b->size, data, length);
+	b->size = new_size;
 	return true;
 }
