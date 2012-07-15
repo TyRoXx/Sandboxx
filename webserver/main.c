@@ -85,6 +85,7 @@ static void handle_request(socket_t client, const http_request_t *request)
 	}
 
 	buffer_destroy(&lua_context.script);
+	http_response_destroy(&response);
 }
 
 static int receive_char(void *client_ptr)

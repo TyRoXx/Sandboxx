@@ -20,7 +20,7 @@ bool buffer_reserve(buffer_t *b, size_t capacity)
 
 	if (b->capacity >= capacity)
 	{
-		return 1;
+		return true;
 	}
 
 	if (capacity < (b->capacity * 2))
