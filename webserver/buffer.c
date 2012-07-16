@@ -17,15 +17,17 @@ void buffer_destroy(buffer_t *b)
 bool buffer_reserve(buffer_t *b, size_t capacity)
 {
 	char *new;
+	size_t min_capacity;
 
 	if (b->capacity >= capacity)
 	{
 		return true;
 	}
 
-	if (capacity < (b->capacity * 2))
+	min_capacity = (b->capacity * 2);
+	if (capacity < min_capacity)
 	{
-		capacity = (b->capacity * 2);
+		capacity = min_capacity;
 	}
 
 	new = realloc(b->data, capacity);
@@ -52,13 +54,7 @@ bool buffer_resize(buffer_t *b, size_t size)
 
 bool buffer_push_back(buffer_t *b, char c)
 {
-	if (!buffer_resize(b, b->size + 1))
-	{
-		return false;
-	}
-
-	b->data[b->size - 1] = c;
-	return true;
+	return buffer_append(b, &c, 1);
 }
 
 bool buffer_append(buffer_t *b, const void *data, size_t length)
@@ -68,6 +64,7 @@ bool buffer_append(buffer_t *b, const void *data, size_t length)
 	{
 		return false;
 	}
+
 	memcpy(b->data + b->size, data, length);
 	b->size = new_size;
 	return true;

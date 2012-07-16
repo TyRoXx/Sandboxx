@@ -105,6 +105,7 @@ bool socket_send(socket_t socket, const void *data, size_t size)
 {
 	const char *remaining = data;
 	const char * const end = (remaining + size);
+
 	while (remaining < end)
 	{
 		const int rc = send(socket, remaining, (end - remaining), 0);
