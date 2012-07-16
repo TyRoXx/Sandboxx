@@ -3,6 +3,17 @@
 #include <stdlib.h>
 
 
+const char *http_status_message(http_status_t status)
+{
+	switch (status)
+	{
+	case Status_Ok: return "OK";
+	case Status_NotFound: return "Not Found";
+	}
+	return "Unknown Status";
+}
+
+
 void http_header_destroy(http_header_t *header)
 {
 	free(header->key);
@@ -34,4 +45,3 @@ http_header_t *http_response_header(http_response_t *response, const char *key)
 	}
 	return 0;
 }
-

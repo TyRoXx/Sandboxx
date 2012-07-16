@@ -57,18 +57,23 @@ static void handle_request(socket_t client, const http_request_t *request)
 		return;
 	}
 
+	response.status = Status_Ok;
+
 	if (handle_lua_request(request, &response, &lua_context))
 	{
 		char buffer[8192];
 		size_t i;
+		const char *status_message = http_status_message(response.status);
 
 		fprintf(stderr, "Sending response\n");
 
 		sprintf(buffer,
-			"HTTP/1.1 OK 200\r\n"
+			"HTTP/1.1 %s %d\r\n"
 			"Content-Length: %u\r\n"
 			"Connection: close\r\n"
 			,
+			status_message,
+			(int)response.status,
 			(unsigned)response.body.size);
 
 		socket_send(client, buffer, strlen(buffer));

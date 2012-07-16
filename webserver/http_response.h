@@ -13,6 +13,9 @@ typedef enum http_status_t
 http_status_t;
 
 
+const char *http_status_message(http_status_t status);
+
+
 typedef struct http_header_t
 {
 	char *key;
