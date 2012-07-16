@@ -4,6 +4,7 @@
 #include "http_response.h"
 #include "directory.h"
 #include "lua_script.h"
+#include "load_directory.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -186,9 +187,18 @@ static void handle_client(socket_t client)
 	}
 }
 
+static const char * const TestDirFile = "home lua index.lua\n";
+
 int main(void)
 {
 	socket_t acceptor, client;
+	directory_t top;
+
+	if (!load_directory(&top, TestDirFile, TestDirFile + strlen(TestDirFile)))
+	{
+		fprintf(stderr, "Could not load directory file\n");
+		return 1;
+	}
 
 	if (!socket_create(&acceptor))
 	{
@@ -209,5 +219,6 @@ int main(void)
 	}
 
 	socket_destroy(acceptor);
+	directory_destroy(&top);
 	return 0;
 }
