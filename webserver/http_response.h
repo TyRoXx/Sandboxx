@@ -7,8 +7,10 @@
 
 typedef enum http_status_t
 {
-	Status_Ok = 200,
-	Status_NotFound = 404,
+	HttpStatus_Ok = 200,
+	HttpStatus_Unauthorized = 401,
+	HttpStatus_Forbidden = 403,
+	HttpStatus_NotFound = 404,
 }
 http_status_t;
 

@@ -75,6 +75,6 @@ bool directory_handle_request(directory_t *directory, const char *path, struct h
 			sub_path, directory->default_, response);
 	}
 
-	response->status = Status_NotFound;
+	response->status = HttpStatus_NotFound;
 	return buffer_append(&response->body, NotFoundMessage, strlen(NotFoundMessage));
 }

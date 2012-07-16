@@ -7,8 +7,10 @@ const char *http_status_message(http_status_t status)
 {
 	switch (status)
 	{
-	case Status_Ok: return "OK";
-	case Status_NotFound: return "Not Found";
+	case HttpStatus_Ok: return "OK";
+	case HttpStatus_Unauthorized: return "Unauthorized";
+	case HttpStatus_Forbidden: return "Forbidden";
+	case HttpStatus_NotFound: return "Not Found";
 	}
 	return "Unknown Status";
 }

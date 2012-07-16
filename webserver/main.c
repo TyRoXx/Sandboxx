@@ -5,6 +5,7 @@
 #include "directory.h"
 #include "lua_script.h"
 #include "load_directory.h"
+#include "load_file.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,47 +15,13 @@
 #endif
 
 
-static bool load_buffer_from_file_name(buffer_t *content, const char *file_name)
-{
-	static const size_t Growth = 4096;
-	size_t total_read = 0;
-	FILE *file = fopen(file_name, "rb");
-	if (!file)
-	{
-		return false;
-	}
-
-	for (;;)
-	{
-		size_t just_read;
-
-		if (!buffer_resize(content, total_read + Growth))
-		{
-			fclose(file);
-			return 0;
-		}
-
-		just_read = fread(content->data + total_read, 1, Growth, file);
-		if (just_read == 0)
-		{
-			break;
-		}
-
-		total_read += just_read;
-	}
-
-	buffer_resize(content, total_read);
-	fclose(file);
-	return true;
-}
-
 static void handle_request(socket_t client, const http_request_t *request)
 {
 	http_response_t response = {0};
 	directory_t top_dir;
 	buffer_t script;
 
-	response.status = Status_Ok;
+	response.status = HttpStatus_Ok;
 
 	top_dir.entries = 0;
 	top_dir.entry_count = 0;
