@@ -2,7 +2,8 @@
 #include "thread.h"
 #include "http_request.h"
 #include "http_response.h"
-#include "lua_request_handler.h"
+#include "directory.h"
+#include "lua_script.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,17 +50,29 @@ static bool load_buffer_from_file_name(buffer_t *content, const char *file_name)
 static void handle_request(socket_t client, const http_request_t *request)
 {
 	http_response_t response = {0};
-	lua_handler_context_t lua_context;
-	buffer_create(&lua_context.script);
-	if (!load_buffer_from_file_name(&lua_context.script, "index.lua"))
+	directory_t top_dir;
+	buffer_t script;
+
+	response.status = Status_Ok;
+
+	top_dir.entries = 0;
+	top_dir.entry_count = 0;
+	top_dir.default_ = malloc(sizeof(*top_dir.default_));
+	top_dir.default_->name = 0;
+
+	buffer_create(&script);
+	if (!load_buffer_from_file_name(&script, "index.lua"))
 	{
 		fprintf(stderr, "Could not load script file\n");
 		return;
 	}
 
-	response.status = Status_Ok;
+	if (!initialize_lua_script(top_dir.default_, script))
+	{
+		return;
+	}
 
-	if (handle_lua_request(request, &response, &lua_context))
+	if (directory_handle_request(&top_dir, request->url, &response))
 	{
 		char buffer[8192];
 		size_t i;
@@ -93,8 +106,8 @@ static void handle_request(socket_t client, const http_request_t *request)
 		socket_send(client, response.body.data, response.body.size);
 	}
 
-	buffer_destroy(&lua_context.script);
 	http_response_destroy(&response);
+	directory_destroy(&top_dir);
 }
 
 static int receive_char(void *client_ptr)
