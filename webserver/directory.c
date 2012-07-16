@@ -2,6 +2,7 @@
 #include "http_response.h"
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 
 void directory_entry_destroy(directory_entry_t *entry)
@@ -55,9 +56,14 @@ static const char * const NotFoundMessage = "Not found";
 bool directory_handle_request(directory_t *directory, const char *path, struct http_response_t *response)
 {
 	const char *part_end = find_path_separator(path);
-	const char *sub_path = part_end + (*part_end != '\0');
+	const char *sub_path = part_end;
 	size_t i;
 
+	if (*sub_path == '/')
+	{
+		++sub_path;
+	}
+	
 	for (i = 0; i < directory->entry_count; ++i)
 	{
 		directory_entry_t *entry = directory->entries + i;

@@ -10,7 +10,7 @@ struct directory_entry_t;
 
 bool initialize_file_system_directory(
 	struct directory_entry_t *entry,
-	const char *path
+	const char *args
 	);
 
 

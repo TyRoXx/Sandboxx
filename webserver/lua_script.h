@@ -11,7 +11,7 @@ struct directory_entry_t;
 
 bool initialize_lua_script(
 	struct directory_entry_t *entry,
-	buffer_t script
+	const char *args
 	);
 
 

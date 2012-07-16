@@ -6,6 +6,7 @@
 #include "lua_script.h"
 #include "load_directory.h"
 #include "load_file.h"
+#include "fs_directory.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,32 +16,22 @@
 #endif
 
 
+static directory_t top_dir;
+
+
 static void handle_request(socket_t client, const http_request_t *request)
 {
 	http_response_t response = {0};
-	directory_t top_dir;
-	buffer_t script;
+	const char *url = request->url;
+
+	if (*url == '/')
+	{
+		++url;
+	}
 
 	response.status = HttpStatus_Ok;
-
-	top_dir.entries = 0;
-	top_dir.entry_count = 0;
-	top_dir.default_ = malloc(sizeof(*top_dir.default_));
-	top_dir.default_->name = 0;
-
-	buffer_create(&script);
-	if (!load_buffer_from_file_name(&script, "index.lua"))
-	{
-		fprintf(stderr, "Could not load script file\n");
-		return;
-	}
-
-	if (!initialize_lua_script(top_dir.default_, script))
-	{
-		return;
-	}
-
-	if (directory_handle_request(&top_dir, request->url, &response))
+	
+	if (directory_handle_request(&top_dir, url, &response))
 	{
 		char buffer[8192];
 		size_t i;
@@ -75,7 +66,6 @@ static void handle_request(socket_t client, const http_request_t *request)
 	}
 
 	http_response_destroy(&response);
-	directory_destroy(&top_dir);
 }
 
 static int receive_char(void *client_ptr)
@@ -154,18 +144,38 @@ static void handle_client(socket_t client)
 	}
 }
 
-static const char * const TestDirFile = "home lua index.lua\n";
-
 int main(void)
 {
 	socket_t acceptor, client;
-	directory_t top;
 
-	if (!load_directory(&top, TestDirFile, TestDirFile + strlen(TestDirFile)))
+	const loadable_handler_t handlers[] =
+	{
+		{"lua", initialize_lua_script},
+		{"fs", initialize_file_system_directory},
+	};
+
+	buffer_t dir_file;
+	buffer_create(&dir_file);
+
+	if (!load_buffer_from_file_name(&dir_file, "directory.txt"))
 	{
 		fprintf(stderr, "Could not load directory file\n");
+		buffer_destroy(&dir_file);
 		return 1;
 	}
+
+	if (!load_directory(&top_dir,
+		dir_file.data,
+		dir_file.data + dir_file.size,
+		handlers,
+		handlers + sizeof(handlers) / sizeof(handlers[0])))
+	{
+		fprintf(stderr, "Could not parse directory file\n");
+		buffer_destroy(&dir_file);
+		return 1;
+	}
+
+	buffer_destroy(&dir_file);
 
 	if (!socket_create(&acceptor))
 	{
@@ -186,6 +196,6 @@ int main(void)
 	}
 
 	socket_destroy(acceptor);
-	directory_destroy(&top);
+	directory_destroy(&top_dir);
 	return 0;
 }

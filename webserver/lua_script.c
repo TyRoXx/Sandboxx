@@ -1,6 +1,7 @@
 #include "lua_script.h"
 #include "http_request.h"
 #include "http_response.h"
+#include "load_file.h"
 #include "directory.h"
 #include <lua.h>
 #include <lauxlib.h>
@@ -146,16 +147,24 @@ static void destroy_lua_script(directory_entry_t *entry)
 
 bool initialize_lua_script(
 	directory_entry_t *entry,
-	buffer_t script
+	const char *args
 	)
 {
-	entry->data = malloc(sizeof(script));
-	if (!entry->data)
+	buffer_t *script = malloc(sizeof(*script));
+	if (!script)
 	{
 		return false;
 	}
+	buffer_create(script);
 
-	*(buffer_t *)entry->data = script;
+	if (!load_buffer_from_file_name(script, args))
+	{
+		buffer_destroy(script);
+		free(script);
+		return false;
+	}
+
+	entry->data = script;
 	entry->destroy = destroy_lua_script;
 	entry->handle_request = handle_lua_request;
 	return true;

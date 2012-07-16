@@ -4,6 +4,7 @@
 #include "load_file.h"
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 #include <stdlib.h>
 
 
@@ -19,18 +20,31 @@ static bool is_last_char(const char *str, char c)
 
 static char *path_join(const char *parent, const char *child)
 {
-	const bool parent_has_slash = is_last_char(parent, '/');
-	const size_t total_length = strlen(parent) + strlen(child) + !parent_has_slash;
+	const bool parent_has_slash =
+		is_last_char(parent, '/') ||
+		(*parent == '\0');
+	const size_t parent_length = strlen(parent);
+	const size_t child_length = strlen(child);
+	const size_t total_length = parent_length + child_length + !parent_has_slash;
 	char *joined = malloc(total_length + 1);
 	if (joined)
 	{
-		char *j = strcpy(joined, parent);
+		char *dest = joined;
+		memcpy(joined, parent, parent_length);
+		dest += parent_length;
+
 		if (!parent_has_slash)
 		{
-			*j = '/';
-			++j;
+			*dest = '/';
+			++dest;
 		}
-		strcpy(j, child);
+
+		memcpy(dest, child, child_length);
+		dest += child_length;
+
+		*dest = '\0';
+
+		assert(dest == joined + total_length);
 	}
 	return joined;
 }
@@ -40,7 +54,7 @@ static bool handle_request(const char *path, struct directory_entry_t *entry, st
 	const char *parent = entry->data;
 	char *full_path;
 
-	if (strchr(path, '.'))
+	if (strstr(path, ".."))
 	{
 		response->status = HttpStatus_Forbidden;
 		return true;
@@ -68,10 +82,10 @@ static void destroy_fs_dir(directory_entry_t *entry)
 
 bool initialize_file_system_directory(
 	struct directory_entry_t *entry,
-	const char *path
+	const char *args
 	)
 {
-	entry->data = strdup(path);
+	entry->data = strdup(args);
 	if (!entry->data)
 	{
 		return false;
