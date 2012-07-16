@@ -7,6 +7,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef WEBSERVER_WITH_VLD
+#include <vld.h>
+#endif
+
 
 static bool load_buffer_from_file_name(buffer_t *content, const char *file_name)
 {
