@@ -115,7 +115,6 @@ static void serve_client(socket_t client)
 {
 	receive_request(client);
 	wait_for_disconnect(client);
-	socket_destroy(client);
 }
 
 static void client_thread_proc(void *client_ptr)
@@ -124,6 +123,7 @@ static void client_thread_proc(void *client_ptr)
 	free(client_ptr);
 
 	serve_client(client);
+	socket_destroy(client);
 	thread_quit();
 }
 
@@ -131,11 +131,13 @@ static void handle_client(socket_t client)
 {
 	thread_t client_thread;
 	socket_t *client_ptr = malloc(sizeof(*client_ptr));
+
 	if (!client_ptr)
 	{
 		socket_destroy(client);
 		return;
 	}
+
 	*client_ptr = client;
 	if (!thread_create(&client_thread, client_thread_proc, client_ptr))
 	{
@@ -183,7 +185,7 @@ int main(void)
 		return 1;
 	}
 
-	if (!socket_bind(acceptor, 8081))
+	if (!socket_bind(acceptor, 8080))
 	{
 		fprintf(stderr, "Could not bind acceptor\n");
 		socket_destroy(acceptor);
