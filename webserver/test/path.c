@@ -1,10 +1,7 @@
 #include "path.h"
+#include "check.h"
 #include "common/path.h"
-#include <stdio.h>
 #include <string.h>
-
-
-#define TEST_EXPECT(x) if (!(x)) { fprintf(stderr, "Failed (%s:%u): %s\n", __FILE__, __LINE__, #x); }
 
 
 static void check_join_equal(
