@@ -31,6 +31,11 @@ void istream_discard(istream_t *this, const char *until)
 	this->discard(this, until);
 }
 
+void istream_discard_all(istream_t *this)
+{
+	istream_discard(this, this->end);
+}
+
 bool istream_empty(istream_t *this)
 {
 	return (this->begin == this->end);

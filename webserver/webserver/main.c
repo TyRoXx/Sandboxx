@@ -20,6 +20,29 @@
 static directory_t top_dir;
 
 
+static bool send_istream(socket_t receiver, istream_t *source)
+{
+	for (;;)
+	{
+		istream_fetch(source);
+
+		if (istream_empty(source))
+		{
+			return true;
+		}
+
+		if (!socket_send(
+			receiver,
+			istream_data(source),
+			istream_size(source)))
+		{
+			return false;
+		}
+
+		istream_discard_all(source);
+	}
+}
+
 static void handle_request(socket_t client, const http_request_t *request)
 {
 	http_response_t response = {0};
@@ -47,7 +70,7 @@ static void handle_request(socket_t client, const http_request_t *request)
 			,
 			status_message,
 			(int)response.status,
-			(unsigned)response.body.size);
+			(unsigned)response.body_size);
 
 		socket_send(client, buffer, strlen(buffer));
 
@@ -63,7 +86,10 @@ static void handle_request(socket_t client, const http_request_t *request)
 		}
 
 		socket_send(client, "\r\n", 2);
-		socket_send(client, response.body.data, response.body.size);
+		if (!send_istream(client, &response.body))
+		{
+			fprintf(stderr, "Connection closed by client\n");
+		}
 	}
 
 	http_response_destroy(&response);

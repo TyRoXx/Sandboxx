@@ -11,6 +11,7 @@ const char *http_status_message(http_status_t status)
 	case HttpStatus_Unauthorized: return "Unauthorized";
 	case HttpStatus_Forbidden: return "Forbidden";
 	case HttpStatus_NotFound: return "Not Found";
+	case HttpStatus_InternalServerError: return "Internal Server Error";
 	}
 	return "Unknown Status";
 }
@@ -30,7 +31,9 @@ void http_response_destroy(http_response_t *response)
 	{
 		http_header_destroy(response->headers + i);
 	}
-	buffer_destroy(&response->body);
+
+	istream_destroy(&response->body);
+	function_call(&response->destroy_body);
 }
 
 http_header_t *http_response_header(http_response_t *response, const char *key)

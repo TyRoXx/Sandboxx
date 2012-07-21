@@ -3,6 +3,8 @@
 
 
 #include "common/buffer.h"
+#include "common/istream.h"
+#include "common/function.h"
 
 
 typedef enum http_status_t
@@ -11,6 +13,7 @@ typedef enum http_status_t
 	HttpStatus_Unauthorized = 401,
 	HttpStatus_Forbidden = 403,
 	HttpStatus_NotFound = 404,
+	HttpStatus_InternalServerError = 500,
 }
 http_status_t;
 
@@ -34,7 +37,9 @@ typedef struct http_response_t
 	http_status_t status;
 	http_header_t *headers;
 	size_t header_count;
-	buffer_t body;
+	istream_t body;
+	function_t destroy_body;
+	size_t body_size;
 }
 http_response_t;
 

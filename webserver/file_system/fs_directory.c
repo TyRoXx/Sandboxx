@@ -1,18 +1,24 @@
 #include "fs_directory.h"
 #include "http/directory.h"
 #include "http/http_response.h"
-#include "common/load_file.h"
 #include "common/path.h"
+#include "common/ifstream.h"
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
 
 
+static void close_file(void *file)
+{
+	fclose(file);
+}
+
 static bool handle_request(const char *path, struct directory_entry_t *entry, struct http_response_t *response)
 {
 	const char *parent = entry->data;
 	char *full_path;
+	FILE *file;
 
 	if (strstr(path, ".."))
 	{
@@ -22,7 +28,8 @@ static bool handle_request(const char *path, struct directory_entry_t *entry, st
 
 	full_path = path_join(parent, path);
 
-	if (!load_buffer_from_file_name(&response->body, full_path))
+	file = fopen(full_path, "rb");
+	if (!file)
 	{
 		response->status = HttpStatus_NotFound;
 
@@ -31,6 +38,18 @@ static bool handle_request(const char *path, struct directory_entry_t *entry, st
 	}
 
 	free(full_path);
+
+	if (!ifstream_create(&response->body, file))
+	{
+		response->status = HttpStatus_InternalServerError;
+		return true;
+	}
+
+	function_create(&response->destroy_body, close_file, file);
+
+	fseek(file, 0, SEEK_END);
+	response->body_size = ftell(file);
+	fseek(file, 0, SEEK_SET);
 	return true;
 }
 

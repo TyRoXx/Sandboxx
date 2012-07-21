@@ -1,6 +1,7 @@
 #include "lua_script.h"
 #include "http/http_request.h"
 #include "http/http_response.h"
+#include "common/imstream.h"
 #include "common/load_file.h"
 #include "http/directory.h"
 #include <lua.h>
@@ -16,6 +17,7 @@ typedef struct execution_context_t
 	const char *url;
 	http_response_t *response;
 	buffer_t headers;
+	buffer_t body;
 }
 execution_context_t;
 
@@ -40,7 +42,7 @@ static int script_echo(lua_State *L)
 	}
 
 	if (!buffer_append(
-		&execution->response->body,
+		&execution->body,
 		text,
 		strlen(text)))
 	{
@@ -103,6 +105,7 @@ static bool handle_lua_request(
 	}
 
 	buffer_create(&execution.headers);
+	buffer_create(&execution.body);
 
 	lua_pushlightuserdata(L, &execution);
 	lua_pushcclosure(L, script_get_url, 1);
@@ -119,7 +122,22 @@ static bool handle_lua_request(
 	if (luaL_loadbuffer(L, script->data, script->size, "script") == LUA_OK &&
 		lua_pcall(L, 0, LUA_MULTRET, 0) == LUA_OK)
 	{
-		result = true;
+		void *body_data = execution.body.data;
+		size_t body_size = execution.body.size;
+
+		execution.body.size = execution.body.capacity = 0;
+		execution.body.data = 0;
+
+		if (imstream_create(&response->body, body_data, body_size))
+		{
+			function_create(&response->destroy_body, free, body_data);
+			response->body_size = body_size;
+			result = true;
+		}
+		else
+		{
+			free(body_data);
+		}
 	}
 	else
 	{

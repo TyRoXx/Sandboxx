@@ -72,6 +72,6 @@ bool buffer_append(buffer_t *b, const void *data, size_t length)
 
 void buffer_erase(buffer_t *b, char *begin, char *end)
 {
-	memcpy(begin, end, (b->data + b->size) - end);
+	memmove(begin, end, (b->data + b->size) - end);
 	b->size -= (end - begin);
 }

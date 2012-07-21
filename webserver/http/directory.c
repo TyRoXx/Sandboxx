@@ -93,5 +93,5 @@ bool directory_handle_request(directory_t *directory, const char *path, struct h
 	}
 
 	response->status = HttpStatus_NotFound;
-	return buffer_append(&response->body, NotFoundMessage, strlen(NotFoundMessage));
+	return true;
 }

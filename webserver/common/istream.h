@@ -27,6 +27,7 @@ void istream_create(
 void istream_destroy(istream_t *this);
 void istream_fetch(istream_t *this);
 void istream_discard(istream_t *this, const char *until);
+void istream_discard_all(istream_t *this);
 bool istream_empty(istream_t *this);
 const char *istream_data(istream_t *this);
 size_t istream_size(istream_t *this);
