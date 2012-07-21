@@ -15,6 +15,7 @@ include_directories(.)
 include_directories(lua)
 
 add_subdirectory(common)
+add_subdirectory(http)
 add_subdirectory(file_system)
 add_subdirectory(lua)
 add_subdirectory(lua_script)

@@ -2,7 +2,7 @@
 #define WS_DIRECTORY_H
 
 
-#include "config.h"
+#include "common/config.h"
 #include <stddef.h>
 
 

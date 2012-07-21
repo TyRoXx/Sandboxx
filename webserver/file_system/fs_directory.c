@@ -1,6 +1,6 @@
 #include "fs_directory.h"
-#include "common/directory.h"
-#include "common/http_response.h"
+#include "http/directory.h"
+#include "http/http_response.h"
 #include "common/load_file.h"
 #include <string.h>
 #include <stdio.h>
