@@ -120,7 +120,8 @@ bool load_directory(
 	const char *begin,
 	const char *end,
 	const loadable_handler_t *handlers_begin,
-	const loadable_handler_t *handlers_end
+	const loadable_handler_t *handlers_end,
+	const char *current_fs_dir
 	)
 {
 	line_t line;
@@ -165,7 +166,7 @@ bool load_directory(
 			goto on_error;
 		}
 
-		success = handler->initialize(&entry, args, handlers_begin, handlers_end);
+		success = handler->initialize(&entry, args, handlers_begin, handlers_end, current_fs_dir);
 
 		free(args);
 

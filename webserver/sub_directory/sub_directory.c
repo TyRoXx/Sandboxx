@@ -24,10 +24,12 @@ bool initialize_sub_directory(
 	directory_entry_t *entry,
 	const char *args,
 	const loadable_handler_t *handlers_begin,
-	const loadable_handler_t *handlers_end
+	const loadable_handler_t *handlers_end,
+	const char *current_fs_dir
 	)
 {
 	buffer_t description;
+	char *sub_fs_dir;
 	char *description_file_name;
 
 	entry->data = malloc(sizeof(directory_t));
@@ -36,14 +38,20 @@ bool initialize_sub_directory(
 		return false;
 	}
 
-	directory_create(entry->data);
-
-	description_file_name = path_join(args, "directory.txt");
-	if (!description_file_name)
+	sub_fs_dir = path_join(current_fs_dir, args);
+	if (!sub_fs_dir)
 	{
 		return false;
 	}
 
+	description_file_name = path_join(sub_fs_dir, "directory.txt");
+	if (!description_file_name)
+	{
+		free(sub_fs_dir);
+		return false;
+	}
+
+	directory_create(entry->data);
 	buffer_create(&description);
 
 	if (!load_buffer_from_file_name(&description, description_file_name))
@@ -61,7 +69,8 @@ bool initialize_sub_directory(
 		description.data,
 		description.data + description.size,
 		handlers_begin,
-		handlers_end))
+		handlers_end,
+		sub_fs_dir))
 	{
 		fprintf(stderr, "Could not parse directory description %s", args);
 		buffer_destroy(&description);

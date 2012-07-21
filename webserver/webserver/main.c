@@ -174,7 +174,8 @@ int main(void)
 		dir_file.data,
 		dir_file.data + dir_file.size,
 		handlers,
-		handlers + sizeof(handlers) / sizeof(handlers[0])))
+		handlers + sizeof(handlers) / sizeof(handlers[0]),
+		"."))
 	{
 		fprintf(stderr, "Could not parse directory file\n");
 		buffer_destroy(&dir_file);

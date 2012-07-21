@@ -78,14 +78,18 @@ bool directory_handle_request(directory_t *directory, const char *path, struct h
 		if (name_equals(entry->name, path, part_end))
 		{
 			return entry->handle_request(
-				sub_path, entry, response);
+				sub_path,
+				entry,
+				response);
 		}
 	}
 
 	if (directory->default_)
 	{
 		return directory->default_->handle_request(
-			sub_path, directory->default_, response);
+			path,
+			directory->default_,
+			response);
 	}
 
 	response->status = HttpStatus_NotFound;

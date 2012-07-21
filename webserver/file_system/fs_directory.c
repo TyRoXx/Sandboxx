@@ -44,10 +44,11 @@ bool initialize_file_system(
 	struct directory_entry_t *entry,
 	const char *args,
 	const struct loadable_handler_t *handlers_begin,
-	const struct loadable_handler_t *handlers_end
+	const struct loadable_handler_t *handlers_end,
+	const char *current_fs_dir
 	)
 {
-	entry->data = strdup(args);
+	entry->data = path_join(current_fs_dir, args);
 	if (!entry->data)
 	{
 		return false;

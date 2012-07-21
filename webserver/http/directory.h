@@ -14,7 +14,7 @@ typedef struct directory_entry_t
 	char *name;
 	void *data;
 	void (*destroy)(struct directory_entry_t *);
-	bool (*handle_request)(const char *, struct directory_entry_t *, struct http_response_t *response);
+	bool (*handle_request)(const char *, struct directory_entry_t *, struct http_response_t *);
 }
 directory_entry_t;
 

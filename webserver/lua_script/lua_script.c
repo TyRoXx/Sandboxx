@@ -150,7 +150,8 @@ bool initialize_lua_script(
 	struct directory_entry_t *entry,
 	const char *args,
 	const struct loadable_handler_t *handlers_begin,
-	const struct loadable_handler_t *handlers_end
+	const struct loadable_handler_t *handlers_end,
+	const char *current_fs_dir
 	)
 {
 	buffer_t *script = malloc(sizeof(*script));
