@@ -2,7 +2,7 @@
 #define WS_HTTP_RESPONSE_H
 
 
-#include "buffer.h"
+#include "common/buffer.h"
 
 
 typedef enum http_status_t

@@ -1,6 +1,6 @@
 #include "load_directory.h"
-#include "directory.h"
-#include "buffer.h"
+#include "common/directory.h"
+#include "common/buffer.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -150,7 +150,6 @@ bool load_directory(
 		{
 			goto on_error;
 		}
-
 
 		handler = find_handler(handlers_begin, handlers_end, &line.handler);
 		if (handler == handlers_end)

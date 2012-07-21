@@ -2,8 +2,8 @@
 #define WS_LUA_SCRIPT_H
 
 
-#include "config.h"
-#include "buffer.h"
+#include "common/config.h"
+#include "common/buffer.h"
 
 
 struct directory_entry_t;

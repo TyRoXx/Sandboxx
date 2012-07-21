@@ -1,5 +1,5 @@
 #include "http_request.h"
-#include "buffer.h"
+#include "common/buffer.h"
 #include <stdlib.h>
 #include <string.h>
 

@@ -1,7 +1,7 @@
 #include "fs_directory.h"
-#include "directory.h"
-#include "http_response.h"
-#include "load_file.h"
+#include "common/directory.h"
+#include "common/http_response.h"
+#include "common/load_file.h"
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>

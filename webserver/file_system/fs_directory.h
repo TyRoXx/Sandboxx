@@ -2,7 +2,7 @@
 #define WS_FS_DIRECTORY_H
 
 
-#include "config.h"
+#include "common/config.h"
 
 
 struct directory_entry_t;

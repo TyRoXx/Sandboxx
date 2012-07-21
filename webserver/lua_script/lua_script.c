@@ -1,8 +1,8 @@
 #include "lua_script.h"
-#include "http_request.h"
-#include "http_response.h"
-#include "load_file.h"
-#include "directory.h"
+#include "common/http_request.h"
+#include "common/http_response.h"
+#include "common/load_file.h"
+#include "common/directory.h"
 #include <lua.h>
 #include <lauxlib.h>
 #include <stdlib.h>

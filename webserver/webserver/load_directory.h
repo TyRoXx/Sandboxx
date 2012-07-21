@@ -2,7 +2,7 @@
 #define WS_LOAD_DIRECTORY_H
 
 
-#include "config.h"
+#include "common/config.h"
 
 
 struct directory_t;
