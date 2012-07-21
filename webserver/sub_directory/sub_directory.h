@@ -1,16 +1,15 @@
-#ifndef WS_LUA_SCRIPT_H
-#define WS_LUA_SCRIPT_H
+#ifndef WS_SUB_DIRECTORY_H
+#define WS_SUB_DIRECTORY_H
 
 
 #include "common/config.h"
-#include "common/buffer.h"
 
 
 struct directory_entry_t;
 struct loadable_handler_t;
 
 
-bool initialize_lua_script(
+bool initialize_sub_directory(
 	struct directory_entry_t *entry,
 	const char *args,
 	const struct loadable_handler_t *handlers_begin,

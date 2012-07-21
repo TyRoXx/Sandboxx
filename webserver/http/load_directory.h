@@ -12,7 +12,11 @@ struct directory_entry_t;
 typedef struct loadable_handler_t
 {
 	char *name;
-	bool (*initialize)(struct directory_entry_t *, const char *);
+	bool (*initialize)(
+		struct directory_entry_t *,
+		const char *, 
+		const struct loadable_handler_t *,
+		const struct loadable_handler_t *);
 }
 loadable_handler_t;
 

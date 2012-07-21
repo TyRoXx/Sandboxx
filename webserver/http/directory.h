@@ -31,6 +31,7 @@ typedef struct directory_t
 directory_t;
 
 
+void directory_create(directory_t *directory);
 void directory_destroy(directory_t *directory);
 bool directory_handle_request(directory_t *directory, const char *path, struct http_response_t *response);
 

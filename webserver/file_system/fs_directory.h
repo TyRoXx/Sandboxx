@@ -6,11 +6,14 @@
 
 
 struct directory_entry_t;
+struct loadable_handler_t;
 
 
-bool initialize_file_system_directory(
+bool initialize_file_system(
 	struct directory_entry_t *entry,
-	const char *args
+	const char *args, 
+	const struct loadable_handler_t *handlers_begin,
+	const struct loadable_handler_t *handlers_end
 	);
 
 

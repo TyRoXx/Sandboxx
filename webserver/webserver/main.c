@@ -1,12 +1,13 @@
 #include "common/socket.h"
 #include "common/thread.h"
+#include "common/load_file.h"
 #include "http/http_request.h"
 #include "http/http_response.h"
 #include "http/directory.h"
+#include "http/load_directory.h"
 #include "lua_script/lua_script.h"
-#include "load_directory.h"
-#include "common/load_file.h"
 #include "file_system/fs_directory.h"
+#include "sub_directory/sub_directory.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -153,7 +154,8 @@ int main(void)
 	const loadable_handler_t handlers[] =
 	{
 		{"lua", initialize_lua_script},
-		{"fs", initialize_file_system_directory},
+		{"fs", initialize_file_system},
+		{"dir", initialize_sub_directory},
 	};
 
 	buffer_t dir_file;
@@ -165,6 +167,8 @@ int main(void)
 		buffer_destroy(&dir_file);
 		return 1;
 	}
+
+	directory_create(&top_dir);
 
 	if (!load_directory(&top_dir,
 		dir_file.data,

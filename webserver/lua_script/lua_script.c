@@ -7,6 +7,7 @@
 #include <lauxlib.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include <stdio.h>
 
 
@@ -146,8 +147,10 @@ static void destroy_lua_script(directory_entry_t *entry)
 }
 
 bool initialize_lua_script(
-	directory_entry_t *entry,
-	const char *args
+	struct directory_entry_t *entry,
+	const char *args,
+	const struct loadable_handler_t *handlers_begin,
+	const struct loadable_handler_t *handlers_end
 	)
 {
 	buffer_t *script = malloc(sizeof(*script));
@@ -156,6 +159,8 @@ bool initialize_lua_script(
 		return false;
 	}
 	buffer_create(script);
+
+	assert(!strcmp(args, "index.lua"));
 
 	if (!load_buffer_from_file_name(script, args))
 	{

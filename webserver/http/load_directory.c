@@ -10,19 +10,20 @@
 static const char *find_char_and_skip(
 	const char **pos,
 	const char *end,
-	char c)
+	const char *terminators)
 {
 	const char *result;
 
 	while ((*pos != end) &&
-		(**pos != c))
+		!strchr(terminators, **pos))
 	{
 		++(*pos);
 	}
 
 	result = *pos;
 
-	if (*pos != end)
+	while ((*pos != end) &&
+		strchr(terminators, **pos))
 	{
 		++(*pos);
 	}
@@ -76,9 +77,9 @@ static void parse_line(
 	const char **pos,
 	const char *end)
 {
-	const string_ref_t name = {*pos, find_char_and_skip(pos, end, ' ')};
-	const string_ref_t handler = {*pos, find_char_and_skip(pos, end, ' ')};
-	const string_ref_t args = {*pos, find_char_and_skip(pos, end, '\n')};
+	const string_ref_t name = {*pos, find_char_and_skip(pos, end, " ")};
+	const string_ref_t handler = {*pos, find_char_and_skip(pos, end, " ")};
+	const string_ref_t args = {*pos, find_char_and_skip(pos, end, "\r\n")};
 
 	line->name = name;
 	line->handler = handler;
@@ -164,7 +165,7 @@ bool load_directory(
 			goto on_error;
 		}
 
-		success = handler->initialize(&entry, args);
+		success = handler->initialize(&entry, args, handlers_begin, handlers_end);
 
 		free(args);
 

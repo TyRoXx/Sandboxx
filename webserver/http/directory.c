@@ -12,6 +12,13 @@ void directory_entry_destroy(directory_entry_t *entry)
 }
 
 
+void directory_create(directory_t *directory)
+{
+	directory->entries = 0;
+	directory->entry_count = 0;
+	directory->default_ = 0;
+}
+
 void directory_destroy(directory_t *directory)
 {
 	size_t i;
