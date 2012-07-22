@@ -74,10 +74,12 @@ bool initialize_sub_directory(
 	{
 		fprintf(stderr, "Could not parse directory description %s", args);
 		buffer_destroy(&description);
+		free(sub_fs_dir);
 		return false;
 	}
 
 	entry->handle_request = handle_request;
 	entry->destroy = destroy_sub_directory;
+	free(sub_fs_dir);
 	return true;
 }
