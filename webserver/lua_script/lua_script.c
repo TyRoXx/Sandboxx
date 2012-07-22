@@ -179,8 +179,6 @@ bool initialize_lua_script(
 	}
 	buffer_create(script);
 
-	assert(!strcmp(args, "index.lua"));
-
 	if (!load_buffer_from_file_name(script, args))
 	{
 		buffer_destroy(script);
