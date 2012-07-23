@@ -61,6 +61,7 @@ bool thread_create(thread_t *thread, void (*function)(void *), void *data)
 	{
 		return false;
 	}
+
 	func_data->function = function;
 	func_data->data = data;
 	return pthread_create(thread, 0, function_wrapper, func_data) == 0;

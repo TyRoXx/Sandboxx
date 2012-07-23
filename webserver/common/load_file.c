@@ -6,7 +6,7 @@ bool load_buffer_from_file_name(buffer_t *content, const char *file_name)
 {
 	static const size_t Growth = 4096;
 	size_t total_read = 0;
-	FILE *file = fopen(file_name, "rb");
+	FILE * const file = fopen(file_name, "rb");
 	if (!file)
 	{
 		return false;

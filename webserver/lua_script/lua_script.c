@@ -98,7 +98,7 @@ static bool handle_lua_request(
 	bool result = false;
 	const buffer_t * const script = entry->data;
 	execution_context_t execution = {url, response};
-	lua_State *L = luaL_newstate();
+	lua_State * const L = luaL_newstate();
 	if (!L)
 	{
 		return false;
@@ -122,8 +122,8 @@ static bool handle_lua_request(
 	if (luaL_loadbuffer(L, script->data, script->size, "script") == LUA_OK &&
 		lua_pcall(L, 0, LUA_MULTRET, 0) == LUA_OK)
 	{
-		void *body_data = execution.body.data;
-		size_t body_size = execution.body.size;
+		void * const body_data = execution.body.data;
+		const size_t body_size = execution.body.size;
 
 		execution.body.size = execution.body.capacity = 0;
 		execution.body.data = 0;
@@ -172,7 +172,7 @@ bool initialize_lua_script(
 	const char *current_fs_dir
 	)
 {
-	buffer_t *script = malloc(sizeof(*script));
+	buffer_t * const script = malloc(sizeof(*script));
 	if (!script)
 	{
 		return false;

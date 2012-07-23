@@ -59,7 +59,7 @@ static void handle_request(socket_t client, const http_request_t *request)
 	{
 		char buffer[8192];
 		size_t i;
-		const char *status_message = http_status_message(response.status);
+		const char * const status_message = http_status_message(response.status);
 
 		fprintf(stderr, "Sending response\n");
 
@@ -97,9 +97,10 @@ static void handle_request(socket_t client, const http_request_t *request)
 
 static int receive_char(void *client_ptr)
 {
-	socket_t client = *(socket_t *)client_ptr;
+	const socket_t client = *(socket_t *)client_ptr;
 	char r;
 	size_t received;
+
 	if (socket_receive(client, &r, 1, &received))
 	{
 		return r;
@@ -157,7 +158,7 @@ static void client_thread_proc(void *client_ptr)
 static void handle_client(socket_t client)
 {
 	thread_t client_thread;
-	socket_t *client_ptr = malloc(sizeof(*client_ptr));
+	socket_t * const client_ptr = malloc(sizeof(*client_ptr));
 
 	if (!client_ptr)
 	{
@@ -177,7 +178,7 @@ int main(void)
 {
 	socket_t acceptor, client;
 
-	const loadable_handler_t handlers[] =
+	static const loadable_handler_t handlers[] =
 	{
 		{"lua", initialize_lua_script},
 		{"fs", initialize_file_system},

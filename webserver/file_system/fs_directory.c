@@ -16,7 +16,7 @@ static void close_file(void *file)
 
 static bool handle_request(const char *path, struct directory_entry_t *entry, struct http_response_t *response)
 {
-	const char *parent = entry->data;
+	const char * const parent = entry->data;
 	char *full_path;
 	FILE *file;
 

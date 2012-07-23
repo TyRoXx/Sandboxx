@@ -54,7 +54,7 @@ static bool equals_string_ref(const string_ref_t *left, const char *right)
 static char *ref_to_string(const string_ref_t *ref)
 {
 	const size_t len = (ref->end - ref->begin);
-	char *result = malloc(len + 1);
+	char * const result = malloc(len + 1);
 	if (result)
 	{
 		memcpy(result, ref->begin, len);

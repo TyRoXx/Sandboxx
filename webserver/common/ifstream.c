@@ -15,10 +15,10 @@ static void fetch(istream_t *this)
 {
 	static const size_t ReadSize = 4096;
 
-	ifstream_impl_t *impl = this->impl;
-	buffer_t *buffer = &impl->buffer;
-	FILE *file = impl->file;
-	size_t old_buffer_size = buffer->size;
+	ifstream_impl_t * const impl = this->impl;
+	buffer_t * const buffer = &impl->buffer;
+	FILE * const file = impl->file;
+	const size_t old_buffer_size = buffer->size;
 	size_t read;
 
 	if (!buffer_resize(buffer, old_buffer_size + ReadSize))
@@ -41,16 +41,16 @@ static void fetch(istream_t *this)
 
 static void discard(istream_t *this, const char *until)
 {
-	ifstream_impl_t *impl = this->impl;
-	buffer_t *buffer = &impl->buffer;
+	ifstream_impl_t * const impl = this->impl;
+	buffer_t * const buffer = &impl->buffer;
 
 	buffer_erase(buffer, buffer->data, (char *) until);
 }
 
 static void destroy(istream_t *this)
 {
-	ifstream_impl_t *impl = this->impl;
-	buffer_t *buffer = &impl->buffer;
+	ifstream_impl_t * const impl = this->impl;
+	buffer_t * const buffer = &impl->buffer;
 
 	buffer_destroy(buffer);
 	free(impl);
