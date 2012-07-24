@@ -147,7 +147,7 @@ static void serve_client(socket_t client)
 
 static void client_thread_proc(void *client_ptr)
 {
-	socket_t client = *(socket_t *)client_ptr;
+	const socket_t client = *(socket_t *)client_ptr;
 	free(client_ptr);
 
 	serve_client(client);

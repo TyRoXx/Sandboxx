@@ -56,8 +56,8 @@ static int script_add_header(lua_State *L)
 {
 	execution_context_t * const execution =
 		lua_touserdata(L, lua_upvalueindex(1));
-	const char *key = lua_tostring(L, -2);
-	const char *value = lua_tostring(L, -1);
+	const char * const key = lua_tostring(L, -2);
+	const char * const value = lua_tostring(L, -1);
 	http_header_t header;
 
 	if (!key ||
