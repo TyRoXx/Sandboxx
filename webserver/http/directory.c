@@ -1,5 +1,7 @@
 #include "directory.h"
 #include "http_response.h"
+#include "common/imstream.h"
+#include "common/buffer.h"
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -58,7 +60,20 @@ static bool name_equals(const char *name, const char *begin, const char *end)
 		!memcmp(name, begin, name_length));
 }
 
-static const char * const NotFoundMessage = "Not found";
+static const char NotFoundMessage[] = "Not found";
+
+static bool set_not_found_message(struct http_response_t *response)
+{
+	const size_t message_len = strlen(NotFoundMessage);
+	if (!imstream_create(&response->body, NotFoundMessage, message_len))
+	{
+		return false;
+	}
+
+	response->body_size = message_len;
+	function_set_nothing(&response->destroy_body);
+	return true;
+}
 
 bool directory_handle_request(directory_t *directory, const char *path, struct http_response_t *response)
 {
@@ -93,5 +108,5 @@ bool directory_handle_request(directory_t *directory, const char *path, struct h
 	}
 
 	response->status = HttpStatus_NotFound;
-	return true;
+	return set_not_found_message(response);
 }
