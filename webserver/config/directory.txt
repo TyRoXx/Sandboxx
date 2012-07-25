@@ -1,0 +1,2 @@
+home lua index.lua
+sub dir subdir
