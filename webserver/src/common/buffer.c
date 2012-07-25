@@ -75,3 +75,8 @@ void buffer_erase(buffer_t *b, char *begin, char *end)
 	memmove(begin, end, (b->data + b->size) - end);
 	b->size -= (end - begin);
 }
+
+void buffer_clear(buffer_t *b)
+{
+	b->size = 0;
+}
