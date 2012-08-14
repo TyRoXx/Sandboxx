@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <functional>
 using namespace Gtk;
 
 
@@ -67,9 +68,12 @@ struct EditorWindow : Gtk::Window
 		show_all();
 
 		m_textBuffer = TextBuffer::create(TextTagTable::create());
-		m_text.set_buffer(m_textBuffer);
+		m_textBuffer->signal_changed().connect(sigc::mem_fun(*this, &EditorWindow::on_current_file_edited));
 
+		m_text.set_buffer(m_textBuffer);
 		m_text.modify_font(Pango::FontDescription("Consolas"));
+
+		signal_delete_event().connect(sigc::mem_fun(*this, &EditorWindow::on_window_closed));
 	}
 
 private:
@@ -114,20 +118,43 @@ private:
 		return true;
 	}
 
-	void on_action_file_new()
+	Gtk::ResponseType ask_save_changes()
+	{
+		Gtk::MessageDialog dialog(*this, "Save changes?", false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
+		dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+		return static_cast<Gtk::ResponseType>(dialog.run());
+	}
+
+	bool check_unsaved_changes()
 	{
 		if (m_hasUnsavedChanges)
 		{
-			Gtk::MessageDialog dialog(*this, "Discard unsaved changes?", false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
-			const int result = dialog.run();
-			switch (result)
+			switch (ask_save_changes())
 			{
 			case Gtk::RESPONSE_YES:
-				break;
+				return save();
+
+			case Gtk::RESPONSE_NO:
+				return true;
 
 			default:
-				return;
+				return false;
 			}
+		}
+
+		return true;
+	}
+
+	void on_current_file_edited()
+	{
+		m_hasUnsavedChanges = true;
+	}
+
+	void on_action_file_new()
+	{
+		if (!check_unsaved_changes())
+		{
+			return;
 		}
 
 		m_textBuffer->set_text(Glib::ustring());
@@ -137,6 +164,11 @@ private:
 
 	void on_action_file_open()
 	{
+		if (!check_unsaved_changes())
+		{
+			return;
+		}
+
 		Gtk::FileChooserDialog dialog(*this, "Open file", Gtk::FILE_CHOOSER_ACTION_OPEN);
 		dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
 		dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
@@ -165,7 +197,7 @@ private:
 		}
 	}
 
-	void on_action_file_save()
+	bool save()
 	{
 		Glib::ustring fileName;
 
@@ -173,7 +205,7 @@ private:
 		{
 			Gtk::FileChooserDialog dialog(*this, "Choose a file name", Gtk::FILE_CHOOSER_ACTION_SAVE);
 			dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
-			dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+			dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
 			dialog.set_select_multiple(false);
 			const int result = dialog.run();
 
@@ -186,7 +218,7 @@ private:
 				}
 
 			default:
-				return;
+				return false;
 			}
 		}
 		else
@@ -198,23 +230,72 @@ private:
 		{
 			m_hasUnsavedChanges = false;
 			m_currentFileName = fileName;
+			return true;
 		}
 		else
 		{
 			//TODO
+			return false;
 		}
+	}
+
+	void on_action_file_save()
+	{
+		save();
 	}
 
 	void on_action_file_save_as()
 	{
+		Gtk::FileChooserDialog dialog(*this, "Choose a file name", Gtk::FILE_CHOOSER_ACTION_SAVE);
+		dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+		dialog.add_button(Gtk::Stock::SAVE_AS, Gtk::RESPONSE_OK);
+		dialog.set_select_multiple(false);
+		const int result = dialog.run();
+
+		switch (result)
+		{
+		case Gtk::RESPONSE_OK:
+			{
+				const auto fileName = dialog.get_filename();
+				if (save_file(fileName))
+				{
+					m_hasUnsavedChanges = false;
+
+					if (m_currentFileName.empty())
+					{
+						m_currentFileName = fileName;
+					}
+				}
+				else
+				{
+					//TODO
+				}
+				break;
+			}
+
+		default:
+			break;
+		}
 	}
 
 	void on_action_file_save_all()
 	{
+		on_action_file_save();
+	}
+
+	bool on_window_closed(GdkEventAny *)
+	{
+		on_action_file_quit();
+		return true;
 	}
 
 	void on_action_file_quit()
 	{
+		if (!check_unsaved_changes())
+		{
+			return;
+		}
+
 		hide();
 	}
 };
