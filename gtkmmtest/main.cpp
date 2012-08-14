@@ -14,7 +14,6 @@ struct EditorWindow : Gtk::Window
 		, m_hasUnsavedChanges(false)
 	{
 		set_default_size(600, 400);
-		set_icon_from_file("faudra.ico");
 
 		m_actions->add(Gtk::Action::create("MenuFile", "_File"));
 		m_actions->add(Gtk::Action::create("New", Gtk::Stock::NEW), sigc::mem_fun(*this, &EditorWindow::on_action_file_new));
