@@ -5,3 +5,11 @@
 *.jar
 *.war
 *.ear
+
+*.sdf
+*.opensdf
+*.filters
+*.user
+Debug/
+Release/
+*.suo
