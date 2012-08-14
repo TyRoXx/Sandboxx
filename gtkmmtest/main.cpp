@@ -1,11 +1,16 @@
 #include <gtkmm.h>
+#include <iostream>
+#include <fstream>
+#include <vector>
 using namespace Gtk;
+
 
 struct EditorWindow : Gtk::Window
 {
 	EditorWindow()
 		: m_actions(Gtk::ActionGroup::create())
 		, m_vbox(false)
+		, m_hasUnsavedChanges(false)
 	{
 		set_default_size(600, 400);
 		set_icon_from_file("faudra.ico");
@@ -53,17 +58,18 @@ struct EditorWindow : Gtk::Window
 
 		Gtk::Widget* pMenuBar = UIManager->get_widget("/MenuBar");
 		Gtk::Widget* pToolbar = UIManager->get_widget("/ToolBar");
-
+		
 		m_vbox.pack_start(*pMenuBar, Gtk::PACK_SHRINK);
 		m_vbox.pack_start(*pToolbar, Gtk::PACK_SHRINK);
 		m_vbox.pack_start(m_textScroll);
-		m_vbox.pack_start(m_status, Gtk::PACK_SHRINK);
 		add(m_vbox);
 
 		show_all();
 
-		Glib::RefPtr<TextBuffer> buffer(TextBuffer::create(TextTagTable::create()));
-		m_text.set_buffer(buffer);
+		m_textBuffer = TextBuffer::create(TextTagTable::create());
+		m_text.set_buffer(m_textBuffer);
+
+		m_text.modify_font(Pango::FontDescription("Consolas"));
 	}
 
 private:
@@ -72,12 +78,61 @@ private:
 	Gtk::VBox m_vbox;
 	Gtk::ScrolledWindow m_textScroll;
 	Gtk::TextView m_text;
-	Gtk::Statusbar m_status;
+	Glib::RefPtr<TextBuffer> m_textBuffer;
+	bool m_hasUnsavedChanges;
+	Glib::ustring m_currentFileName;
 
+
+	bool load_file(const Glib::ustring &fileName)
+	{
+		std::ifstream file(fileName, std::ios::binary);
+		if (!file)
+		{
+			return false;
+		}
+
+		std::vector<char> content(
+			(std::istreambuf_iterator<char>(file)),
+			std::istreambuf_iterator<char>());
+
+		m_textBuffer->set_text(
+			content.data(),
+			content.data() + content.size());
+		return true;
+	}
+
+	bool save_file(const Glib::ustring &fileName)
+	{
+		std::ofstream file(fileName, std::ios::binary);
+		if (!file)
+		{
+			return false;
+		}
+
+		const Glib::ustring content = m_textBuffer->get_text();
+		file.write(content.data(), content.size());
+		return true;
+	}
 
 	void on_action_file_new()
 	{
+		if (m_hasUnsavedChanges)
+		{
+			Gtk::MessageDialog dialog(*this, "Discard unsaved changes?", false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
+			const int result = dialog.run();
+			switch (result)
+			{
+			case Gtk::RESPONSE_YES:
+				break;
 
+			default:
+				return;
+			}
+		}
+
+		m_textBuffer->set_text(Glib::ustring());
+		m_hasUnsavedChanges = false;
+		m_currentFileName.clear();
 	}
 
 	void on_action_file_open()
@@ -85,14 +140,23 @@ private:
 		Gtk::FileChooserDialog dialog(*this, "Open file", Gtk::FILE_CHOOSER_ACTION_OPEN);
 		dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
 		dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
-		dialog.set_select_multiple(true);
+		dialog.set_select_multiple(false);
 		const int result = dialog.run();
 
 		switch (result)
 		{
 		case Gtk::RESPONSE_OK:
 			{
-				const auto fileNames = dialog.get_filenames();
+				const auto fileName = dialog.get_filename();
+				if (load_file(fileName))
+				{
+					m_hasUnsavedChanges = false;
+					m_currentFileName = fileName;
+				}
+				else
+				{
+					//TODO
+				}
 				break;
 			}
 
@@ -103,6 +167,42 @@ private:
 
 	void on_action_file_save()
 	{
+		Glib::ustring fileName;
+
+		if (m_currentFileName.empty())
+		{
+			Gtk::FileChooserDialog dialog(*this, "Choose a file name", Gtk::FILE_CHOOSER_ACTION_SAVE);
+			dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+			dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+			dialog.set_select_multiple(false);
+			const int result = dialog.run();
+
+			switch (result)
+			{
+			case Gtk::RESPONSE_OK:
+				{
+					fileName = dialog.get_filename();
+					break;
+				}
+
+			default:
+				return;
+			}
+		}
+		else
+		{
+			fileName = m_currentFileName;
+		}
+
+		if (save_file(fileName))
+		{
+			m_hasUnsavedChanges = false;
+			m_currentFileName = fileName;
+		}
+		else
+		{
+			//TODO
+		}
 	}
 
 	void on_action_file_save_as()
