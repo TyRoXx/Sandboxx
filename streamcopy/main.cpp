@@ -141,15 +141,30 @@ namespace
 				});
 			};
 
+			benchmarkCopyWithBuffer(1UL);
 			benchmarkCopyWithBuffer(1UL << 12);
-			benchmarkCopyWithBuffer(1UL << 13);
-			benchmarkCopyWithBuffer(1UL << 14);
+			benchmarkCopyWithBuffer(1UL << 17);
 		}
+
+		benchmarkCopy("get + put",
+			source,
+			[&source](std::ostream &sink)
+		{
+			for (;;)
+			{
+				const char c = source.get();
+				if (!source)
+				{
+					break;
+				}
+				sink.put(c);
+			}
+		});
 	}
 }
 
 int main(int argc, char* argv[])
 {
-	std::istringstream source(std::string(104857600, ' '));
+	std::istringstream source(std::string(104857600 / 10, ' '));
 	runBenchmarks(source);
 }
