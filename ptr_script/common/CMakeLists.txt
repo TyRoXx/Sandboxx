@@ -1,4 +1,4 @@
 
 file(GLOB files "*.hpp" "*.cpp")
 
-add_library(intermediate ${files})
+add_library(common ${files})
