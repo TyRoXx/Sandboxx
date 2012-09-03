@@ -5,7 +5,7 @@ project(ptr_script)
 include_directories(".")
 
 add_subdirectory(common)
-add_subdirectory(intermediate)
+add_subdirectory(package)
 add_subdirectory(ptrsc)
 add_subdirectory(ptrs)
 add_subdirectory(test)

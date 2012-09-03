@@ -18,14 +18,11 @@ namespace
 
 		for (auto i = fileName.begin(); i != fileName.end(); ++i)
 		{
-			char c = *i;
+			char c = std::toupper(*i);
+
 			if (std::find(Chars.begin(), Chars.end(), c) == Chars.end())
 			{
 				c = '_';
-			}
-			else
-			{
-				c = std::toupper(c);
 			}
 
 			destination.put(c);
@@ -43,14 +40,16 @@ namespace
 			const char r = Chars[index_dist(rng)];
 			destination.put(r);
 		}
+
+		destination.put('\n');
 	}
 
 	void printHelp()
 	{
 		std::cerr
 			<< "Arguments:\n"
+			<< "    file name (optional, default: stdout)\n"
 			<< "    header name (optional)\n"
-			<< "    output (optional, default: stdout)\n"
 			;
 	}
 }
@@ -65,16 +64,14 @@ int main(int argc, char **argv)
 	{
 		destination = &std::cout;
 	}
-	else if (argc == 2)
+	else if (argc == 2 || argc == 3)
 	{
-		headerName = argv[1];
-		destination = &std::cout;
-	}
-	else if (argc == 3)
-	{
-		headerName = argv[1];
+		if (argc == 3)
+		{
+			headerName = argv[2];
+		}
 
-		const std::string fileName = argv[2];
+		const std::string fileName = argv[1];
 		file.open(fileName, std::ios::app);
 		if (!file)
 		{

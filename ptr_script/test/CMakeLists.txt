@@ -1,4 +1,6 @@
 
 file(GLOB files "*.hpp" "*.cpp")
 
-add_library(intermediate ${files})
+add_executable(test ${files})
+
+target_link_libraries(test package common)
