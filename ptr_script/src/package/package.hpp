@@ -12,7 +12,7 @@ namespace ptrs
 {
 	struct package
 	{
-		typedef std::vector<std::unique_ptr<structure>> structure_vector;
+		typedef std::vector<structure> structure_vector;
 		typedef std::vector<guid> dependency_vector;
 		
 		
