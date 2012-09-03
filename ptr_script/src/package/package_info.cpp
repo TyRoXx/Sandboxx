@@ -45,7 +45,8 @@ namespace ptrs
 
 	std::ostream &operator << (std::ostream &os, const package_info &p)
 	{
-		os << "v0 " << p.id() << "\n"
+		os << "v0\n"
+			<< p.id() << "\n"
 			<< p.title() << "\n"
 			;
 
