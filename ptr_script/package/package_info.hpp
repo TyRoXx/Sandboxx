@@ -5,6 +5,8 @@
 #include "common/guid.hpp"
 #include <string>
 #include <set>
+#include <istream>
+#include <ostream>
 
 
 namespace ptrs
@@ -19,6 +21,7 @@ namespace ptrs
 			std::string title,
 			dependency_set dependencies
 			);
+		package_info();
 		const guid &id() const;
 		const std::string &title() const;
 		const dependency_set &dependencies() const;
@@ -29,6 +32,13 @@ namespace ptrs
 		std::string m_title;
 		dependency_set m_dependencies;
 	};
+
+
+	bool operator == (const package_info &left, const package_info &right);
+
+
+	std::ostream &operator << (std::ostream &os, const package_info &p);
+	std::istream &operator >> (std::istream &is, package_info &p);
 }
 
 

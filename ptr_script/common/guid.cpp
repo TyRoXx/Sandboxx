@@ -70,8 +70,8 @@ namespace ptrs
 		{
 			const unsigned value = *i;
 			os
-				<< Digits[(value >> 4U) & 7U]
-				<< Digits[value & 7U]
+				<< Digits[(value >> 4U) & 15U]
+				<< Digits[value & 15U]
 				;
 		}
 
