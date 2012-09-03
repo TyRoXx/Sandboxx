@@ -3,4 +3,8 @@
 
 namespace ptrs
 {
+	type::~type()
+	{
+
+	}
 }

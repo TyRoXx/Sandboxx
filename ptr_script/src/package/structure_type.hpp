@@ -4,7 +4,6 @@
 
 #include "type.hpp"
 #include "structure_ref.hpp"
-#include "common/override.hpp"
 
 
 namespace ptrs
@@ -12,8 +11,8 @@ namespace ptrs
 	struct structure_type : type
 	{
 		explicit structure_type(const structure_ref &ref);
-		virtual void print_name(std::ostream &os) const PTR_SCRIPT_OVERRIDE;
-		
+		const structure_ref &ref() const;
+
 	private:
 	
 		structure_ref m_ref;

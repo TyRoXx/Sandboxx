@@ -3,4 +3,22 @@
 
 namespace ptrs
 {
+	block::block(
+		statement_vector statements,
+		bool is_jump_target
+		)
+		: m_statements(std::move(statements))
+		, m_is_jump_target(is_jump_target)
+	{
+	}
+
+	const block::statement_vector &block::statements() const
+	{
+		return m_statements;
+	}
+
+	bool block::is_jump_target() const
+	{
+		return m_is_jump_target;
+	}
 }

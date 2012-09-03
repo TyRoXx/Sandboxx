@@ -19,6 +19,9 @@ namespace ptrs
 			std::size_t structure_index
 			);
 	};
+
+
+	bool operator == (const structure_ref &left, const structure_ref &right);
 }
 
 

@@ -2,9 +2,6 @@
 #define VALUE_HPP_INCLUDED_YJZRTXMC635LUY4Q
 
 
-#include <ostream>
-
-
 namespace ptrs
 {
 	struct type;
@@ -15,7 +12,6 @@ namespace ptrs
 		explicit value(const ptrs::type &type);
 		virtual ~value();
 		type &type() const;
-		virtual void print(std::ostream &os) const = 0;
 
 	private:
 

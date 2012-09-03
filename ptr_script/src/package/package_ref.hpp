@@ -20,6 +20,9 @@ namespace ptrs
 		explicit package_ref(std::size_t dependency_index);
 		bool is_self() const;
 	};
+
+
+	bool operator == (const package_ref &left, const package_ref &right);
 }
 
 

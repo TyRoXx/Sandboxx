@@ -3,17 +3,22 @@
 
 
 #include "value.hpp"
-#include "common/override.hpp"
+#include <cstddef>
 
 
 namespace ptrs
 {
 	struct local : value
 	{
-		explicit local(const ptrs::type &type);
-		virtual void print(std::ostream &os) const PTR_SCRIPT_OVERRIDE;
+		explicit local(
+			std::size_t id,
+			const ptrs::type &type
+			);
+		std::size_t id() const;
 
 	private:
+
+		std::size_t m_id;
 	};
 }
 

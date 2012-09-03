@@ -3,7 +3,6 @@
 
 
 #include "type.hpp"
-#include "common/override.hpp"
 
 
 namespace ptrs
@@ -11,7 +10,6 @@ namespace ptrs
 	struct primitive_type : type
 	{
 		explicit primitive_type();
-		virtual void print_name(std::ostream &os) const PTR_SCRIPT_OVERRIDE;
 		
 	private:
 	};
