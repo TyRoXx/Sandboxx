@@ -26,6 +26,12 @@ namespace ptrs
 		}
 	}
 
+	void guid::fill(guid_byte value)
+	{
+		elements.fill(value);
+	}
+
+
 	bool is_zero(const guid &guid)
 	{
 		return std::all_of(

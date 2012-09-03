@@ -10,7 +10,7 @@
 
 namespace ptrs
 {
-	typedef char guid_byte;
+	typedef unsigned char guid_byte;
 
 
 	struct invalid_guid_error : std::runtime_error
@@ -32,6 +32,7 @@ namespace ptrs
 		///zero-fills the elements
 		guid();
 		explicit guid(const std::string &hexadecimalASCII);
+		void fill(guid_byte value);
 	};
 
 	///returns true if all the elements are zero
