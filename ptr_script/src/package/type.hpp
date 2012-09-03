@@ -11,7 +11,7 @@ namespace ptrs
 	{
 		explicit type();
 		virtual ~type();
-		virtual void printName(std::ostream &os) const = 0;
+		virtual void print_name(std::ostream &os) const = 0;
 	};
 }
 

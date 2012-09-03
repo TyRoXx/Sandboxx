@@ -11,7 +11,7 @@ namespace ptrs
 	struct primitive_type : type
 	{
 		explicit primitive_type();
-		virtual void printName(std::ostream &os) const PTR_SCRIPT_OVERRIDE;
+		virtual void print_name(std::ostream &os) const PTR_SCRIPT_OVERRIDE;
 		
 	private:
 	};

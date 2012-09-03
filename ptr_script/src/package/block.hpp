@@ -14,12 +14,17 @@ namespace ptrs
 		typedef std::vector<std::unique_ptr<statement>> statement_vector;
 		
 		
-		explicit block(statement_vector statements);
+		explicit block(
+			statement_vector statements,
+			bool is_jump_target
+			);
 		const statement_vector &statements() const;
+		bool is_jump_target() const;
 		
 	private:
 	
 		statement_vector m_statements;
+		bool m_is_jump_target;
 	};
 }
 

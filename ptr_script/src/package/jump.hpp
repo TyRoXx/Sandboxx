@@ -19,15 +19,15 @@ namespace ptrs
 		
 		explicit jump(
 			mode_t mode,
-			std::size_t scope_count
+			std::size_t block_count
 			);
 		mode_t mode() const;
-		std::size_t scope_count() const;
+		std::size_t block_count() const;
 		
 	private:
 
 		mode_t m_mode;
-		std::size_t m_scope_count;
+		std::size_t m_block_count;
 	};
 }
 
