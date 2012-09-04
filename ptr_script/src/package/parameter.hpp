@@ -2,6 +2,7 @@
 #define PARAMETER_HPP_INCLUDED_0U0OJDD0MOF7NK0E
 
 
+#include "type.hpp"
 #include <string>
 #include <memory>
 
@@ -14,7 +15,7 @@ namespace ptrs
 	struct parameter
 	{
 		explicit parameter(
-			std::shared_ptr<const type> type,
+			std::unique_ptr<type> type,
 			std::string name
 			);
 		const type &type() const;
@@ -22,7 +23,7 @@ namespace ptrs
 		
 	private:
 	
-		std::shared_ptr<const ptrs::type> m_type;
+		std::unique_ptr<ptrs::type> m_type;
 		std::string m_name;
 	};
 }

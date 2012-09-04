@@ -11,8 +11,8 @@ namespace ptrs
 	struct ptr_type : type
 	{
 		explicit ptr_type(std::unique_ptr<type> pointee);
-		virtual void printName(std::ostream &os) const;
-		
+		const type &pointee() const;
+
 	private:
 	
 		std::unique_ptr<type> m_pointee;

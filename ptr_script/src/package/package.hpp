@@ -12,7 +12,7 @@ namespace ptrs
 {
 	struct package
 	{
-		typedef std::vector<structure> structure_vector;
+		typedef std::vector<std::unique_ptr<structure>> structure_vector;
 		typedef std::vector<guid> dependency_vector;
 		
 		
@@ -22,8 +22,6 @@ namespace ptrs
 			);
 		const structure_vector &structures() const;
 		const dependency_vector &dependencies() const;
-		const package *find_package(package_ref ref) const;
-		const structure *find_structure(const structure_ref &ref) const;
 		
 	private:
 	
