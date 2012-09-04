@@ -1,6 +1,5 @@
 #include "element_ptr.hpp"
 #include "ptr_type.hpp"
-#include "structure_type.hpp"
 #include "pointer.hpp"
 
 
@@ -9,12 +8,10 @@ namespace ptrs
 	element_ptr::element_ptr(
 		std::unique_ptr<ptr_type> type,
 		std::unique_ptr<pointer> object,
-		std::unique_ptr<structure_type> object_type,
 		std::size_t element_index
 		)
 		: pointer(std::move(type))
 		, m_object(std::move(object))
-		, m_object_type(std::move(object_type))
 		, m_element_index(element_index)
 	{
 	}
@@ -22,11 +19,6 @@ namespace ptrs
 	const pointer &element_ptr::object() const
 	{
 		return *m_object;
-	}
-
-	const structure_type &element_ptr::object_type() const
-	{
-		return *m_object_type;
 	}
 
 	std::size_t element_ptr::element_index() const
