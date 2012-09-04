@@ -7,12 +7,12 @@
 
 namespace ptrs
 {
-	struct pointer_type;
+	struct ptr_type;
 
 
 	struct pointer : value
 	{
-		explicit pointer(const pointer_type &type);
+		explicit pointer(std::unique_ptr<ptr_type> type);
 
 	private:
 	};

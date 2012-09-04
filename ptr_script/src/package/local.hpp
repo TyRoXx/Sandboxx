@@ -2,17 +2,20 @@
 #define LOCAL_HPP_INCLUDED_1C3CQGMCP8YVUH53
 
 
-#include "value.hpp"
+#include "pointer.hpp"
 #include <cstddef>
 
 
 namespace ptrs
 {
-	struct local : value
+	struct ptr_type;
+
+
+	struct local : pointer
 	{
 		explicit local(
-			std::size_t id,
-			const ptrs::type &type
+			std::unique_ptr<ptr_type> type,
+			std::size_t id
 			);
 		std::size_t id() const;
 

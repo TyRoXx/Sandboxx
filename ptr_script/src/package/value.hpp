@@ -2,6 +2,9 @@
 #define VALUE_HPP_INCLUDED_YJZRTXMC635LUY4Q
 
 
+#include <memory>
+
+
 namespace ptrs
 {
 	struct type;
@@ -9,13 +12,13 @@ namespace ptrs
 
 	struct value
 	{
-		explicit value(const ptrs::type &type);
+		explicit value(std::unique_ptr<ptrs::type> type);
 		virtual ~value();
-		type &type() const;
+		const type &type() const;
 
 	private:
 
-		const ptrs::type &m_type;
+		std::unique_ptr<ptrs::type> m_type;
 	};
 }
 
