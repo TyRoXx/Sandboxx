@@ -2,6 +2,7 @@
 #define VALUE_HPP_INCLUDED_YJZRTXMC635LUY4Q
 
 
+#include "type.hpp"
 #include <memory>
 
 
