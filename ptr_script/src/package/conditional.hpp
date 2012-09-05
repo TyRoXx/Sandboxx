@@ -26,6 +26,7 @@ namespace ptrs
 			branch_vector branches,
 			std::unique_ptr<statement> otherwise
 			);
+		virtual void visit(statement_visitor &visitor) const PTR_SCRIPT_OVERRIDE;
 		const branch_vector &branches() const;
 		const statement *otherwise() const;
 		

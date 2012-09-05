@@ -1,4 +1,6 @@
 #include "interpreter.hpp"
+#include "package/package.hpp"
+#include "package/statement_visitor.hpp"
 
 
 namespace ptrs
@@ -10,7 +12,13 @@ namespace ptrs
 	{
 	}
 
-	void interpreter::call(std::size_t free_method_id)
+	void interpreter::call(const method &callee)
+	{
+		executeStatement(callee.body());
+	}
+
+
+	void interpreter::executeStatement(const statement &statement)
 	{
 
 	}

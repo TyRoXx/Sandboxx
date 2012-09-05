@@ -1,4 +1,5 @@
 #include "jump.hpp"
+#include "statement_visitor.hpp"
 
 
 namespace ptrs
@@ -10,6 +11,11 @@ namespace ptrs
 		: m_mode(mode)
 		, m_block_count(block_count)
 	{
+	}
+
+	void jump::visit(statement_visitor &visitor) const
+	{
+		visitor.accept(*this);
 	}
 
 	jump::mode_t jump::mode() const

@@ -18,6 +18,7 @@ namespace ptrs
 			statement_vector statements,
 			bool is_jump_target
 			);
+		virtual void visit(statement_visitor &visitor) const PTR_SCRIPT_OVERRIDE;
 		const statement_vector &statements() const;
 		bool is_jump_target() const;
 		

@@ -1,4 +1,5 @@
 #include "block.hpp"
+#include "statement_visitor.hpp"
 
 
 namespace ptrs
@@ -10,6 +11,11 @@ namespace ptrs
 		: m_statements(std::move(statements))
 		, m_is_jump_target(is_jump_target)
 	{
+	}
+
+	void block::visit(statement_visitor &visitor) const
+	{
+		visitor.accept(*this);
 	}
 
 	const block::statement_vector &block::statements() const

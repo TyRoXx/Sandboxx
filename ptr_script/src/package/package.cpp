@@ -4,14 +4,19 @@
 namespace ptrs
 {
 	package::package(
+		dependency_vector dependencies,
 		structure_vector structures,
-		method_vector free_methods,
-		dependency_vector dependencies
+		method_vector free_methods
 		)
-		: m_structures(std::move(structures))
+		: m_dependencies(std::move(dependencies))
+		, m_structures(std::move(structures))
 		, m_free_methods(std::move(free_methods))
-		, m_dependencies(std::move(dependencies))
 	{
+	}
+
+	const package::dependency_vector &package::dependencies() const
+	{
+		return m_dependencies;
 	}
 
 	const package::structure_vector &package::structures() const
@@ -22,10 +27,5 @@ namespace ptrs
 	const package::method_vector &package::free_methods() const
 	{
 		return m_free_methods;
-	}
-
-	const package::dependency_vector &package::dependencies() const
-	{
-		return m_dependencies;
 	}
 }

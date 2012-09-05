@@ -9,6 +9,8 @@
 namespace ptrs
 {
 	struct package;
+	struct statement;
+	struct method;
 
 
 	struct interpreter
@@ -19,11 +21,14 @@ namespace ptrs
 		explicit interpreter(
 			package_by_id packages
 			);
-		void call(std::size_t free_method_id);
+		void call(const method &callee);
 
 	private:
 
 		package_by_id m_packages;
+
+
+		void executeStatement(const statement &statement);
 	};
 }
 
