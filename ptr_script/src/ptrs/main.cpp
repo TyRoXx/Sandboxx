@@ -4,8 +4,11 @@
 #include "package/block.hpp"
 #include "package/structure_type.hpp"
 #include "package/intrinsic.hpp"
+#include "serialize_package/text_sink.hpp"
+#include "serialize_package/write_package.hpp"
 #include "print_package.hpp"
 #include <iostream>
+#include <fstream>
 
 
 namespace ptrs
@@ -73,6 +76,12 @@ namespace ptrs
 			std::move(methods));
 
 		print_package(std::cout, p);
+
+		{
+			std::ofstream file("package.txt");
+			serialization::text_sink sink(file);
+			serialization::write_package(sink, p);
+		}
 
 		interpreter::package_by_id packages;
 		packages[guid()] = &p;
