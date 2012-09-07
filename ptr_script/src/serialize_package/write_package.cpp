@@ -66,7 +66,7 @@ namespace ptrs
 		{
 			{
 				const auto &deps = package.dependencies();
-				sink.integer(deps.size());
+				sink.integer64(deps.size());
 				sink.line();
 
 				for (auto i = deps.begin(); i != deps.end(); ++i)
@@ -79,7 +79,7 @@ namespace ptrs
 
 			{
 				const auto &structures = package.structures();
-				sink.integer(structures.size());
+				sink.integer64(structures.size());
 				sink.line();
 
 				for (auto i = structures.begin(); i != structures.end(); ++i)

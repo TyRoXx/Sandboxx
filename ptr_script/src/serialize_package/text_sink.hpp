@@ -14,12 +14,12 @@ namespace ptrs
 		struct text_sink : sink
 		{
 			explicit text_sink(std::ostream &out);
-			virtual void integer(unsigned int value) PTR_SCRIPT_OVERRIDE;
-			virtual void integer(unsigned long value) PTR_SCRIPT_OVERRIDE;
-			virtual void integer(unsigned long long value) PTR_SCRIPT_OVERRIDE;
-			virtual void integer(signed int value) PTR_SCRIPT_OVERRIDE;
-			virtual void integer(signed long value) PTR_SCRIPT_OVERRIDE;
-			virtual void integer(signed long long value) PTR_SCRIPT_OVERRIDE;
+			virtual void integer64(unsigned int value) PTR_SCRIPT_OVERRIDE;
+			virtual void integer64(unsigned long value) PTR_SCRIPT_OVERRIDE;
+			virtual void integer64(unsigned long long value) PTR_SCRIPT_OVERRIDE;
+			virtual void integer64(signed int value) PTR_SCRIPT_OVERRIDE;
+			virtual void integer64(signed long value) PTR_SCRIPT_OVERRIDE;
+			virtual void integer64(signed long long value) PTR_SCRIPT_OVERRIDE;
 			virtual void identifier(const std::string &identifier) PTR_SCRIPT_OVERRIDE;
 			virtual void data(const void *data, std::size_t size) PTR_SCRIPT_OVERRIDE;
 			virtual void text(const std::string &text) PTR_SCRIPT_OVERRIDE;

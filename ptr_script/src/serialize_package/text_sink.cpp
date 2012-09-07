@@ -11,32 +11,32 @@ namespace ptrs
 		{
 		}
 
-		void text_sink::integer(unsigned int value)
+		void text_sink::integer64(unsigned int value)
 		{
 			m_out << value << ' ';
 		}
 
-		void text_sink::integer(unsigned long value)
+		void text_sink::integer64(unsigned long value)
 		{
 			m_out << value << ' ';
 		}
 
-		void text_sink::integer(unsigned long long value)
+		void text_sink::integer64(unsigned long long value)
 		{
 			m_out << value << ' ';
 		}
 
-		void text_sink::integer(signed int value)
+		void text_sink::integer64(signed int value)
 		{
 			m_out << value << ' ';
 		}
 
-		void text_sink::integer(signed long value)
+		void text_sink::integer64(signed long value)
 		{
 			m_out << value << ' ';
 		}
 
-		void text_sink::integer(signed long long value)
+		void text_sink::integer64(signed long long value)
 		{
 			m_out << value << ' ';
 		}
