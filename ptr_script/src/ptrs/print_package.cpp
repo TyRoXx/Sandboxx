@@ -35,6 +35,7 @@ namespace ptrs
 		const auto &structures = package.structures();
 		for (auto i = structures.begin(); i != structures.end(); ++i)
 		{
+			os << std::distance(structures.begin(), i) << ": ";
 			print_structure(os, **i);
 			os << "\n";
 		}
@@ -58,9 +59,8 @@ namespace ptrs
 			for (auto i = types.begin(); i != types.end(); ++i)
 			{
 				const auto &type = **i;
-				os << "\t ";
 				print_type(os, type);
-				os << "\n";
+				os << ", ";
 			}
 		}
 	}
@@ -70,22 +70,22 @@ namespace ptrs
 		const method &method
 		)
 	{
-		os << method.name() << " (\n";
+		os << method.name() << " (";
 
 		const auto &params = method.parameters();
 		for (auto i = params.begin(); i != params.end(); ++i)
 		{
 			const auto &parameter = **i;
-			os << "\t" << parameter.name() << "\n";
+			os << parameter.name() << ", ";
 		}
 
-		os << ") -> (\n";
+		os << ") -> (";
 		print_type_ptr_vector(os, method.results());
 		os << ") {\n";
 
 		print_statement(os, method.body());
 
-		os << "}\n";
+		os << "\n}\n";
 	}
 
 	void print_structure(
@@ -142,7 +142,18 @@ namespace ptrs
 
 			virtual void visit(const structure_type &type) PTR_SCRIPT_OVERRIDE
 			{
-				os << "struct " << type.ref().package.dependency_index << "." << type.ref().structure_index;
+				os << "struct ";
+
+				const auto package = type.ref().package;
+				if (package.is_self())
+				{
+					os << "this_package";
+				}
+				else
+				{
+					os << package.dependency_index;
+				}
+				os << "." << type.ref().structure_index;
 			}
 
 			virtual void visit(const method_type &type) PTR_SCRIPT_OVERRIDE
@@ -255,7 +266,7 @@ namespace ptrs
 				print_statement(os, statement.positive());
 				os << "\n} else {\n";
 				print_statement(os, statement.negative());
-				os << "}";
+				os << "\n}";
 			}
 
 			virtual void visit(const jump &statement) PTR_SCRIPT_OVERRIDE
@@ -266,6 +277,11 @@ namespace ptrs
 			virtual void visit(const call_statement &statement) PTR_SCRIPT_OVERRIDE
 			{
 				print_value(os, statement.call());
+			}
+
+			virtual void visit(const intrinsic &statement) PTR_SCRIPT_OVERRIDE
+			{
+				os << "intrinsic";
 			}
 		};
 	}

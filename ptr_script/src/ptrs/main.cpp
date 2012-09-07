@@ -2,6 +2,8 @@
 #include "package/package.hpp"
 #include "package/method.hpp"
 #include "package/block.hpp"
+#include "package/structure_type.hpp"
+#include "package/intrinsic.hpp"
 #include "print_package.hpp"
 #include <iostream>
 
@@ -26,11 +28,41 @@ namespace ptrs
 				std::move(body))));
 		}
 
+		const structure_ref uint_ref(package_ref(), 0);
 		{
+			method::result_vector results;
+			results.push_back(std::unique_ptr<type>(new structure_type(
+				uint_ref)));
+
+			std::unique_ptr<method> negate(new method(
+				"-",
+				method::parameter_vector(),
+				std::move(results),
+				std::unique_ptr<statement>(new intrinsic)
+				));
+
+			structure::method_vector methods;
+			methods.push_back(std::move(negate));
+
+			std::unique_ptr<structure> structure(new structure(
+				"uint",
+				std::move(methods),
+				structure::element_vector()));
+
+			structures.push_back(std::move(structure));
+		}
+
+		{
+			structure::element_vector elements;
+			elements.push_back(std::unique_ptr<element>(new element(
+				std::unique_ptr<type>(new structure_type(uint_ref)), "real")));
+			elements.push_back(std::unique_ptr<element>(new element(
+				std::unique_ptr<type>(new structure_type(uint_ref)), "imag")));
+
 			std::unique_ptr<structure> structure(new structure(
 				"complex",
 				structure::method_vector(),
-				structure::element_vector()));
+				std::move(elements)));
 
 			structures.push_back(std::move(structure));
 		}
