@@ -2,6 +2,8 @@
 #include "package/package.hpp"
 #include "package/method.hpp"
 #include "package/block.hpp"
+#include "print_package.hpp"
+#include <iostream>
 
 
 namespace ptrs
@@ -28,6 +30,8 @@ namespace ptrs
 			std::move(deps),
 			std::move(structures),
 			std::move(methods));
+
+		print_package(std::cout, p);
 
 		interpreter::package_by_id packages;
 		packages[guid()] = &p;
