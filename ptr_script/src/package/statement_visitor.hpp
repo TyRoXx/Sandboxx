@@ -12,9 +12,9 @@ namespace ptrs
 	struct statement_visitor
 	{
 		virtual ~statement_visitor();
-		virtual void visit(const block &statement);
-		virtual void visit(const conditional &statement);
-		virtual void visit(const jump &statement);
+		virtual void visit(const block &statement) = 0;
+		virtual void visit(const conditional &statement) = 0;
+		virtual void visit(const jump &statement) = 0;
 	};
 }
 

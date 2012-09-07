@@ -12,9 +12,9 @@ namespace ptrs
 	struct value_visitor
 	{
 		virtual ~value_visitor();
-		virtual void visit(const local &value);
-		virtual void visit(const element_ptr &value);
-		virtual void visit(const literal &value);
+		virtual void visit(const local &value) = 0;
+		virtual void visit(const element_ptr &value) = 0;
+		virtual void visit(const literal &value) = 0;
 	};
 }
 
