@@ -13,6 +13,7 @@ namespace ptrs
 	struct element;
 	struct type;
 	struct value;
+	struct statement;
 
 
 	void print_package(
@@ -43,6 +44,11 @@ namespace ptrs
 	void print_value(
 		std::ostream &os,
 		const value &value
+		);
+
+	void print_statement(
+		std::ostream &os,
+		const statement &statement
 		);
 }
 

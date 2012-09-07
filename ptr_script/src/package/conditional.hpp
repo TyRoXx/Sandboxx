@@ -3,37 +3,29 @@
 
 
 #include "statement.hpp"
+#include "value.hpp"
 #include <memory>
-#include <vector>
-#include <utility>
 
 
 namespace ptrs
 {
-	struct value;
-	
-	
 	struct conditional : statement
 	{
-		typedef std::pair<
-			std::unique_ptr<value>,
-			std::unique_ptr<statement>
-			> branch;
-		typedef std::vector<branch> branch_vector;
-		
-		
 		explicit conditional(
-			branch_vector branches,
-			std::unique_ptr<statement> otherwise
+			std::unique_ptr<value> condition,
+			std::unique_ptr<statement> positive,
+			std::unique_ptr<statement> negative
 			);
 		virtual void accept(statement_visitor &visitor) const PTR_SCRIPT_OVERRIDE;
-		const branch_vector &branches() const;
-		const statement *otherwise() const;
-		
+		const value &condition() const;
+		const statement &negative() const;
+		const statement &positive() const;
+
 	private:
-	
-		branch_vector m_branches;
-		std::unique_ptr<statement> m_otherwise;
+
+		std::unique_ptr<value> m_condition;
+		std::unique_ptr<statement> m_positive;
+		std::unique_ptr<statement> m_negative;
 	};
 }
 

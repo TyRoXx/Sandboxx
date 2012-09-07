@@ -2,8 +2,10 @@
 #include "package/package.hpp"
 #include "package/statement.hpp"
 #include "package/statement_visitor.hpp"
+#include "package/conditional.hpp"
 #include "package/block.hpp"
 #include "package/jump.hpp"
+#include "package/call_statement.hpp"
 #include "package/value.hpp"
 #include "package/value_visitor.hpp"
 #include "package/local.hpp"
@@ -79,7 +81,11 @@ namespace ptrs
 
 		os << ") -> (\n";
 		print_type_ptr_vector(os, method.results());
-		os << ")";
+		os << ") {\n";
+
+		print_statement(os, method.body());
+
+		os << "}\n";
 	}
 
 	void print_structure(
@@ -218,5 +224,58 @@ namespace ptrs
 	{
 		value_printer printer(os);
 		value.accept(printer);
+	}
+
+	namespace
+	{
+		struct statement_printer : statement_visitor
+		{
+			std::ostream &os;
+
+			explicit statement_printer(std::ostream &os)
+				: os(os)
+			{
+			}
+
+			virtual void visit(const block &statement) PTR_SCRIPT_OVERRIDE
+			{
+				const auto &statements = statement.statements();
+				for (auto i = statements.begin(); i != statements.end(); ++i)
+				{
+					print_statement(os, **i);
+					os << "\n";
+				}
+			}
+
+			virtual void visit(const conditional &statement) PTR_SCRIPT_OVERRIDE
+			{
+				os << "if (";
+				print_value(os, statement.condition());
+				os << ") {\n";
+				print_statement(os, statement.positive());
+				os << "\n} else {\n";
+				print_statement(os, statement.negative());
+				os << "}";
+			}
+
+			virtual void visit(const jump &statement) PTR_SCRIPT_OVERRIDE
+			{
+				os << "jump " << statement.mode() << " " << statement.block_count();
+			}
+
+			virtual void visit(const call_statement &statement) PTR_SCRIPT_OVERRIDE
+			{
+				print_value(os, statement.call());
+			}
+		};
+	}
+
+	void print_statement(
+		std::ostream &os,
+		const statement &statement
+		)
+	{
+		statement_printer printer(os);
+		statement.accept(printer);
 	}
 }
