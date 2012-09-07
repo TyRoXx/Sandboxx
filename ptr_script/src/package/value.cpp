@@ -3,4 +3,8 @@
 
 namespace ptrs
 {
+	value::~value()
+	{
+
+	}
 }

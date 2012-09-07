@@ -10,6 +10,7 @@ namespace ptrs
 	struct package;
 	struct method;
 	struct structure;
+	struct element;
 	struct type;
 	struct value;
 
@@ -27,6 +28,11 @@ namespace ptrs
 	void print_structure(
 		std::ostream &os,
 		const structure &structure
+		);
+
+	void print_element(
+		std::ostream &os,
+		const element &element
 		);
 
 	void print_type(

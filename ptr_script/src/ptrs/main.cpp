@@ -26,6 +26,13 @@ namespace ptrs
 				std::move(body))));
 		}
 
+		{
+			std::unique_ptr<structure> structure(new structure(
+				"complex", structure::method_vector(), structure::element_vector()));
+
+			structures.push_back(std::move(structure));
+		}
+
 		const package p(
 			std::move(deps),
 			std::move(structures),

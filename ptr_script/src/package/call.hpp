@@ -20,6 +20,7 @@ namespace ptrs
 			argument_vector arguments,
 			result_vector results
 			);
+		virtual void accept(value_visitor &visitor) const PTR_SCRIPT_OVERRIDE;
 		const value &method() const;
 		const argument_vector &arguments() const;
 		const result_vector &results() const;

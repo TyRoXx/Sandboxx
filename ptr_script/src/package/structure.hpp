@@ -11,7 +11,7 @@ namespace ptrs
 {
 	struct structure
 	{
-		typedef std::vector<method> method_vector;
+		typedef std::vector<std::unique_ptr<method>> method_vector;
 		typedef std::vector<std::unique_ptr<element>> element_vector;
 
 

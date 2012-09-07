@@ -2,8 +2,14 @@
 #include "package/package.hpp"
 #include "package/statement.hpp"
 #include "package/statement_visitor.hpp"
+#include "package/block.hpp"
+#include "package/jump.hpp"
 #include "package/value.hpp"
 #include "package/value_visitor.hpp"
+#include "package/local.hpp"
+#include "package/literal.hpp"
+#include "package/element_ptr.hpp"
+#include "package/call.hpp"
 #include "package/type.hpp"
 #include "package/type_visitor.hpp"
 #include "package/ptr_type.hpp"
@@ -81,7 +87,33 @@ namespace ptrs
 		const structure &structure
 		)
 	{
+		os << "structure " << structure.full_name() << " {\n";
 
+		const auto &methods = structure.methods();
+		for (auto i = methods.begin(); i != methods.end(); ++i)
+		{
+			const auto &method = **i;
+			print_method(os, method);
+		}
+
+		const auto &elements = structure.elements();
+		for (auto i = elements.begin(); i != elements.end(); ++i)
+		{
+			const auto &element = **i;
+			print_element(os, element);
+			os << "\n";
+		}
+
+		os << "}";
+	}
+
+	void print_element(
+		std::ostream &os,
+		const element &element
+		)
+	{
+		os << element.name() << ": ";
+		print_type(os, element.type());
 	}
 
 	namespace
@@ -127,11 +159,64 @@ namespace ptrs
 		type.accept(printer);
 	}
 
+	namespace
+	{
+		struct value_printer : value_visitor
+		{
+			std::ostream &os;
+
+			explicit value_printer(std::ostream &os)
+				: os(os)
+			{
+			}
+
+			virtual void visit(const local &value) PTR_SCRIPT_OVERRIDE
+			{
+				os << "local " << value.id();
+			}
+
+			virtual void visit(const element_ptr &value) PTR_SCRIPT_OVERRIDE
+			{
+				print_value(os, value.object());
+				os << "." << value.element_index();
+			}
+
+			virtual void visit(const literal &value) PTR_SCRIPT_OVERRIDE
+			{
+				os << "literal";
+			}
+
+			virtual void visit(const call &value) PTR_SCRIPT_OVERRIDE
+			{
+				print_value(os, value.method());
+				os << "(";
+
+				bool comma = false;
+				const auto &arguments = value.arguments();
+				for (auto i = arguments.begin(); i != arguments.end(); ++i)
+				{
+					print_value(os, **i);
+					if (comma)
+					{
+						os << ", ";
+					}
+					else
+					{
+						comma = true;
+					}
+				}
+
+				os << ")";
+			}
+		};
+	}
+
 	void print_value(
 		std::ostream &os,
 		const value &value
 		)
 	{
-
+		value_printer printer(os);
+		value.accept(printer);
 	}
 }

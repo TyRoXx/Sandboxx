@@ -1,4 +1,5 @@
 #include "element_ptr.hpp"
+#include "value_visitor.hpp"
 
 
 namespace ptrs
@@ -10,6 +11,11 @@ namespace ptrs
 		: m_object(std::move(object))
 		, m_element_index(element_index)
 	{
+	}
+
+	void element_ptr::accept(value_visitor &visitor) const
+	{
+		visitor.visit(*this);
 	}
 
 	const value &element_ptr::object() const
