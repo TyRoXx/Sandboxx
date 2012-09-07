@@ -39,6 +39,24 @@ namespace ptrs
 		}
 	}
 
+	namespace
+	{
+		template <class Types>
+		void print_type_ptr_vector(
+			std::ostream &os,
+			const Types &types
+			)
+		{
+			for (auto i = types.begin(); i != types.end(); ++i)
+			{
+				const auto &type = **i;
+				os << "\t ";
+				print_type(os, type);
+				os << "\n";
+			}
+		}
+	}
+
 	void print_method(
 		std::ostream &os,
 		const method &method
@@ -54,16 +72,7 @@ namespace ptrs
 		}
 
 		os << ") -> (\n";
-
-		const auto &results = method.results();
-		for (auto i = results.begin(); i != results.end(); ++i)
-		{
-			const auto &result = **i;
-			os << "\t ";
-			print_type(os, result);
-			os << "\n";
-		}
-
+		print_type_ptr_vector(os, method.results());
 		os << ")";
 	}
 
@@ -101,27 +110,9 @@ namespace ptrs
 			virtual void visit(const method_type &type) PTR_SCRIPT_OVERRIDE
 			{
 				os << "method (\n";
-
-				const auto &params = type.parameters();
-				for (auto i = params.begin(); i != params.end(); ++i)
-				{
-					const auto &parameter = **i;
-					os << "\t";
-					print_type(os, parameter);
-					os << "\n";
-				}
-
+				print_type_ptr_vector(os, type.parameters());
 				os << ") -> (\n";
-
-				const auto &results = type.results();
-				for (auto i = results.begin(); i != results.end(); ++i)
-				{
-					const auto &result = **i;
-					os << "\t ";
-					print_type(os, result);
-					os << "\n";
-				}
-
+				print_type_ptr_vector(os, type.results());
 				os << ")";
 			}
 		};
