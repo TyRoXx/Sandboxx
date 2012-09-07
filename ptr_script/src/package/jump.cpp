@@ -13,9 +13,9 @@ namespace ptrs
 	{
 	}
 
-	void jump::visit(statement_visitor &visitor) const
+	void jump::accept(statement_visitor &visitor) const
 	{
-		visitor.accept(*this);
+		visitor.visit(*this);
 	}
 
 	jump::mode_t jump::mode() const

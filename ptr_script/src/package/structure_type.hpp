@@ -11,6 +11,7 @@ namespace ptrs
 	struct structure_type : type
 	{
 		explicit structure_type(const structure_ref &ref);
+		virtual void accept(type_visitor &visitor) const PTR_SCRIPT_OVERRIDE;
 		const structure_ref &ref() const;
 
 	private:

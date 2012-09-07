@@ -21,7 +21,7 @@ namespace ptrs
 			mode_t mode,
 			std::size_t block_count
 			);
-		virtual void visit(statement_visitor &visitor) const PTR_SCRIPT_OVERRIDE;
+		virtual void accept(statement_visitor &visitor) const PTR_SCRIPT_OVERRIDE;
 		mode_t mode() const;
 		std::size_t block_count() const;
 		

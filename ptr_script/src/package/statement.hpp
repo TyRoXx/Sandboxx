@@ -13,7 +13,7 @@ namespace ptrs
 	struct statement
 	{
 		virtual ~statement();
-		virtual void visit(statement_visitor &visitor) const = 0;
+		virtual void accept(statement_visitor &visitor) const = 0;
 	};
 }
 

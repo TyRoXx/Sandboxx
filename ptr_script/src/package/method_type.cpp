@@ -1,4 +1,5 @@
 #include "method_type.hpp"
+#include "type_visitor.hpp"
 
 
 namespace ptrs
@@ -12,6 +13,11 @@ namespace ptrs
 		, m_parameters(std::move(parameters))
 		, m_results(std::move(parameters))
 	{
+	}
+
+	void method_type::accept(type_visitor &visitor) const
+	{
+		visitor.visit(*this);
 	}
 
 	const structure_ref &method_type::structure() const

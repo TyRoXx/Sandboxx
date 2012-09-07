@@ -11,6 +11,7 @@ namespace ptrs
 	struct ptr_type : type
 	{
 		explicit ptr_type(std::unique_ptr<type> pointee);
+		virtual void accept(type_visitor &visitor) const PTR_SCRIPT_OVERRIDE;
 		const type &pointee() const;
 
 	private:

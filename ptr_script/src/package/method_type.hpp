@@ -10,7 +10,7 @@
 
 namespace ptrs
 {
-	struct method_type
+	struct method_type : type
 	{
 		typedef std::vector<std::unique_ptr<type>> type_vector;
 
@@ -20,6 +20,7 @@ namespace ptrs
 			type_vector parameters,
 			type_vector results
 			);
+		virtual void accept(type_visitor &visitor) const PTR_SCRIPT_OVERRIDE;
 		const structure_ref &structure() const;
 		const type_vector &parameters() const;
 		const type_vector &results() const;

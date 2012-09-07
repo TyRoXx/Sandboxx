@@ -2,7 +2,7 @@
 #define LOCAL_HPP_INCLUDED_1C3CQGMCP8YVUH53
 
 
-#include "pointer.hpp"
+#include "value.hpp"
 #include <cstddef>
 
 
@@ -11,11 +11,12 @@ namespace ptrs
 	struct ptr_type;
 
 
-	struct local : pointer
+	struct local : value
 	{
 		explicit local(
 			std::size_t id
 			);
+		virtual void accept(value_visitor &visitor) const PTR_SCRIPT_OVERRIDE;
 		std::size_t id() const;
 
 	private:

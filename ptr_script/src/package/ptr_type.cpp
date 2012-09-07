@@ -1,4 +1,5 @@
 #include "ptr_type.hpp"
+#include "type_visitor.hpp"
 #include <cassert>
 
 
@@ -8,6 +9,11 @@ namespace ptrs
 		: m_pointee(std::move(pointee))
 	{
 		assert(m_pointee);
+	}
+
+	void ptr_type::accept(type_visitor &visitor) const
+	{
+		visitor.visit(*this);
 	}
 
 	const type &ptr_type::pointee() const

@@ -1,12 +1,10 @@
 #include "element_ptr.hpp"
-#include "ptr_type.hpp"
-#include "pointer.hpp"
 
 
 namespace ptrs
 {
 	element_ptr::element_ptr(
-		std::unique_ptr<pointer> object,
+		std::unique_ptr<value> object,
 		std::size_t element_index
 		)
 		: m_object(std::move(object))
@@ -14,7 +12,7 @@ namespace ptrs
 	{
 	}
 
-	const pointer &element_ptr::object() const
+	const value &element_ptr::object() const
 	{
 		return *m_object;
 	}

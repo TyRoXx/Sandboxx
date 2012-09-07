@@ -14,6 +14,7 @@ namespace ptrs
 		explicit literal(
 			boost::any value
 			);
+		virtual void accept(value_visitor &visitor) const PTR_SCRIPT_OVERRIDE;
 		const boost::any &get() const;
 
 	private:

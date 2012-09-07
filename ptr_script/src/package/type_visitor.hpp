@@ -12,9 +12,9 @@ namespace ptrs
 	struct type_visitor
 	{
 		virtual ~type_visitor();
-		virtual void accept(const ptr_type &type);
-		virtual void accept(const structure_type &type);
-		virtual void accept(const method_type &type);
+		virtual void visit(const ptr_type &type);
+		virtual void visit(const structure_type &type);
+		virtual void visit(const method_type &type);
 	};
 }
 

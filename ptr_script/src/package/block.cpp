@@ -13,9 +13,9 @@ namespace ptrs
 	{
 	}
 
-	void block::visit(statement_visitor &visitor) const
+	void block::accept(statement_visitor &visitor) const
 	{
-		visitor.accept(*this);
+		visitor.visit(*this);
 	}
 
 	const block::statement_vector &block::statements() const

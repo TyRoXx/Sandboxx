@@ -2,18 +2,18 @@
 #define VALUE_HPP_INCLUDED_YJZRTXMC635LUY4Q
 
 
-#include "type.hpp"
-#include <memory>
+#include "common/override.hpp"
 
 
 namespace ptrs
 {
-	struct type;
+	struct value_visitor;
 
 
 	struct value
 	{
 		virtual ~value();
+		virtual void accept(value_visitor &visitor) const = 0;
 	};
 }
 

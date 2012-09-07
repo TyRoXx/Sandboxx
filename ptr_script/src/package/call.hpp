@@ -2,7 +2,7 @@
 #define CALL_HPP_INCLUDED_H49EBWL951P3VI5X
 
 
-#include "pointer.hpp"
+#include "value.hpp"
 #include <vector>
 #include <memory>
 
@@ -12,7 +12,7 @@ namespace ptrs
 	struct call : value
 	{
 		typedef std::vector<std::unique_ptr<value>> argument_vector;
-		typedef std::vector<std::unique_ptr<pointer>> result_vector;
+		typedef std::vector<std::unique_ptr<value>> result_vector;
 
 
 		explicit call(

@@ -7,15 +7,15 @@ namespace ptrs
 	{
 	}
 	
-	void type_visitor::accept(const ptr_type &type)
+	void type_visitor::visit(const ptr_type &type)
 	{
 	}
 	
-	void type_visitor::accept(const structure_type &type)
+	void type_visitor::visit(const structure_type &type)
 	{
 	}
 	
-	void type_visitor::accept(const method_type &type)
+	void type_visitor::visit(const method_type &type)
 	{
 	}
 }

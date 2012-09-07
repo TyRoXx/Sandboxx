@@ -7,15 +7,15 @@ namespace ptrs
 	{
 	}
 	
-	void statement_visitor::accept(const block &statement)
+	void statement_visitor::visit(const block &statement)
 	{
 	}
 	
-	void statement_visitor::accept(const conditional &statement)
+	void statement_visitor::visit(const conditional &statement)
 	{
 	}
 	
-	void statement_visitor::accept(const jump &statement)
+	void statement_visitor::visit(const jump &statement)
 	{
 	}
 }
