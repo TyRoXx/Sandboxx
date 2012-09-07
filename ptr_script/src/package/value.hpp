@@ -13,13 +13,7 @@ namespace ptrs
 
 	struct value
 	{
-		explicit value(std::unique_ptr<ptrs::type> type);
 		virtual ~value();
-		const type &type() const;
-
-	private:
-
-		std::unique_ptr<ptrs::type> m_type;
 	};
 }
 

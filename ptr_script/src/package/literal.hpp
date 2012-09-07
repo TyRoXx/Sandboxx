@@ -12,7 +12,6 @@ namespace ptrs
 	struct literal : value
 	{
 		explicit literal(
-			std::unique_ptr<ptrs::type> type,
 			boost::any value
 			);
 		const boost::any &get() const;

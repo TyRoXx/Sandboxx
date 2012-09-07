@@ -6,12 +6,10 @@
 namespace ptrs
 {
 	element_ptr::element_ptr(
-		std::unique_ptr<ptr_type> type,
 		std::unique_ptr<pointer> object,
 		std::size_t element_index
 		)
-		: pointer(std::move(type))
-		, m_object(std::move(object))
+		: m_object(std::move(object))
 		, m_element_index(element_index)
 	{
 	}

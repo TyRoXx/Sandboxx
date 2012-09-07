@@ -14,7 +14,6 @@ namespace ptrs
 	struct element_ptr : pointer
 	{
 		explicit element_ptr(
-			std::unique_ptr<ptr_type> type,
 			std::unique_ptr<pointer> object,
 			std::size_t element_index
 			);
