@@ -1,6 +1,4 @@
 #include "interpreter.hpp"
-#include "package/package.hpp"
-#include "package/statement_visitor.hpp"
 
 
 namespace ptrs
@@ -12,14 +10,8 @@ namespace ptrs
 	{
 	}
 
-	void interpreter::call(const method &callee)
+	const interpreter::package_by_id &interpreter::packages() const
 	{
-		executeStatement(callee.body());
-	}
-
-
-	void interpreter::executeStatement(const statement &statement)
-	{
-
+		return m_packages;
 	}
 }

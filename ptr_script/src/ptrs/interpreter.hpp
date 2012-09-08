@@ -9,8 +9,6 @@
 namespace ptrs
 {
 	struct package;
-	struct statement;
-	struct method;
 
 
 	struct interpreter
@@ -18,17 +16,12 @@ namespace ptrs
 		typedef std::map<guid, const package *> package_by_id;
 
 
-		explicit interpreter(
-			package_by_id packages
-			);
-		void call(const method &callee);
+		explicit interpreter(package_by_id packages);
+		const package_by_id &packages() const;
 
 	private:
 
 		package_by_id m_packages;
-
-
-		void executeStatement(const statement &statement);
 	};
 }
 

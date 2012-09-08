@@ -7,6 +7,7 @@
 #include "serialize_package/text_sink.hpp"
 #include "serialize_package/write_package.hpp"
 #include "print_package.hpp"
+#include "call_method.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -87,7 +88,9 @@ namespace ptrs
 		packages[guid()] = &p;
 
 		interpreter inter(packages);
-		inter.call(*p.free_methods()[0]);
+		call_method(
+			inter,
+			*p.free_methods()[0]);
 	}
 }
 
