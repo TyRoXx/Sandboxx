@@ -74,6 +74,13 @@ namespace skyfall
 
 		virtual void render(sf::RenderTarget &renderer) const
 		{
+			sf::RectangleShape background(sf::Vector2f(position().width - 10, position().height - 10));
+			background.setPosition(sf::Vector2f(position().left + 5, position().top + 5));
+			background.setFillColor(sf::Color(127, 127, 127, 127));
+			background.setOutlineColor(sf::Color::Black);
+			background.setOutlineThickness(2);
+			renderer.draw(background);
+
 			sf::Text text(m_label, m_font, m_font_size);
 			text.setPosition(position().left, position().top);
 			text.setColor(sf::Color::Black);
@@ -339,7 +346,7 @@ namespace skyfall
 
 int main()
 {
-	sf::RenderWindow window(sf::VideoMode(1200, 700), "Skyfall");
+	sf::RenderWindow window(sf::VideoMode(1200, 700), "Skyfall", sf::Style::Close);
 	window.setFramerateLimit(60);
 
 	sf::Font label_font, text_font;
@@ -361,6 +368,9 @@ int main()
 				if (event.type == sf::Event::Closed)
 				{
 					window.close();
+				}
+				else if (event.type == sf::Event::Resized)
+				{
 				}
 				else
 				{
