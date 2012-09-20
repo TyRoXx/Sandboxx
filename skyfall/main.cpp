@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <numeric>
 #include <cassert>
+#include <iostream>
 
 namespace skyfall
 {
@@ -42,8 +43,9 @@ namespace skyfall
 		}
 
 		virtual void handle_resize() = 0;
-		virtual void handle_event(const sf::Event &event) = 0;
+		virtual bool handle_event(const sf::Event &event) = 0;
 		virtual void render(sf::RenderTarget &renderer) const = 0;
+		virtual element *pick_child(const sf::Vector2f &point) = 0;
 
 	private:
 
@@ -64,8 +66,10 @@ namespace skyfall
 		{
 		}
 
-		virtual void handle_event(const sf::Event &event)
+		virtual bool handle_event(const sf::Event &event)
 		{
+			std::cout << m_label << "\n";
+			return false;
 		}
 
 		virtual void render(sf::RenderTarget &renderer) const
@@ -74,6 +78,11 @@ namespace skyfall
 			text.setPosition(position().left, position().top);
 			text.setColor(sf::Color::Black);
 			renderer.draw(text);
+		}
+
+		virtual element *pick_child(const sf::Vector2f &point)
+		{
+			return 0;
 		}
 
 	private:
@@ -160,7 +169,7 @@ namespace skyfall
 			recalculate_cells();
 		}
 
-		virtual void handle_event(const sf::Event &event)
+		virtual bool handle_event(const sf::Event &event)
 		{
 			switch (event.type)
 			{
@@ -170,6 +179,8 @@ namespace skyfall
 			case sf::Event::MouseWheelMoved:
 				break;
 			}
+
+			return false;
 		}
 
 		virtual void render(sf::RenderTarget &renderer) const
@@ -182,6 +193,31 @@ namespace skyfall
 					cell.render(renderer);
 				}
 			}
+		}
+
+		virtual element *pick_child(const sf::Vector2f &point)
+		{
+			sf::Vector2f current(position().left, position().top);
+			size_t x = 0, y = 0;
+			while (true)
+			{
+				current.x += m_horizontal_sizes[x] * position().width;
+				if (current.x >= point.x)
+				{
+					break;
+				}
+				++x;
+			}
+			while (true)
+			{
+				current.y += m_vertical_sizes[y] * position().height;
+				if (current.y >= point.y)
+				{
+					break;
+				}
+				++y;
+			}
+			return &cell_at(x, y);
 		}
 
 	private:
@@ -205,14 +241,19 @@ namespace skyfall
 			m_content->position(position());
 		}
 
-		virtual void handle_event(const sf::Event &event)
+		virtual bool handle_event(const sf::Event &event)
 		{
-			m_content->handle_event(event);
+			return m_content->handle_event(event);
 		}
 
 		virtual void render(sf::RenderTarget &renderer) const
 		{
 			m_content->render(renderer);
+		}
+
+		virtual element *pick_child(const sf::Vector2f &point)
+		{
+			return m_content.get();
 		}
 
 	private:
@@ -256,6 +297,35 @@ namespace skyfall
 			m_window.display();
 		}
 
+		void handle_event(const sf::Event &event)
+		{
+			switch (event.type)
+			{
+			case sf::Event::MouseButtonPressed:
+			case sf::Event::MouseButtonReleased:
+				{
+					const sf::Vector2f point(
+						static_cast<float>(event.mouseButton.x),
+						static_cast<float>(event.mouseButton.y)
+						);
+
+					element *candidate = m_test_window.get();
+
+					while (candidate &&
+						candidate->position().contains(point) &&
+						!candidate->handle_event(event))
+					{
+						candidate = candidate->pick_child(point);
+					}
+					break;
+				}
+
+			default:
+				//to do focus
+				break;
+			}
+		}
+
 	private:
 
 		sf::RenderWindow &m_window;
@@ -284,12 +354,18 @@ int main()
 
 	while (window.isOpen())
 	{
-		sf::Event event;
-		while (window.pollEvent(event))
 		{
-			if (event.type == sf::Event::Closed)
+			sf::Event event;
+			while (window.pollEvent(event))
 			{
-				window.close();
+				if (event.type == sf::Event::Closed)
+				{
+					window.close();
+				}
+				else
+				{
+					env.handle_event(event);
+				}
 			}
 		}
 
