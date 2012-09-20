@@ -269,6 +269,40 @@ namespace skyfall
 	};
 
 
+	struct image : element
+	{
+		explicit image(const sf::Texture &texture)
+			: m_texture(texture)
+		{
+		}
+
+		virtual void handle_resize()
+		{
+		}
+
+		virtual bool handle_event(const sf::Event &event)
+		{
+			return false;
+		}
+
+		virtual void render(sf::RenderTarget &renderer) const
+		{
+			sf::Sprite sprite(m_texture);
+			sprite.setPosition(position().left, position().top);
+			renderer.draw(sprite);
+		}
+
+		virtual element *pick_child(const sf::Vector2f &point)
+		{
+			return 0;
+		}
+
+	private:
+
+		const sf::Texture &m_texture;
+	};
+
+
 	struct environment
 	{
 		explicit environment(sf::RenderWindow &window, const sf::Font &label_font,
@@ -279,6 +313,8 @@ namespace skyfall
 			, m_label_font_size(24)
 			, m_text_font_size(16)
 		{
+			m_test_texture.loadFromFile("test.png");
+
 			grid::cells cells(2 * 2);
 			grid::relative_sizes horz(2), vert(2);
 			horz[0] = 0.7f;
@@ -288,7 +324,7 @@ namespace skyfall
 			cells[0].reset(new button("A", m_label_font, m_label_font_size));
 			cells[1].reset(new button("B", m_label_font, m_label_font_size));
 			cells[2].reset(new button("C", m_label_font, m_label_font_size));
-			cells[3].reset(new button("D", m_label_font, m_label_font_size));
+			cells[3].reset(new image(m_test_texture));
 
 			m_test_window.reset(
 				new skyfall::window(std::unique_ptr<element>(new grid(std::move(cells), 2, horz, vert))));
@@ -341,6 +377,7 @@ namespace skyfall
 		unsigned m_label_font_size;
 		unsigned m_text_font_size;
 		std::unique_ptr<window> m_test_window;
+		sf::Texture m_test_texture;
 	};
 }
 
