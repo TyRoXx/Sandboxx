@@ -4,6 +4,7 @@
 #include <numeric>
 #include <cassert>
 #include <iostream>
+#include <boost/signals2.hpp>
 
 namespace skyfall
 {
@@ -55,6 +56,9 @@ namespace skyfall
 
 	struct button : element
 	{
+		boost::signals2::signal<void ()> clicked;
+
+
 		explicit button(std::string label, const sf::Font &font, unsigned font_size)
 			: m_label(std::move(label))
 			, m_font(font)
@@ -68,8 +72,15 @@ namespace skyfall
 
 		virtual bool handle_event(const sf::Event &event)
 		{
-			std::cout << m_label << "\n";
-			return false;
+			switch (event.type)
+			{
+			case sf::Event::MouseButtonReleased:
+				clicked();
+				return true;
+
+			default:
+				return false;
+			}
 		}
 
 		virtual void render(sf::RenderTarget &renderer) const
