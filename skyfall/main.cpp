@@ -5,6 +5,7 @@
 #include <cassert>
 #include <iostream>
 #include <boost/signals2.hpp>
+#include <boost/dynamic_bitset.hpp>
 
 #ifdef _MSC_VER
 #define SKYFALL_OVERRIDE override
@@ -268,6 +269,7 @@ namespace skyfall
 			const auto grid_pos = position();
 
 			std::vector<float> x_desired_sizes(width(), -1), y_desired_sizes(height(), -1);
+			boost::dynamic_bitset<size_t> is_desired_x(x_desired_sizes.size()), is_desired_y(y_desired_sizes.size());
 
 			for (size_t y = 0; y < height(); ++y)
 			{
@@ -278,6 +280,8 @@ namespace skyfall
 					sf::Vector2f cell_size;
 					if (cell.query_size(cell_size))
 					{
+						is_desired_x.set(x);
+						is_desired_y.set(y);
 					}
 					else
 					{
@@ -296,6 +300,8 @@ namespace skyfall
 			const float desired_height = std::accumulate(y_desired_sizes.begin(), y_desired_sizes.end(), 0);
 			const float x_factor = (position().width / desired_width);
 			const float y_factor = (position().height / desired_height);
+			const float spare_x = std::max<float>(0, (position().width - desired_width));
+			const float spare_y = std::max<float>(0, (position().height - desired_height));
 
 			std::vector<float> x_positions(width()), y_positions(height());
 			float x_pos = 0, y_pos = 0;
@@ -309,7 +315,7 @@ namespace skyfall
 				{
 				case 0:
 					{
-						const auto real_size = (desired_size * x_factor);
+						const auto real_size = is_desired_x.test(i) ? (desired_size * x_factor) : (spare_x * m_horizontal_sizes[i]);
 						x_pos += real_size;
 						break;
 					}
@@ -325,7 +331,14 @@ namespace skyfall
 				{
 				case 0:
 					{
-						const auto real_size = (desired_size * y_factor);
+						const auto real_size = is_desired_y.test(i) ? (desired_size * y_factor) : (spare_y * m_vertical_sizes[i]);
+						y_pos += real_size;
+						break;
+					}
+
+				case -1:
+					{
+						const auto real_size = is_desired_y.test(i) ? (desired_size * std::min<float>(y_factor, 1)) : (spare_y * m_vertical_sizes[i]);
 						y_pos += real_size;
 						break;
 					}
@@ -557,14 +570,14 @@ namespace skyfall
 			cells[2].reset(new button("C", m_label_font, m_label_font_size));
 
 			{
-				const size_t image_count = 12;
+				const size_t image_count = 7;
 				grid::cells images(image_count);
 				for (size_t i = 0; i < images.size(); ++i)
 				{
 					images[i].reset(new image(m_test_texture));
 				}
 				std::unique_ptr<grid> image_grid(new grid(
-					std::move(images), 1, grid::relative_sizes(1, 1), grid::relative_sizes(image_count, 1)));
+					std::move(images), 1, grid::relative_sizes(1, 1), grid::relative_sizes(image_count, 1), grid::gravity_vector(0, -1)));
 				cells[3].reset(new frame(std::move(image_grid)));
 			}
 
