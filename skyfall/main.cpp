@@ -260,8 +260,8 @@ namespace skyfall
 		virtual element *pick_child(const sf::Vector2f &point)
 		{
 			sf::Vector2f current(position().left, position().top);
-			size_t x = 0, y = 0;
-			while (true)
+			size_t x = 0;
+			for (;;)
 			{
 				current.x += m_horizontal_sizes[x] * position().width;
 				if (current.x >= point.x)
@@ -270,7 +270,8 @@ namespace skyfall
 				}
 				++x;
 			}
-			while (true)
+			size_t y = 0;
+			for (;;)
 			{
 				current.y += m_vertical_sizes[y] * position().height;
 				if (current.y >= point.y)
