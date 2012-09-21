@@ -54,6 +54,50 @@ namespace skyfall
 	};
 
 
+	struct frame : element
+	{
+		explicit frame(std::unique_ptr<element> content)
+			: m_content(std::move(content))
+		{
+		}
+
+		virtual void handle_resize()
+		{
+			m_content->position(sf::FloatRect(
+				position().left - m_position_in_content.x,
+				position().top - m_position_in_content.y,
+				position().width,
+				position().height));
+		}
+
+		virtual bool handle_event(const sf::Event &event)
+		{
+			return false;
+		}
+
+		virtual void render(sf::RenderTarget &renderer) const
+		{
+			m_content->render(renderer);
+		}
+
+		virtual element *pick_child(const sf::Vector2f &point)
+		{
+			const auto point_in_content = (point - m_position_in_content);
+			if (m_content->position().contains(point_in_content))
+			{
+				return m_content.get();
+			}
+
+			return 0;
+		}
+
+	private:
+
+		std::unique_ptr<element> m_content;
+		sf::Vector2f m_position_in_content;
+	};
+
+
 	struct button : element
 	{
 		boost::signals2::signal<void ()> clicked;
@@ -335,7 +379,18 @@ namespace skyfall
 			cells[0].reset(new button("A", m_label_font, m_label_font_size));
 			cells[1].reset(new button("B", m_label_font, m_label_font_size));
 			cells[2].reset(new button("C", m_label_font, m_label_font_size));
-			cells[3].reset(new image(m_test_texture));
+
+			{
+				const size_t image_count = 7;
+				grid::cells images(image_count);
+				for (size_t i = 0; i < images.size(); ++i)
+				{
+					images[i].reset(new image(m_test_texture));
+				}
+				std::unique_ptr<grid> image_grid(new grid(
+					std::move(images), 1, grid::relative_sizes(1, 1), grid::relative_sizes(image_count, 1)));
+				cells[3].reset(new frame(std::move(image_grid)));
+			}
 
 			m_test_window.reset(
 				new skyfall::window(std::unique_ptr<element>(new grid(std::move(cells), 2, horz, vert))));
