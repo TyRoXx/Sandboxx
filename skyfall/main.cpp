@@ -17,7 +17,7 @@ namespace skyfall
 	namespace
 	{
 		template <class I>
-		void normalize(I begin, I end)
+		void normalize_to_sum_1(I begin, I end)
 		{
 			const auto sum = std::accumulate(begin, end, std::iterator_traits<I>::value_type(0));
 			for (; begin != end; ++begin)
@@ -180,10 +180,10 @@ namespace skyfall
 			{
 				const auto c = *i;
 				const auto &glyph = m_font.getGlyph(c, m_font_size, false);
-				size.x += glyph.bounds.width;
+				size.x += static_cast<float>(glyph.bounds.width);
 			}
 
-			size.y = m_font_size;
+			size.y = static_cast<float>(m_font_size);
 			return size;
 		}
 	};
@@ -205,8 +205,8 @@ namespace skyfall
 			assert(width == m_horizontal_sizes.size());
 			assert(height() == m_vertical_sizes.size());
 
-			normalize(m_horizontal_sizes.begin(), m_horizontal_sizes.end());
-			normalize(m_vertical_sizes.begin(), m_vertical_sizes.end());
+			normalize_to_sum_1(m_horizontal_sizes.begin(), m_horizontal_sizes.end());
+			normalize_to_sum_1(m_vertical_sizes.begin(), m_vertical_sizes.end());
 		}
 
 		size_t width() const
@@ -431,8 +431,8 @@ namespace skyfall
 		virtual bool query_size(sf::Vector2f &size) const SKYFALL_OVERRIDE
 		{
 			const auto texture_size = m_texture.getSize();
-			size.x = texture_size.x;
-			size.y = texture_size.y;
+			size.x = static_cast<float>(texture_size.x);
+			size.y = static_cast<float>(texture_size.y);
 			return true;
 		}
 
