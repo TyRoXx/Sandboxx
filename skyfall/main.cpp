@@ -193,13 +193,16 @@ namespace skyfall
 	{
 		typedef std::vector<std::unique_ptr<element>> cells;
 		typedef std::vector<float> relative_sizes;
+		typedef sf::Vector2i gravity_vector;
 
 
-		explicit grid(cells cells, size_t width, relative_sizes horizontal_sizes, relative_sizes vertical_sizes)
+		explicit grid(cells cells, size_t width, relative_sizes horizontal_sizes, relative_sizes vertical_sizes, gravity_vector gravity = gravity_vector(0, 0))
 			: m_cells(std::move(cells))
 			, m_width(width)
 			, m_horizontal_sizes(std::move(horizontal_sizes))
 			, m_vertical_sizes(std::move(vertical_sizes))
+			, m_gravity(gravity)
+			
 		{
 			assert(m_cells.size() % width == 0);
 			assert(width == m_horizontal_sizes.size());
@@ -260,9 +263,97 @@ namespace skyfall
 			}
 		}
 
+		void recalculate_cells2()
+		{
+			const auto grid_pos = position();
+
+			std::vector<float> x_desired_sizes(width(), -1), y_desired_sizes(height(), -1);
+
+			for (size_t y = 0; y < height(); ++y)
+			{
+				for (size_t x = 0; x < width(); ++x)
+				{
+					auto &cell = cell_at(x, y);
+
+					sf::Vector2f cell_size;
+					if (cell.query_size(cell_size))
+					{
+					}
+					else
+					{
+						cell_size = sf::Vector2f();
+					}
+
+					auto &column_width = x_desired_sizes[x];
+					column_width = std::max(column_width, cell_size.x);
+
+					auto &row_height = y_desired_sizes[y];
+					row_height = std::max(row_height, cell_size.y);
+				}
+			}
+
+			const float desired_width = std::accumulate(x_desired_sizes.begin(), x_desired_sizes.end(), 0);
+			const float desired_height = std::accumulate(y_desired_sizes.begin(), y_desired_sizes.end(), 0);
+			const float x_factor = (position().width / desired_width);
+			const float y_factor = (position().height / desired_height);
+
+			std::vector<float> x_positions(width()), y_positions(height());
+			float x_pos = 0, y_pos = 0;
+
+			for (size_t i = 0; i < x_desired_sizes.size(); ++i)
+			{
+				const auto desired_size = x_desired_sizes[i];
+				x_positions[i] = x_pos;
+
+				switch (m_gravity.x)
+				{
+				case 0:
+					{
+						const auto real_size = (desired_size * x_factor);
+						x_pos += real_size;
+						break;
+					}
+				}
+			}
+
+			for (size_t i = 0; i < y_desired_sizes.size(); ++i)
+			{
+				const auto desired_size = y_desired_sizes[i];
+				y_positions[i] = y_pos;
+
+				switch (m_gravity.y)
+				{
+				case 0:
+					{
+						const auto real_size = (desired_size * y_factor);
+						y_pos += real_size;
+						break;
+					}
+				}
+			}
+
+			for (size_t y = 0; y < height(); ++y)
+			{
+				for (size_t x = 0; x < width(); ++x)
+				{
+					auto &cell = cell_at(x, y);
+
+					const auto cell_width  = (x == (width()  - 1) ? (x_pos - x_positions[x]) : (x_positions[x + 1] - x_positions[x]));
+					const auto cell_height = (y == (height() - 1) ? (y_pos - y_positions[y]) : (y_positions[y + 1] - y_positions[y]));
+
+					cell.position(sf::FloatRect(
+						position().left + x_positions[x],
+						position().top  + y_positions[y],
+						cell_width,
+						cell_height
+						));
+				}
+			}
+		}
+
 		virtual void handle_resize() SKYFALL_OVERRIDE
 		{
-			recalculate_cells();
+			recalculate_cells2();
 		}
 
 		virtual bool handle_event(const sf::Event &event) SKYFALL_OVERRIDE
@@ -359,6 +450,7 @@ namespace skyfall
 		size_t m_width;
 		relative_sizes m_horizontal_sizes;
 		relative_sizes m_vertical_sizes;
+		gravity_vector m_gravity;
 	};
 
 
