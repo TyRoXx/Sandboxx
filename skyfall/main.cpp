@@ -69,6 +69,11 @@ namespace skyfall
 		{
 		}
 
+		element &content()
+		{
+			return *m_content;
+		}
+
 		virtual void handle_resize() SKYFALL_OVERRIDE
 		{
 			m_content->position(sf::FloatRect(
@@ -233,6 +238,11 @@ namespace skyfall
 			return *m_cells[y * m_width + x];
 		}
 
+		void set_cell(size_t x, size_t y, std::unique_ptr<element> cell)
+		{
+			m_cells[y * m_width + x] = std::move(cell);
+		}
+
 		void recalculate_cells()
 		{
 			const auto grid_pos = position();
@@ -296,8 +306,8 @@ namespace skyfall
 				}
 			}
 
-			const float desired_width = std::accumulate(x_desired_sizes.begin(), x_desired_sizes.end(), 0);
-			const float desired_height = std::accumulate(y_desired_sizes.begin(), y_desired_sizes.end(), 0);
+			const float desired_width = std::accumulate(x_desired_sizes.begin(), x_desired_sizes.end(), 0.0f);
+			const float desired_height = std::accumulate(y_desired_sizes.begin(), y_desired_sizes.end(), 0.0f);
 			const float x_factor = (position().width / desired_width);
 			const float y_factor = (position().height / desired_height);
 			const float spare_x = std::max<float>(0, (position().width - desired_width));
@@ -565,12 +575,12 @@ namespace skyfall
 			horz[1] = 0.3f;
 			vert[0] = 2;
 			vert[1] = 5;
-			cells[0].reset(new button("A", m_label_font, m_label_font_size));
+
 			cells[1].reset(new button("B", m_label_font, m_label_font_size));
 			cells[2].reset(new button("C", m_label_font, m_label_font_size));
 
+			const auto create_images = [this](grid &main_grid, size_t image_count)
 			{
-				const size_t image_count = 7;
 				grid::cells images(image_count);
 				for (size_t i = 0; i < images.size(); ++i)
 				{
@@ -578,12 +588,28 @@ namespace skyfall
 				}
 				std::unique_ptr<grid> image_grid(new grid(
 					std::move(images), 1, grid::relative_sizes(1, 1), grid::relative_sizes(image_count, 1), grid::gravity_vector(0, -1)));
-				cells[3].reset(new frame(std::move(image_grid)));
-			}
 
-			m_test_window.reset(
-				new skyfall::window(std::unique_ptr<element>(new grid(std::move(cells), 2, horz, vert))));
+				main_grid.set_cell(1, 1, std::unique_ptr<element>(new frame(std::move(image_grid))));
+			};
+
+			std::unique_ptr<button> add_image(new button("Add image", m_label_font, m_label_font_size));
+			button &add_image_ref = *add_image;
+			cells[0] = std::move(add_image);
+
+			std::unique_ptr<grid> main_grid(new grid(std::move(cells), 2, horz, vert));
+			grid &main_grid_ref = *main_grid;
+			m_test_window.reset(new skyfall::window(std::move(main_grid)));
+			create_images(main_grid_ref, 1);
+
 			m_test_window->position(sf::FloatRect(0, 0, 1200, 700));
+
+			add_image_ref.clicked.connect([&main_grid_ref, create_images]()
+			{
+				auto &images = static_cast<grid &>(static_cast<frame &>(main_grid_ref.cell_at(1, 1)).content());
+				const size_t image_count = (images.height() + 1);
+				create_images(main_grid_ref, image_count);
+				main_grid_ref.recalculate_cells2();
+			});
 		}
 
 		void render()
