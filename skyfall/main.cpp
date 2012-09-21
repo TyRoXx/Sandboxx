@@ -6,6 +6,12 @@
 #include <iostream>
 #include <boost/signals2.hpp>
 
+#ifdef _MSC_VER
+#define SKYFALL_OVERRIDE override
+#else
+#define SKYFALL_OVERRIDE
+#endif
+
 namespace skyfall
 {
 	namespace
@@ -47,6 +53,7 @@ namespace skyfall
 		virtual bool handle_event(const sf::Event &event) = 0;
 		virtual void render(sf::RenderTarget &renderer) const = 0;
 		virtual element *pick_child(const sf::Vector2f &point) = 0;
+		virtual bool query_size(sf::Vector2f &size) const = 0;
 
 	private:
 
@@ -61,7 +68,7 @@ namespace skyfall
 		{
 		}
 
-		virtual void handle_resize()
+		virtual void handle_resize() SKYFALL_OVERRIDE
 		{
 			m_content->position(sf::FloatRect(
 				position().left - m_position_in_content.x,
@@ -70,17 +77,17 @@ namespace skyfall
 				position().height));
 		}
 
-		virtual bool handle_event(const sf::Event &event)
+		virtual bool handle_event(const sf::Event &event) SKYFALL_OVERRIDE
 		{
 			return false;
 		}
 
-		virtual void render(sf::RenderTarget &renderer) const
+		virtual void render(sf::RenderTarget &renderer) const SKYFALL_OVERRIDE
 		{
 			m_content->render(renderer);
 		}
 
-		virtual element *pick_child(const sf::Vector2f &point)
+		virtual element *pick_child(const sf::Vector2f &point) SKYFALL_OVERRIDE
 		{
 			const auto point_in_content = (point - m_position_in_content);
 			if (m_content->position().contains(point_in_content))
@@ -89,6 +96,11 @@ namespace skyfall
 			}
 
 			return 0;
+		}
+
+		virtual bool query_size(sf::Vector2f &size) const SKYFALL_OVERRIDE
+		{
+			return m_content->query_size(size);
 		}
 
 	private:
@@ -110,11 +122,11 @@ namespace skyfall
 		{
 		}
 
-		virtual void handle_resize()
+		virtual void handle_resize() SKYFALL_OVERRIDE
 		{
 		}
 
-		virtual bool handle_event(const sf::Event &event)
+		virtual bool handle_event(const sf::Event &event) SKYFALL_OVERRIDE
 		{
 			switch (event.type)
 			{
@@ -127,7 +139,7 @@ namespace skyfall
 			}
 		}
 
-		virtual void render(sf::RenderTarget &renderer) const
+		virtual void render(sf::RenderTarget &renderer) const SKYFALL_OVERRIDE
 		{
 			sf::RectangleShape background(sf::Vector2f(position().width - 10, position().height - 10));
 			background.setPosition(sf::Vector2f(position().left + 5, position().top + 5));
@@ -142,9 +154,15 @@ namespace skyfall
 			renderer.draw(text);
 		}
 
-		virtual element *pick_child(const sf::Vector2f &point)
+		virtual element *pick_child(const sf::Vector2f &point) SKYFALL_OVERRIDE
 		{
 			return 0;
+		}
+
+		virtual bool query_size(sf::Vector2f &size) const SKYFALL_OVERRIDE
+		{
+			size = measure_label();
+			return true;
 		}
 
 	private:
@@ -152,6 +170,22 @@ namespace skyfall
 		std::string m_label;
 		const sf::Font &m_font;
 		unsigned m_font_size;
+
+
+		sf::Vector2f measure_label() const
+		{
+			sf::Vector2f size;
+			
+			for (auto i = m_label.begin(); i != m_label.end(); ++i)
+			{
+				const auto c = *i;
+				const auto &glyph = m_font.getGlyph(c, m_font_size, false);
+				size.x += glyph.bounds.width;
+			}
+
+			size.y = m_font_size;
+			return size;
+		}
 	};
 
 
@@ -226,12 +260,12 @@ namespace skyfall
 			}
 		}
 
-		virtual void handle_resize()
+		virtual void handle_resize() SKYFALL_OVERRIDE
 		{
 			recalculate_cells();
 		}
 
-		virtual bool handle_event(const sf::Event &event)
+		virtual bool handle_event(const sf::Event &event) SKYFALL_OVERRIDE
 		{
 			switch (event.type)
 			{
@@ -245,7 +279,7 @@ namespace skyfall
 			return false;
 		}
 
-		virtual void render(sf::RenderTarget &renderer) const
+		virtual void render(sf::RenderTarget &renderer) const SKYFALL_OVERRIDE
 		{
 			for (size_t y = 0; y < height(); ++y)
 			{
@@ -257,7 +291,7 @@ namespace skyfall
 			}
 		}
 
-		virtual element *pick_child(const sf::Vector2f &point)
+		virtual element *pick_child(const sf::Vector2f &point) SKYFALL_OVERRIDE
 		{
 			sf::Vector2f current(position().left, position().top);
 			size_t x = 0;
@@ -283,6 +317,42 @@ namespace skyfall
 			return &cell_at(x, y);
 		}
 
+		virtual bool query_size(sf::Vector2f &size) const SKYFALL_OVERRIDE
+		{
+			sf::Vector2f calculated_size;
+			bool result = false;
+
+			for (size_t y = 0; y < height(); ++y)
+			{
+				float row_width = 0;
+
+				for (size_t x = 0; x < width(); ++x)
+				{
+					const auto &cell = cell_at(x, y);
+
+					sf::Vector2f cell_size;
+					if (cell.query_size(cell_size))
+					{
+						result = true;
+
+						calculated_size.y += cell_size.y;
+						row_width += cell_size.x;
+					}
+				}
+
+				if (row_width > calculated_size.x)
+				{
+					calculated_size.x = row_width;
+				}
+			}
+
+			if (result)
+			{
+				size = calculated_size;
+			}
+			return result;
+		}
+
 	private:
 
 		cells m_cells;
@@ -299,24 +369,29 @@ namespace skyfall
 		{
 		}
 
-		virtual void handle_resize()
+		virtual void handle_resize() SKYFALL_OVERRIDE
 		{
 			m_content->position(position());
 		}
 
-		virtual bool handle_event(const sf::Event &event)
+		virtual bool handle_event(const sf::Event &event) SKYFALL_OVERRIDE
 		{
 			return m_content->handle_event(event);
 		}
 
-		virtual void render(sf::RenderTarget &renderer) const
+		virtual void render(sf::RenderTarget &renderer) const SKYFALL_OVERRIDE
 		{
 			m_content->render(renderer);
 		}
 
-		virtual element *pick_child(const sf::Vector2f &point)
+		virtual element *pick_child(const sf::Vector2f &point) SKYFALL_OVERRIDE
 		{
 			return m_content.get();
+		}
+
+		virtual bool query_size(sf::Vector2f &size) const SKYFALL_OVERRIDE
+		{
+			return m_content->query_size(size);
 		}
 
 	private:
@@ -332,25 +407,33 @@ namespace skyfall
 		{
 		}
 
-		virtual void handle_resize()
+		virtual void handle_resize() SKYFALL_OVERRIDE
 		{
 		}
 
-		virtual bool handle_event(const sf::Event &event)
+		virtual bool handle_event(const sf::Event &event) SKYFALL_OVERRIDE
 		{
 			return false;
 		}
 
-		virtual void render(sf::RenderTarget &renderer) const
+		virtual void render(sf::RenderTarget &renderer) const SKYFALL_OVERRIDE
 		{
 			sf::Sprite sprite(m_texture);
 			sprite.setPosition(position().left, position().top);
 			renderer.draw(sprite);
 		}
 
-		virtual element *pick_child(const sf::Vector2f &point)
+		virtual element *pick_child(const sf::Vector2f &point) SKYFALL_OVERRIDE
 		{
 			return 0;
+		}
+
+		virtual bool query_size(sf::Vector2f &size) const SKYFALL_OVERRIDE
+		{
+			const auto texture_size = m_texture.getSize();
+			size.x = texture_size.x;
+			size.y = texture_size.y;
+			return true;
 		}
 
 	private:
@@ -382,7 +465,7 @@ namespace skyfall
 			cells[2].reset(new button("C", m_label_font, m_label_font_size));
 
 			{
-				const size_t image_count = 7;
+				const size_t image_count = 12;
 				grid::cells images(image_count);
 				for (size_t i = 0; i < images.size(); ++i)
 				{
