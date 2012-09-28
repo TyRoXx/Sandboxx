@@ -118,3 +118,8 @@ bool socket_send(socket_t socket, const void *data, size_t size)
 	}
 	return true;
 }
+
+void socket_shutdown(socket_t socket)
+{
+	shutdown(socket, SHUT_RDWR);
+}

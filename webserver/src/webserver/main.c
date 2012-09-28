@@ -54,12 +54,13 @@ static void handle_request(socket_t client, const http_request_t *request)
 	}
 
 	response.status = HttpStatus_Ok;
-	
+
 	if (directory_handle_request(&top_dir, url, &response))
 	{
 		char buffer[8192];
 		size_t i;
 		const char * const status_message = http_status_message(response.status);
+		bool send_failed = false;
 
 		fprintf(stderr, "Sending response\n");
 
@@ -72,7 +73,10 @@ static void handle_request(socket_t client, const http_request_t *request)
 			(int)response.status,
 			(unsigned)response.body_size);
 
-		socket_send(client, buffer, strlen(buffer));
+		if ((send_failed = !socket_send(client, buffer, strlen(buffer))))
+		{
+			goto send_ended;
+		}
 
 		for (i = 0; i < response.header_count; ++i)
 		{
@@ -82,13 +86,22 @@ static void handle_request(socket_t client, const http_request_t *request)
 				header->key,
 				header->value);
 
-			socket_send(client, buffer, strlen(buffer));
+			if ((send_failed = !socket_send(client, buffer, strlen(buffer))))
+			{
+				goto send_ended;
+			}
 		}
 
-		socket_send(client, "\r\n", 2);
-		if (!send_istream(client, &response.body))
+		if (!socket_send(client, "\r\n", 2) ||
+			!send_istream(client, &response.body))
 		{
-			fprintf(stderr, "Connection closed by client\n");
+			send_failed = true;
+		}
+
+send_ended:
+		if (send_failed)
+		{
+			fprintf(stderr, "Send failed\n");
 		}
 	}
 
@@ -142,6 +155,7 @@ static void wait_for_disconnect(socket_t client)
 static void serve_client(socket_t client)
 {
 	receive_request(client);
+	socket_shutdown(client);
 	wait_for_disconnect(client);
 }
 
@@ -174,8 +188,9 @@ static void handle_client(socket_t client)
 	}
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
+	const unsigned short acceptor_port = ((argc >= 2) ? (unsigned short)atoi(argv[1]) : 80);
 	socket_t acceptor, client;
 
 	static const loadable_handler_t handlers[] =
@@ -217,9 +232,9 @@ int main(void)
 		return 1;
 	}
 
-	if (!socket_bind(acceptor, 8080))
+	if (!socket_bind(acceptor, acceptor_port))
 	{
-		fprintf(stderr, "Could not bind acceptor\n");
+		fprintf(stderr, "Could not bind acceptor to port %u\n", (unsigned)acceptor_port);
 		socket_destroy(acceptor);
 		return 1;
 	}
