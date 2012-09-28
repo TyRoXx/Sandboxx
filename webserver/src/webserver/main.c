@@ -190,7 +190,7 @@ static void handle_client(socket_t client)
 
 int main(int argc, char **argv)
 {
-	const unsigned short acceptor_port = ((argc >= 2) ? (unsigned short)atoi(argv[1]) : 80);
+	const unsigned short acceptor_port = ((argc >= 2) ? (unsigned short)atoi(argv[1]) : 8080);
 	socket_t acceptor, client;
 
 	static const loadable_handler_t handlers[] =
