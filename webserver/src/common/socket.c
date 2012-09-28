@@ -121,5 +121,13 @@ bool socket_send(socket_t socket, const void *data, size_t size)
 
 void socket_shutdown(socket_t socket)
 {
-	shutdown(socket, SHUT_RDWR);
+	const int how =
+#ifdef _WIN32
+		SD_BOTH
+#else
+		SHUT_RDWR
+#endif
+		;
+
+	shutdown(socket, how);
 }

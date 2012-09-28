@@ -34,6 +34,8 @@ static bool handle_request(const char *path, struct directory_entry_t *entry, st
 		response->status = HttpStatus_NotFound;
 
 		free(full_path);
+
+		function_set_nothing(&response->destroy_body);
 		return true;
 	}
 
@@ -42,6 +44,8 @@ static bool handle_request(const char *path, struct directory_entry_t *entry, st
 	if (!ifstream_create(&response->body, file))
 	{
 		response->status = HttpStatus_InternalServerError;
+
+		function_set_nothing(&response->destroy_body);
 		return true;
 	}
 
