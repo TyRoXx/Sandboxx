@@ -161,11 +161,22 @@ static bool handle_lua_request(
 	)
 {
 	bool result = false;
-	const buffer_t * const script = entry->data;
+	const char *script_path = entry->data;
+	buffer_t script;
 	execution_context_t execution = {url, response};
 	lua_State * const L = luaL_newstate();
+
 	if (!L)
 	{
+		return false;
+	}
+
+	buffer_create(&script);
+
+	if (!load_buffer_from_file_name(&script, script_path))
+	{
+		buffer_destroy(&script);
+		lua_close(L);
 		return false;
 	}
 
@@ -192,7 +203,7 @@ static bool handle_lua_request(
 	lua_pushcclosure(L, script_add_header, 1);
 	lua_setglobal(L, "AddHeader");
 
-	if (luaL_loadbuffer(L, script->data, script->size, "script") == LUA_OK &&
+	if (luaL_loadbuffer(L, script.data, script.size, "script") == LUA_OK &&
 		lua_pcall(L, 0, LUA_MULTRET, 0) == LUA_OK)
 	{
 		void * const body_data = execution.body.data;
@@ -232,14 +243,15 @@ static bool handle_lua_request(
 			exit(1);
 		}
 
-		lua_close(L);
-		buffer_destroy(&execution.headers);
-		return true;
+		result = true;
+		goto return_;
 	}
 
 	move_headers(&execution.headers, response);
 
+return_:
 	lua_close(L);
+	buffer_destroy(&script);
 	buffer_destroy(&execution.headers);
 	return result;
 }
@@ -247,8 +259,6 @@ static bool handle_lua_request(
 
 static void destroy_lua_script(directory_entry_t *entry)
 {
-	buffer_t * const script = entry->data;
-	buffer_destroy(script);
 	free(entry->data);
 }
 
@@ -260,21 +270,12 @@ bool initialize_lua_script(
 	const char *current_fs_dir
 	)
 {
-	buffer_t * const script = malloc(sizeof(*script));
-	if (!script)
+	entry->data = strdup(args);
+	if (!entry->data)
 	{
 		return false;
 	}
-	buffer_create(script);
 
-	if (!load_buffer_from_file_name(script, args))
-	{
-		buffer_destroy(script);
-		free(script);
-		return false;
-	}
-
-	entry->data = script;
 	entry->destroy = destroy_lua_script;
 	entry->handle_request = handle_lua_request;
 	return true;
