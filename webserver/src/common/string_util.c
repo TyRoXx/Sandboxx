@@ -6,10 +6,15 @@
 char *string_duplicate(const char *original)
 {
 	const size_t length = strlen(original);
-	char *duplicate = malloc(length + 1);
+	return data_duplicate(original, length + 1);
+}
+
+char *data_duplicate(const char *data, size_t size)
+{
+	char *duplicate = malloc(size);
 	if (duplicate)
 	{
-		memcpy(duplicate, original, length + 1);
+		memcpy(duplicate, data, size);
 	}
 	return duplicate;
 }
