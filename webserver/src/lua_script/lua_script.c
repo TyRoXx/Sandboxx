@@ -2,6 +2,7 @@
 #include "http/http_request.h"
 #include "http/http_response.h"
 #include "common/imstream.h"
+#include "common/string_util.h"
 #include "common/load_file.h"
 #include "http/directory.h"
 #include <lua.h>
@@ -131,8 +132,8 @@ static int script_add_header(lua_State *L)
 		return 0;
 	}
 
-	header.key = strdup(key);
-	header.value = strdup(value);
+	header.key = string_duplicate(key);
+	header.value = string_duplicate(value);
 
 	if (!header.key ||
 		!header.value ||
@@ -270,7 +271,7 @@ bool initialize_lua_script(
 	const char *current_fs_dir
 	)
 {
-	entry->data = strdup(args);
+	entry->data = string_duplicate(args);
 	if (!entry->data)
 	{
 		return false;
