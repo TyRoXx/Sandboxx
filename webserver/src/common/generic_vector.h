@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include <stdlib.h>
+#include <assert.h>
 
 
 #define WS_GEN_VECTOR(name, element_type) \
@@ -23,13 +24,14 @@
 
 #define WS_GEN_VECTOR_RESERVE(reference, capacity) do { \
 		void *new_begin; \
+		const size_t new_capacity = (capacity); \
 		const size_t old_size = WS_GEN_VECTOR_SIZE(reference); \
-		if (WS_GEN_VECTOR_CAPACITY(reference) >= (capacity)) break; \
-		new_begin = realloc( WS_GEN_VECTOR_DATA(reference), ((capacity) * sizeof(*WS_GEN_VECTOR_DATA(reference)))); \
+		if (WS_GEN_VECTOR_CAPACITY(reference) >= new_capacity) break; \
+		new_begin = realloc( WS_GEN_VECTOR_DATA(reference), (new_capacity * sizeof(*WS_GEN_VECTOR_DATA(reference)))); \
 		if (!new_begin) break; \
 		WS_GEN_VECTOR_BEGIN(reference) = new_begin; \
 		WS_GEN_VECTOR_END(reference) = WS_GEN_VECTOR_BEGIN(reference) + old_size; \
-		(reference ## _allocated) = (WS_GEN_VECTOR_BEGIN(reference) + (capacity)); \
+		(reference ## _allocated) = (WS_GEN_VECTOR_BEGIN(reference) + new_capacity); \
 	} while(0)
 
 #define WS_GEN_VECTOR_GROW(reference, min_capacity) do { \
@@ -44,7 +46,14 @@
 		++(WS_GEN_VECTOR_END(reference)); \
 	} while(0)
 
+#define WS_GEN_VECTOR_POP_BACK(reference) do { \
+		assert(!WS_GEN_VECTOR_EMPTY(reference)); \
+		--WS_GEN_VECTOR_END(reference); \
+	} while(0)
+
 #define WS_GEN_VECTOR_SIZE(reference) (size_t)(WS_GEN_VECTOR_END(reference) - WS_GEN_VECTOR_BEGIN(reference))
+
+#define WS_GEN_VECTOR_EMPTY(reference) (WS_GEN_VECTOR_BEGIN(reference) == WS_GEN_VECTOR_END(reference))
 
 #define WS_GEN_VECTOR_CAPACITY(reference) (size_t)((reference ## _allocated) - WS_GEN_VECTOR_BEGIN(reference))
 
