@@ -46,7 +46,7 @@ static bool write_escaped(buffer_t *dest, char c)
 	str = dest->data + dest->size;
 
 	/*sprintf for simplicity*/
-	rc = sprintf(str, "&#%u;", (unsigned)c);
+	rc = sprintf(str, "&#%u;", (unsigned)(unsigned char)c);
 
 	/*sprintf can fail*/
 	if (rc < 0)
