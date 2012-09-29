@@ -3,5 +3,5 @@ subdomain
 C:\dev\sandboxx\webserver\config
 
 subdomain
-test
+test.webserver.de
 C:\dev\sandboxx\webserver\config\subdir

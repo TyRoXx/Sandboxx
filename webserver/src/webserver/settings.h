@@ -5,20 +5,20 @@
 #include "common/generic_vector.h"
 
 
-typedef struct sub_domain_t
+typedef struct host_entry_t
 {
 	char *name;
 	char *destination;
 }
-sub_domain_t;
+host_entry_t;
 
 
-void sub_domain_create(sub_domain_t *d, char *name, char *destination);
-void sub_domain_destroy(sub_domain_t *d);
+void host_entry_create(host_entry_t *d, char *name, char *destination);
+void host_entry_destroy(host_entry_t *d);
 
 typedef struct settings_t
 {
-	WS_GEN_VECTOR(sub_domains, sub_domain_t);
+	WS_GEN_VECTOR(hosts, host_entry_t);
 }
 settings_t;
 

@@ -18,3 +18,13 @@ char *data_duplicate(const char *data, size_t size)
 	}
 	return duplicate;
 }
+
+size_t string_index_of(const char * const str, const char c)
+{
+	const char *s = str;
+	while ((*s != '\0') && (*s != c))
+	{
+		++s;
+	}
+	return (size_t)(s - str);
+}

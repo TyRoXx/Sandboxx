@@ -47,14 +47,14 @@ static bool send_istream(socket_t receiver, istream_t *source)
 
 typedef struct location_t
 {
-	char *sub_domain;
+	char *host;
 	directory_t directory;
 }
 location_t;
 
 static void location_destroy(location_t *loc)
 {
-	free(loc->sub_domain);
+	free(loc->host);
 	directory_destroy(&loc->directory);
 }
 
@@ -67,36 +67,33 @@ typedef struct client_t
 client_t;
 
 
-static const directory_t *find_directory_by_url(const client_t *client, const char *url)
+static const directory_t *find_directory_by_host(const client_t *client, const char *host)
 {
-	const char *dot = strchr(url, '.');
-	size_t sub_domain_length;
-	const location_t *loc;
-
-	if (!dot ||
-		!strchr(dot + 1, '.')) /*make sure there is another point for the ending */
-	{
-		dot = url;
-	}
-
-	sub_domain_length = (dot - url);
-
+	const location_t *loc, *result = 0;
+	const size_t significant_host_length = string_index_of(host, ':');
+	
 	for (loc = client->locations_begin; loc != client->locations_end; ++loc)
 	{
-		if (!strncmp(loc->sub_domain, url, sub_domain_length))
+		if (!strncmp(loc->host, host, significant_host_length))
 		{
-			return &loc->directory;
+			result = loc;
+			break;
+		}
+
+		if (*loc->host == '\0')
+		{
+			result = loc;
 		}
 	}
 
-	return 0;
+	return (result ? &result->directory : 0);
 }
 
 static void handle_request(client_t *client, const http_request_t *request)
 {
 	http_response_t response = {0};
 	const char *url = request->url;
-	const directory_t * const directory = find_directory_by_url(client, request->host);
+	const directory_t * const directory = find_directory_by_host(client, request->host);
 
 	if (!directory)
 	{
@@ -253,7 +250,7 @@ static void handle_client(
 	}
 }
 
-static bool load_location(location_t *loc, const char *sub_domain, const char *path)
+static bool load_location(location_t *loc, const char *host, const char *path)
 {
 	static const loadable_handler_t handlers[] =
 	{
@@ -266,7 +263,7 @@ static bool load_location(location_t *loc, const char *sub_domain, const char *p
 	buffer_t dir_file;
 
 	assert(loc);
-	assert(sub_domain);
+	assert(host);
 	assert(path);
 
 	buffer_create(&dir_file);
@@ -298,8 +295,8 @@ static bool load_location(location_t *loc, const char *sub_domain, const char *p
 
 	buffer_destroy(&dir_file);
 
-	loc->sub_domain = string_duplicate(sub_domain);
-	return (loc->sub_domain != 0);
+	loc->host = string_duplicate(host);
+	return (loc->host != 0);
 }
 
 static void destroy_locations(location_t *locations_begin, location_t *locations_end)
@@ -318,7 +315,7 @@ int main(int argc, char **argv)
 	location_t *locations_begin, *locations_end, *loc;
 	settings_t settings;
 	buffer_t settings_content;
-	sub_domain_t *sub;
+	host_entry_t *host;
 	int result;
 
 	buffer_create(&settings_content);
@@ -337,14 +334,14 @@ int main(int argc, char **argv)
 
 	buffer_destroy(&settings_content);
 
-	locations_begin = loc = malloc(sizeof(*locations_begin) * WS_GEN_VECTOR_SIZE(settings.sub_domains));
+	locations_begin = loc = malloc(sizeof(*locations_begin) * WS_GEN_VECTOR_SIZE(settings.hosts));
 	locations_end = locations_begin;
 
-	for (sub = WS_GEN_VECTOR_BEGIN(settings.sub_domains);
-		sub != WS_GEN_VECTOR_END(settings.sub_domains);
-		++sub, ++loc, ++locations_end)
+	for (host = WS_GEN_VECTOR_BEGIN(settings.hosts);
+		host != WS_GEN_VECTOR_END(settings.hosts);
+		++host, ++loc, ++locations_end)
 	{
-		if (!load_location(loc, sub->name, sub->destination))
+		if (!load_location(loc, host->name, host->destination))
 		{
 			destroy_locations(locations_begin, locations_end);
 			free(locations_begin);

@@ -4,13 +4,13 @@
 #include <stdio.h>
 
 
-void sub_domain_create(sub_domain_t *d, char *name, char *destination)
+void host_entry_create(host_entry_t *d, char *name, char *destination)
 {
 	d->name = name;
 	d->destination = destination;
 }
 
-void sub_domain_destroy(sub_domain_t *d)
+void host_entry_destroy(host_entry_t *d)
 {
 	free(d->name);
 	free(d->destination);
@@ -83,7 +83,7 @@ static bool parse_settings(settings_t *s, const char *pos, const char *end)
 		{
 			if (!strcmp("subdomain", command))
 			{
-				sub_domain_t sub_domain;
+				host_entry_t host;
 				char * const name = parse_line(&pos, end);
 				char * const location = parse_line(&pos, end);
 
@@ -96,12 +96,12 @@ static bool parse_settings(settings_t *s, const char *pos, const char *end)
 					return false;
 				}
 
-				sub_domain_create(&sub_domain, name, location);
-				WS_GEN_VECTOR_PUSH_BACK(s->sub_domains, sub_domain);
+				host_entry_create(&host, name, location);
+				WS_GEN_VECTOR_PUSH_BACK(s->hosts, host);
 			}
 			else
 			{
-				fprintf(stderr, "Unknown command '%s'", command);
+				fprintf(stderr, "Unknown command '%s'\n", command);
 				free(command);
 				return false;
 			}
@@ -115,20 +115,20 @@ static bool parse_settings(settings_t *s, const char *pos, const char *end)
 
 bool settings_create(settings_t *s, const char *begin, const char *end)
 {
-	WS_GEN_VECTOR_CREATE(s->sub_domains);
+	WS_GEN_VECTOR_CREATE(s->hosts);
 
 	return parse_settings(s, begin, end);
 }
 
 void settings_destroy(settings_t *s)
 {
-	sub_domain_t * begin = WS_GEN_VECTOR_BEGIN(s->sub_domains);
-	sub_domain_t * const end = WS_GEN_VECTOR_END(s->sub_domains);
+	host_entry_t * begin = WS_GEN_VECTOR_BEGIN(s->hosts);
+	host_entry_t * const end = WS_GEN_VECTOR_END(s->hosts);
 
 	for (; begin != end; ++begin)
 	{
-		sub_domain_destroy(begin);
+		host_entry_destroy(begin);
 	}
 
-	WS_GEN_VECTOR_DESTROY(s->sub_domains);
+	WS_GEN_VECTOR_DESTROY(s->hosts);
 }
