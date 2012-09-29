@@ -8,4 +8,6 @@ for i = 0, 9 do
 	Raw("<br>")
 end
 
+Write("<p>escaped</p>")
+
 Raw("</body></html>")

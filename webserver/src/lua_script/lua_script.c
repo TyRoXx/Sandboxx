@@ -83,6 +83,7 @@ static int script_write(lua_State *L)
 				/*silence for now*/
 				return 0;
 			}
+			break;
 
 		default:
 			if (!buffer_push_back(body, *text))
