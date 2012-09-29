@@ -1,7 +1,0 @@
-subdomain
-
-C:\dev\sandboxx\webserver\config
-
-subdomain
-test.webserver.de
-C:\dev\sandboxx\webserver\config\subdir

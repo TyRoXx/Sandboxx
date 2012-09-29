@@ -69,7 +69,7 @@ static char *parse_line(const char **pos, const char *end)
 	return line;
 }
 
-static bool parse_settings(settings_t *s, const char *pos, const char *end)
+static bool parse_settings_v1(settings_t *s, const char *pos, const char *end)
 {
 	while (pos != end)
 	{
@@ -81,7 +81,7 @@ static bool parse_settings(settings_t *s, const char *pos, const char *end)
 
 		if (*command != '\0')
 		{
-			if (!strcmp("subdomain", command))
+			if (!strcmp("host", command))
 			{
 				host_entry_t host;
 				char * const name = parse_line(&pos, end);
@@ -115,9 +115,26 @@ static bool parse_settings(settings_t *s, const char *pos, const char *end)
 
 bool settings_create(settings_t *s, const char *begin, const char *end)
 {
+	char * const version = parse_line(&begin, end);
+	if (!version)
+	{
+		return false;
+	}
+
 	WS_GEN_VECTOR_CREATE(s->hosts);
 
-	return parse_settings(s, begin, end);
+	if (!strcmp("version 1", version))
+	{
+		free(version);
+		return parse_settings_v1(s, begin, end);
+	}
+
+	fprintf(stderr, "Unsupported settings version '%s'\n", version);
+	fprintf(stderr, "The first line should be:\n");
+	fprintf(stderr, "version 1\n");
+
+	free(version);
+	return false;
 }
 
 void settings_destroy(settings_t *s)
