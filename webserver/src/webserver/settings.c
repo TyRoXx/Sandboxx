@@ -29,6 +29,7 @@ static void skip_current_and_next_if_equals(const char **pos, const char *end, c
 
 static char *parse_line(const char **pos, const char *end)
 {
+	char *line;
 	const char * const line_begin = *pos;
 	const char *line_end;
 
@@ -59,7 +60,13 @@ static char *parse_line(const char **pos, const char *end)
 		++(*pos);
 	}
 
-	return data_duplicate(line_begin, (line_end - line_begin));
+	line = malloc(line_end - line_begin + 1);
+	if (line)
+	{
+		memcpy(line, line_begin, (line_end - line_begin));
+		line[line_end - line_begin] = '\0';
+	}
+	return line;
 }
 
 static bool parse_settings(settings_t *s, const char *pos, const char *end)
@@ -72,29 +79,32 @@ static bool parse_settings(settings_t *s, const char *pos, const char *end)
 			return false;
 		}
 
-		if (!strcmp("subdomain", command))
+		if (*command != '\0')
 		{
-			sub_domain_t sub_domain;
-			char * const name = parse_line(&pos, end);
-			char * const location = parse_line(&pos, end);
-
-			if (!name ||
-				!location)
+			if (!strcmp("subdomain", command))
 			{
-				free(name);
-				free(location);
+				sub_domain_t sub_domain;
+				char * const name = parse_line(&pos, end);
+				char * const location = parse_line(&pos, end);
+
+				if (!name ||
+					!location)
+				{
+					free(name);
+					free(location);
+					free(command);
+					return false;
+				}
+
+				sub_domain_create(&sub_domain, name, location);
+				WS_GEN_VECTOR_PUSH_BACK(s->sub_domains, sub_domain);
+			}
+			else
+			{
+				fprintf(stderr, "Unknown command '%s'", command);
 				free(command);
 				return false;
 			}
-
-			sub_domain_create(&sub_domain, name, location);
-			WS_GEN_VECTOR_PUSH_BACK(s->sub_domains, sub_domain);
-		}
-		else
-		{
-			fprintf(stderr, "Unknown command '%s'", command);
-			free(command);
-			return false;
 		}
 
 		free(command);

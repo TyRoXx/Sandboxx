@@ -4,6 +4,7 @@
 #include "common/imstream.h"
 #include "common/string_util.h"
 #include "common/load_file.h"
+#include "common/path.h"
 #include "http/directory.h"
 #include <lua.h>
 #include <lauxlib.h>
@@ -176,8 +177,8 @@ static bool handle_lua_request(
 
 	if (!load_buffer_from_file_name(&script, script_path))
 	{
-		buffer_destroy(&script);
 		lua_close(L);
+		buffer_destroy(&script);
 		return false;
 	}
 
@@ -271,7 +272,7 @@ bool initialize_lua_script(
 	const char *current_fs_dir
 	)
 {
-	entry->data = string_duplicate(args);
+	entry->data = path_join(current_fs_dir, args);
 	if (!entry->data)
 	{
 		return false;

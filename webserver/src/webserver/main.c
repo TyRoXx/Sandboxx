@@ -1,5 +1,7 @@
 #include "common/socket.h"
 #include "common/thread.h"
+#include "common/path.h"
+#include "common/string_util.h"
 #include "common/load_file.h"
 #include "http/http_request.h"
 #include "http/http_response.h"
@@ -8,16 +10,15 @@
 #include "lua_script/lua_script.h"
 #include "file_system/fs_directory.h"
 #include "sub_directory/sub_directory.h"
+#include "settings.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #ifdef WEBSERVER_WITH_VLD
 #include <vld.h>
 #endif
-
-
-static directory_t top_dir;
 
 
 static bool send_istream(socket_t receiver, istream_t *source)
@@ -43,10 +44,66 @@ static bool send_istream(socket_t receiver, istream_t *source)
 	}
 }
 
-static void handle_request(socket_t client, const http_request_t *request)
+
+typedef struct location_t
+{
+	char *sub_domain;
+	directory_t directory;
+}
+location_t;
+
+static void location_destroy(location_t *loc)
+{
+	free(loc->sub_domain);
+	directory_destroy(&loc->directory);
+}
+
+
+typedef struct client_t
+{
+	socket_t socket;
+	const location_t *locations_begin, *locations_end;
+}
+client_t;
+
+
+static const directory_t *find_directory_by_url(const client_t *client, const char *url)
+{
+	const char *dot = strchr(url, '.');
+	size_t sub_domain_length;
+	const location_t *loc;
+
+	if (!dot ||
+		!strchr(dot + 1, '.')) /*make sure there is another point for the ending */
+	{
+		dot = url;
+	}
+
+	sub_domain_length = (dot - url);
+
+	for (loc = client->locations_begin; loc != client->locations_end; ++loc)
+	{
+		if (!strncmp(loc->sub_domain, url, sub_domain_length))
+		{
+			return &loc->directory;
+		}
+	}
+
+	return 0;
+}
+
+static void handle_request(client_t *client, const http_request_t *request)
 {
 	http_response_t response = {0};
 	const char *url = request->url;
+	const directory_t * const directory = find_directory_by_url(client, request->host);
+
+	if (!directory)
+	{
+		/* TODO error handling */
+		fprintf(stderr, "No directory for host '%s'\n", request->host);
+		return;
+	}
 
 	if (*url == '/')
 	{
@@ -55,7 +112,7 @@ static void handle_request(socket_t client, const http_request_t *request)
 
 	response.status = HttpStatus_Ok;
 
-	if (directory_handle_request(&top_dir, url, &response))
+	if (directory_handle_request(directory, url, &response))
 	{
 		char buffer[8192];
 		size_t i;
@@ -73,7 +130,7 @@ static void handle_request(socket_t client, const http_request_t *request)
 			(int)response.status,
 			(unsigned)response.body_size);
 
-		if ((send_failed = !socket_send(client, buffer, strlen(buffer))))
+		if ((send_failed = !socket_send(client->socket, buffer, strlen(buffer))))
 		{
 			goto send_ended;
 		}
@@ -86,14 +143,14 @@ static void handle_request(socket_t client, const http_request_t *request)
 				header->key,
 				header->value);
 
-			if ((send_failed = !socket_send(client, buffer, strlen(buffer))))
+			if ((send_failed = !socket_send(client->socket, buffer, strlen(buffer))))
 			{
 				goto send_ended;
 			}
 		}
 
-		if (!socket_send(client, "\r\n", 2) ||
-			!send_istream(client, &response.body))
+		if (!socket_send(client->socket, "\r\n", 2) ||
+			!send_istream(client->socket, &response.body))
 		{
 			send_failed = true;
 		}
@@ -124,13 +181,13 @@ static int receive_char(void *client_ptr)
 	}
 }
 
-static void receive_request(socket_t client)
+static void receive_request(client_t *client)
 {
 	http_request_t request;
 
 	fprintf(stderr, "Serving client\n");
 
-	if (!http_request_parse(&request, receive_char, &client))
+	if (!http_request_parse(&request, receive_char, &client->socket))
 	{
 		fprintf(stderr, "Invalid request\n");
 		return;
@@ -142,57 +199,62 @@ static void receive_request(socket_t client)
 	http_request_destroy(&request);
 }
 
-static void wait_for_disconnect(socket_t client)
+static void wait_for_disconnect(socket_t s)
 {
 	char c;
 	size_t received;
 
-	while (socket_receive(client, &c, 1, &received))
+	while (socket_receive(s, &c, 1, &received))
 	{
 	}
 }
 
-static void serve_client(socket_t client)
+static void serve_client(client_t *client)
 {
 	receive_request(client);
-	socket_shutdown(client);
-	wait_for_disconnect(client);
+	socket_shutdown(client->socket);
+	wait_for_disconnect(client->socket);
 }
 
 static void client_thread_proc(void *client_ptr)
 {
-	const socket_t client = *(socket_t *)client_ptr;
-	free(client_ptr);
+	client_t * const client = client_ptr;
 
 	serve_client(client);
-	socket_destroy(client);
+	socket_destroy(client->socket);
+
+	free(client);
+
 	thread_quit();
 }
 
-static void handle_client(socket_t client)
+static void handle_client(
+	socket_t s,
+	const location_t *locations_begin,
+	const location_t *locations_end)
 {
 	thread_t client_thread;
-	socket_t * const client_ptr = malloc(sizeof(*client_ptr));
+	client_t * const client = malloc(sizeof(*client));
 
-	if (!client_ptr)
+	if (!client)
 	{
-		socket_destroy(client);
+		socket_destroy(s);
 		return;
 	}
 
-	*client_ptr = client;
-	if (!thread_create(&client_thread, client_thread_proc, client_ptr))
+	client->socket = s;
+	client->locations_begin = locations_begin;
+	client->locations_end = locations_end;
+
+	if (!thread_create(&client_thread, client_thread_proc, client))
 	{
-		free(client_ptr);
-		socket_destroy(client);
+		socket_destroy(s);
+		free(client);
 	}
 }
 
-int main(int argc, char **argv)
+static bool load_location(location_t *loc, const char *sub_domain, const char *path)
 {
-	const unsigned short acceptor_port = ((argc >= 2) ? (unsigned short)atoi(argv[1]) : 8080);
-	socket_t acceptor, client;
-
 	static const loadable_handler_t handlers[] =
 	{
 		{"lua", initialize_lua_script},
@@ -200,51 +262,127 @@ int main(int argc, char **argv)
 		{"dir", initialize_sub_directory},
 	};
 
+	char * const directory_file_name = path_join(path, "directory.txt");
 	buffer_t dir_file;
+
+	assert(loc);
+	assert(sub_domain);
+	assert(path);
+
 	buffer_create(&dir_file);
 
-	if (!load_buffer_from_file_name(&dir_file, "directory.txt"))
+	if (!load_buffer_from_file_name(&dir_file, directory_file_name))
 	{
-		fprintf(stderr, "Could not load directory file\n");
+		fprintf(stderr, "Could not load directory file '%s'\n", directory_file_name);
 		buffer_destroy(&dir_file);
-		return 1;
+		free(directory_file_name);
+		return false;
 	}
 
-	directory_create(&top_dir);
+	free(directory_file_name);
 
-	if (!load_directory(&top_dir,
+	directory_create(&loc->directory);
+
+	if (!load_directory(
+		&loc->directory,
 		dir_file.data,
 		dir_file.data + dir_file.size,
 		handlers,
 		handlers + sizeof(handlers) / sizeof(handlers[0]),
-		"."))
+		path))
 	{
 		fprintf(stderr, "Could not parse directory file\n");
 		buffer_destroy(&dir_file);
-		return 1;
+		return false;
 	}
 
 	buffer_destroy(&dir_file);
 
+	loc->sub_domain = string_duplicate(sub_domain);
+	return (loc->sub_domain != 0);
+}
+
+static void destroy_locations(location_t *locations_begin, location_t *locations_end)
+{
+	for (; locations_begin != locations_end; ++locations_begin)
+	{
+		location_destroy(locations_begin);
+	}
+}
+
+int main(int argc, char **argv)
+{
+	const unsigned short acceptor_port = ((argc >= 2) ? (unsigned short)atoi(argv[1]) : 8080);
+	const char * const settings_file_name = ((argc >= 3) ? argv[2] : "settings.txt");
+	socket_t acceptor, client;
+	location_t *locations_begin, *locations_end, *loc;
+	settings_t settings;
+	buffer_t settings_content;
+	sub_domain_t *sub;
+	int result;
+
+	buffer_create(&settings_content);
+
+	if (!load_buffer_from_file_name(&settings_content, settings_file_name))
+	{
+		fprintf(stderr, "Could not load settings file '%s'\n", settings_file_name);
+		return 1;
+	}
+
+	if (!settings_create(&settings, settings_content.data, settings_content.data + settings_content.size))
+	{
+		buffer_destroy(&settings_content);
+		return 1;
+	}
+
+	buffer_destroy(&settings_content);
+
+	locations_begin = loc = malloc(sizeof(*locations_begin) * WS_GEN_VECTOR_SIZE(settings.sub_domains));
+	locations_end = locations_begin;
+
+	for (sub = WS_GEN_VECTOR_BEGIN(settings.sub_domains);
+		sub != WS_GEN_VECTOR_END(settings.sub_domains);
+		++sub, ++loc, ++locations_end)
+	{
+		if (!load_location(loc, sub->name, sub->destination))
+		{
+			destroy_locations(locations_begin, locations_end);
+			free(locations_begin);
+			settings_destroy(&settings);
+			return 1;
+		}
+	}
+
+	settings_destroy(&settings);
+
 	if (!socket_create(&acceptor))
 	{
 		fprintf(stderr, "Could not create acceptor\n");
-		return 1;
+		result = 1;
+		goto cleanup;
 	}
 
 	if (!socket_bind(acceptor, acceptor_port))
 	{
 		fprintf(stderr, "Could not bind acceptor to port %u\n", (unsigned)acceptor_port);
-		socket_destroy(acceptor);
-		return 1;
+		result = 1;
+		goto cleanup;
 	}
 
 	while (socket_accept(acceptor, &client))
 	{
-		handle_client(client);
+		handle_client(
+			client,
+			locations_begin,
+			locations_end);
 	}
 
+	result = 0;
+
+cleanup:
 	socket_destroy(acceptor);
-	directory_destroy(&top_dir);
-	return 0;
+
+	destroy_locations(locations_begin, locations_end);
+	free(locations_begin);
+	return result;
 }

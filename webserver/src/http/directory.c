@@ -75,7 +75,7 @@ static bool set_not_found_message(struct http_response_t *response)
 	return true;
 }
 
-bool directory_handle_request(directory_t *directory, const char *path, struct http_response_t *response)
+bool directory_handle_request(const directory_t *directory, const char *path, struct http_response_t *response)
 {
 	const char * const part_end = find_path_separator(path);
 	const char * sub_path = part_end;

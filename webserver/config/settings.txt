@@ -1,0 +1,7 @@
+subdomain
+
+C:\dev\sandboxx\webserver\config
+
+subdomain
+test
+C:\dev\sandboxx\webserver\config\subdir
