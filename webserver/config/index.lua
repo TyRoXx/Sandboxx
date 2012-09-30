@@ -1,10 +1,13 @@
 AddHeader("Server", "TyRoXx WebServer 0.1")
 AddHeader("Content-Type", "text/html")
 
-Echo("<html><head><title>WebServer</title></head><body>")
+Raw("<html><head><title>WebServer</title></head><body>")
 
 for i = 0, 9 do
-	Echo(i .. "<br>")
+	Write(tostring(i))
+	Raw("<br>")
 end
 
-Echo("</body></html>")
+Write("<p>escaped</p>")
+
+Raw("</body></html>")

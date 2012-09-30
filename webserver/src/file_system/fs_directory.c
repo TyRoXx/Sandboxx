@@ -3,6 +3,7 @@
 #include "http/http_response.h"
 #include "common/path.h"
 #include "common/ifstream.h"
+#include "common/imstream.h"
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
@@ -19,11 +20,13 @@ static bool handle_request(const char *path, struct directory_entry_t *entry, st
 	const char * const parent = entry->data;
 	char *full_path;
 	FILE *file;
+	const char *error_message;
 
 	if (strstr(path, ".."))
 	{
 		response->status = HttpStatus_Forbidden;
-		return true;
+		error_message = "Forbidden";
+		goto on_error;
 	}
 
 	full_path = path_join(parent, path);
@@ -32,9 +35,10 @@ static bool handle_request(const char *path, struct directory_entry_t *entry, st
 	if (!file)
 	{
 		response->status = HttpStatus_NotFound;
+		error_message = "Not found";
 
 		free(full_path);
-		return true;
+		goto on_error;
 	}
 
 	free(full_path);
@@ -42,7 +46,8 @@ static bool handle_request(const char *path, struct directory_entry_t *entry, st
 	if (!ifstream_create(&response->body, file))
 	{
 		response->status = HttpStatus_InternalServerError;
-		return true;
+		error_message = "Internal server error";
+		goto on_error;
 	}
 
 	function_create(&response->destroy_body, close_file, file);
@@ -50,6 +55,16 @@ static bool handle_request(const char *path, struct directory_entry_t *entry, st
 	fseek(file, 0, SEEK_END);
 	response->body_size = ftell(file);
 	fseek(file, 0, SEEK_SET);
+	return true;
+
+on_error:
+	{
+		const size_t error_message_length = strlen(error_message);
+
+		imstream_create(&response->body, error_message, error_message_length);
+		response->body_size = error_message_length;
+	}
+	function_set_nothing(&response->destroy_body);
 	return true;
 }
 

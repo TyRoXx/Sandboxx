@@ -18,7 +18,10 @@ void istream_create(
 
 void istream_destroy(istream_t *this)
 {
-	this->destroy(this);
+	if (this->destroy)
+	{
+		this->destroy(this);
+	}
 }
 
 void istream_fetch(istream_t *this)

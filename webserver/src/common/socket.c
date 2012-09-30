@@ -118,3 +118,16 @@ bool socket_send(socket_t socket, const void *data, size_t size)
 	}
 	return true;
 }
+
+void socket_shutdown(socket_t socket)
+{
+	const int how =
+#ifdef _WIN32
+		SD_BOTH
+#else
+		SHUT_RDWR
+#endif
+		;
+
+	shutdown(socket, how);
+}
