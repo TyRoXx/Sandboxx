@@ -6,11 +6,24 @@
 #include "dynamic_library.h"
 
 
+typedef struct node_plugin_request_handler_t
+{
+	bool (*function)(const char *, const char * const *, char **);
+	void (*cleanup)(struct node_plugin_request_handler_t *);
+	void *data;
+}
+node_plugin_request_handler_t;
+
+
+void node_plugin_request_handler_destroy(node_plugin_request_handler_t *r);
+
+
 typedef struct node_plugin_t
 {
 	dyn_lib_t library;
 	unsigned api_version;
 	char *name;
+	node_plugin_request_handler_t request_handler;
 }
 node_plugin_t;
 
