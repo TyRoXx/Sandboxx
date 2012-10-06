@@ -16,14 +16,28 @@ typedef void (*np_get_info)(char *, size_t, unsigned *);
 
 static const size_t PluginNameMaxLength = 32;
 
-typedef bool (*np_handle_request_v0)(const char *, const char * const *, char **);
+static bool load_memory_functions(node_plugin_t *plugin)
+{
+	plugin->realloc = dyn_lib_find(plugin->library, "np_realloc");
+	plugin->free    = dyn_lib_find(plugin->library, "np_free");
+
+	if (plugin->realloc &&
+		plugin->free)
+	{
+		return true;
+	}
+
+	fprintf(stderr, "Plugin %s: np_realloc or np_free missing\n",
+		plugin->name);
+	return false;
+}
 
 static bool load_request_handler_v0(node_plugin_t *plugin)
 {
 	node_plugin_request_handler_t *handler = &plugin->request_handler;
 
 	const char * const function_name = "np_handle_request";
-	np_handle_request_v0 function = dyn_lib_find(plugin->library, function_name);
+	void * const function = dyn_lib_find(plugin->library, function_name);
 	if (!function)
 	{
 		fprintf(stderr, "Plugin %s: Could not find function %s\n",
@@ -40,6 +54,11 @@ static bool load_request_handler_v0(node_plugin_t *plugin)
 
 static bool load_request_handler(node_plugin_t *plugin)
 {
+	if (!load_memory_functions(plugin))
+	{
+		return false;
+	}
+
 	switch (plugin->api_version)
 	{
 	case 0:

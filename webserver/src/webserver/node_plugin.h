@@ -4,6 +4,7 @@
 
 #include "common/config.h"
 #include "dynamic_library.h"
+#include <stddef.h>
 
 
 typedef struct node_plugin_request_handler_t
@@ -23,6 +24,8 @@ typedef struct node_plugin_t
 	dyn_lib_t library;
 	unsigned api_version;
 	char *name;
+	void (*realloc)(void *, size_t);
+	void (*free)(void *);
 	node_plugin_request_handler_t request_handler;
 }
 node_plugin_t;
