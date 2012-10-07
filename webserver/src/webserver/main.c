@@ -134,7 +134,7 @@ static void handle_request(client_t *client, const http_request_t *request)
 
 		for (i = 0; i < response.header_count; ++i)
 		{
-			const http_header_t *header = response.headers + i;
+			const http_header_t * const header = response.headers + i;
 			sprintf(buffer,
 				"%s: %s\r\n",
 				header->key,
@@ -164,7 +164,7 @@ send_ended:
 
 static int receive_char(void *client_ptr)
 {
-	const socket_t client = *(socket_t *)client_ptr;
+	socket_t const client = *(socket_t *)client_ptr;
 	char r;
 	size_t received;
 

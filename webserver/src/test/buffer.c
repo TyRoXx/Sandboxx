@@ -14,7 +14,7 @@ static void test_buffer_size(size_t size)
 
 	TEST_EXPECT(buffer_resize(&buffer, size));
 	TEST_EXPECT(buffer.size == size);
-        TEST_EXPECT(buffer.capacity >= size);
+	TEST_EXPECT(buffer.capacity >= size);
 
 	buffer_destroy(&buffer);
 }

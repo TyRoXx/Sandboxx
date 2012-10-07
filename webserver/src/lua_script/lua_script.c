@@ -101,7 +101,7 @@ static int script_raw(lua_State *L)
 {
 	execution_context_t * const execution =
 		lua_touserdata(L, lua_upvalueindex(1));
-	const char *text = lua_tostring(L, -1);
+	const char * const text = lua_tostring(L, -1);
 
 	if (!text)
 	{
@@ -164,7 +164,7 @@ static bool handle_lua_request(
 	)
 {
 	bool result = false;
-	const char *script_path = entry->data;
+	const char * const script_path = entry->data;
 	buffer_t script;
 	execution_context_t execution = {url, response};
 	lua_State * const L = luaL_newstate();
