@@ -4,7 +4,7 @@
 void istream_create(
 	istream_t *this,
 	void (*fetch)(istream_t *),
-	void (*discard)(istream_t *, const char *),
+	void (*discard)(istream_t *, char const *),
 	void (*destroy)(istream_t *),
 	void *impl
 	)
@@ -29,7 +29,7 @@ void istream_fetch(istream_t *this)
 	this->fetch(this);
 }
 
-void istream_discard(istream_t *this, const char *until)
+void istream_discard(istream_t *this, char const *until)
 {
 	this->discard(this, until);
 }
@@ -44,7 +44,7 @@ bool istream_empty(istream_t *this)
 	return (this->begin == this->end);
 }
 
-const char *istream_data(istream_t *this)
+char const *istream_data(istream_t *this)
 {
 	return this->begin;
 }

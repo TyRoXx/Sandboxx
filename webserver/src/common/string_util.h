@@ -6,9 +6,9 @@
 #include <stddef.h>
 
 
-char *string_duplicate(const char *original);
-char *data_duplicate(const char *data, size_t size);
-size_t string_index_of(const char *str, char c);
+char *string_duplicate(char const *original);
+char *data_duplicate(char const *data, size_t size);
+size_t string_index_of(char const *str, char c);
 
 
 #endif

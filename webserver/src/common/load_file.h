@@ -6,7 +6,7 @@
 #include "buffer.h"
 
 
-bool load_buffer_from_file_name(buffer_t *content, const char *file_name);
+bool load_buffer_from_file_name(buffer_t *content, char const *file_name);
 
 
 #endif

@@ -17,7 +17,7 @@
 
 typedef struct execution_context_t
 {
-	const char *url;
+	char const *url;
 	http_response_t *response;
 	buffer_t headers;
 	buffer_t body;
@@ -63,7 +63,7 @@ static int script_write(lua_State *L)
 	execution_context_t * const execution =
 		lua_touserdata(L, lua_upvalueindex(1));
 	buffer_t * const body = &execution->body;
-	const char *text = lua_tostring(L, -1);
+	char const *text = lua_tostring(L, -1);
 
 	if (!text)
 	{
@@ -101,7 +101,7 @@ static int script_raw(lua_State *L)
 {
 	execution_context_t * const execution =
 		lua_touserdata(L, lua_upvalueindex(1));
-	const char * const text = lua_tostring(L, -1);
+	char const * const text = lua_tostring(L, -1);
 
 	if (!text)
 	{
@@ -124,8 +124,8 @@ static int script_add_header(lua_State *L)
 {
 	execution_context_t * const execution =
 		lua_touserdata(L, lua_upvalueindex(1));
-	const char * const key = lua_tostring(L, -2);
-	const char * const value = lua_tostring(L, -1);
+	char const * const key = lua_tostring(L, -2);
+	char const * const value = lua_tostring(L, -1);
 	http_header_t header;
 
 	if (!key ||
@@ -158,13 +158,13 @@ static void move_headers(buffer_t *from, http_response_t *to)
 }
 
 static bool handle_lua_request(
-	const char *url,
+	char const *url,
 	directory_entry_t *entry,
 	struct http_response_t *response
 	)
 {
 	bool result = false;
-	const char * const script_path = entry->data;
+	char const * const script_path = entry->data;
 	buffer_t script;
 	execution_context_t execution = {url, response};
 	lua_State * const L = luaL_newstate();
@@ -228,9 +228,9 @@ static bool handle_lua_request(
 	}
 	else
 	{
-		static const char Message[] = "Internal server error";
+		static char const Message[] = "Internal server error";
 
-		const char * const error_str = lua_tostring(L, -1);
+		char const * const error_str = lua_tostring(L, -1);
 		if (error_str)
 		{
 			fprintf(stderr, "Lua error: %s\n", error_str);
@@ -267,10 +267,10 @@ static void destroy_lua_script(directory_entry_t *entry)
 
 bool initialize_lua_script(
 	struct directory_entry_t *entry,
-	const char *args,
+	char const *args,
 	const struct loadable_handler_t *handlers_begin,
 	const struct loadable_handler_t *handlers_end,
-	const char *current_fs_dir
+	char const *current_fs_dir
 	)
 {
 	entry->data = path_join(current_fs_dir, args);

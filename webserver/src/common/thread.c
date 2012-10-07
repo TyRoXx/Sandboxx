@@ -10,7 +10,7 @@ bool thread_create(thread_t *thread, void (*function)(void *), void *data)
 	/*_beginthread returns 1L on an error, in which case errno is set to EAGAIN 
 	if there are too many threads or to EINVAL if the argument is invalid or the 
 	stack size is incorrect.*/
-	const uintptr_t rc = _beginthread(function, 0, data);
+	uintptr_t const rc = _beginthread(function, 0, data);
 	if (rc == 1)
 	{
 		return false;
@@ -48,7 +48,7 @@ function_and_data_t;
 
 static void *function_wrapper(void *func_data_ptr)
 {
-	const function_and_data_t func_data = *(function_and_data_t *)func_data_ptr;
+	function_and_data_t const func_data = *(function_and_data_t *)func_data_ptr;
 	free(func_data_ptr);
 	func_data.function(func_data.data);
 	return 0;

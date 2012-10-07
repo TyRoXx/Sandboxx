@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 
-static bool handle_request(const char *path, struct directory_entry_t *entry, struct http_response_t *response)
+static bool handle_request(char const *path, struct directory_entry_t *entry, struct http_response_t *response)
 {
 	return directory_handle_request(entry->data, path, response);
 }
@@ -22,10 +22,10 @@ static void destroy_sub_directory(directory_entry_t *entry)
 
 bool initialize_sub_directory(
 	directory_entry_t *entry,
-	const char *args,
+	char const *args,
 	const loadable_handler_t *handlers_begin,
 	const loadable_handler_t *handlers_end,
-	const char *current_fs_dir
+	char const *current_fs_dir
 	)
 {
 	buffer_t description;

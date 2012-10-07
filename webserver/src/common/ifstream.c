@@ -39,7 +39,7 @@ static void fetch(istream_t *this)
 	this->end = this->begin + buffer->size;
 }
 
-static void discard(istream_t *this, const char *until)
+static void discard(istream_t *this, char const *until)
 {
 	ifstream_impl_t * const impl = this->impl;
 	buffer_t * const buffer = &impl->buffer;

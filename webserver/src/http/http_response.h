@@ -18,7 +18,7 @@ typedef enum http_status_t
 http_status_t;
 
 
-const char *http_status_message(http_status_t status);
+char const *http_status_message(http_status_t status);
 
 
 typedef struct http_header_t
@@ -45,7 +45,7 @@ http_response_t;
 
 
 void http_response_destroy(http_response_t *response);
-http_header_t *http_response_header(http_response_t *response, const char *key);
+http_header_t *http_response_header(http_response_t *response, char const *key);
 
 
 #endif

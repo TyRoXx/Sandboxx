@@ -12,10 +12,10 @@ struct loadable_handler_t;
 
 bool initialize_lua_script(
 	struct directory_entry_t *entry,
-	const char *args,
+	char const *args,
 	const struct loadable_handler_t *handlers_begin,
 	const struct loadable_handler_t *handlers_end,
-	const char *current_fs_dir
+	char const *current_fs_dir
 	);
 
 

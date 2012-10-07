@@ -4,7 +4,7 @@
 
 typedef struct imstream_impl_t
 {
-	const char *data;
+	char const *data;
 	size_t size;
 }
 imstream_impl_t;
@@ -21,7 +21,7 @@ static void fetch(istream_t *this)
 	}
 }
 
-static void discard(istream_t *this, const char *until)
+static void discard(istream_t *this, char const *until)
 {
 	this->begin = until;
 }

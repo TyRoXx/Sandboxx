@@ -5,9 +5,9 @@
 
 
 static void check_join_equal(
-	const char *left,
-	const char *right,
-	const char *joined)
+	char const *left,
+	char const *right,
+	char const *joined)
 {
 	char *result = path_join(left, right);
 	TEST_EXPECT(result);

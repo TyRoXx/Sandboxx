@@ -35,21 +35,21 @@ static bool load_memory_functions(node_plugin_t *plugin)
 }
 
 typedef bool (*np_request_handler_fn)(
-	const char *method,
-	const char *url,
-	const char *host,
-	const char * const *request_headers,
-	const char *request_body,
+	char const *method,
+	char const *url,
+	char const *host,
+	char const * const *request_headers,
+	char const *request_body,
 	size_t request_body_size,
 	char **response_headers,
 	char **response_body);
 
 static bool request_handle_v0_call(
-	const char *method,
-	const char *url,
-	const char *host,
-	const char * const *request_headers,
-	const char *request_body,
+	char const *method,
+	char const *url,
+	char const *host,
+	char const * const *request_headers,
+	char const *request_body,
 	size_t request_body_size,
 	char **response_headers,
 	char **response_body,
@@ -65,7 +65,7 @@ static bool load_request_handler_v0(node_plugin_t *plugin)
 {
 	node_plugin_request_handler_t *handler = &plugin->request_handler;
 
-	const char * const function_name = "np_handle_request";
+	char const * const function_name = "np_handle_request";
 	np_request_handler_fn const function = dyn_lib_find(plugin->library, function_name);
 	if (!function)
 	{
@@ -101,7 +101,7 @@ static bool load_request_handler(node_plugin_t *plugin)
 	}
 }
 
-bool node_plugin_load(node_plugin_t *plugin, const char *library_file)
+bool node_plugin_load(node_plugin_t *plugin, char const *library_file)
 {
 	np_get_info get_info;
 

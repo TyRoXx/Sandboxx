@@ -5,7 +5,7 @@
 #include "config.h"
 
 
-char *path_join(const char *parent, const char *child);
+char *path_join(char const *parent, char const *child);
 
 
 #endif

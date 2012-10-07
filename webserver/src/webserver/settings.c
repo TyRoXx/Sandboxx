@@ -17,7 +17,7 @@ void host_entry_destroy(host_entry_t *d)
 }
 
 
-static void skip_current_and_next_if_equals(const char **pos, const char *end, char next)
+static void skip_current_and_next_if_equals(char const **pos, char const *end, char next)
 {
 	++(*pos);
 	if ((*pos != end) &&
@@ -27,11 +27,11 @@ static void skip_current_and_next_if_equals(const char **pos, const char *end, c
 	}
 }
 
-static char *parse_line(const char **pos, const char *end)
+static char *parse_line(char const **pos, char const *end)
 {
 	char *line;
-	const char * const line_begin = *pos;
-	const char *line_end;
+	char const * const line_begin = *pos;
+	char const *line_end;
 
 	for (;;)
 	{
@@ -69,7 +69,7 @@ static char *parse_line(const char **pos, const char *end)
 	return line;
 }
 
-static bool parse_settings_v1(settings_t *s, const char *pos, const char *end)
+static bool parse_settings_v1(settings_t *s, char const *pos, char const *end)
 {
 	while (pos != end)
 	{
@@ -113,7 +113,7 @@ static bool parse_settings_v1(settings_t *s, const char *pos, const char *end)
 	return true;
 }
 
-bool settings_create(settings_t *s, const char *begin, const char *end)
+bool settings_create(settings_t *s, char const *begin, char const *end)
 {
 	char * const version = parse_line(&begin, end);
 	if (!version)

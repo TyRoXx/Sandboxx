@@ -7,12 +7,12 @@
 #include <assert.h>
 
 
-static const char *find_char_and_skip(
-	const char **pos,
-	const char *end,
-	const char *terminators)
+static char const *find_char_and_skip(
+	char const **pos,
+	char const *end,
+	char const *terminators)
 {
-	const char *result;
+	char const *result;
 
 	while ((*pos != end) &&
 		!strchr(terminators, **pos))
@@ -33,7 +33,7 @@ static const char *find_char_and_skip(
 
 typedef struct string_ref_t
 {
-	const char *begin, *end;
+	char const *begin, *end;
 }
 string_ref_t;
 
@@ -43,7 +43,7 @@ static bool is_string_ref_empty(const string_ref_t *str)
 	return (str->begin == str->end);
 }
 
-static bool equals_string_ref(const string_ref_t *left, const char *right)
+static bool equals_string_ref(const string_ref_t *left, char const *right)
 {
 	const size_t len = strlen(right);
 	return
@@ -74,8 +74,8 @@ line_t;
 
 static void parse_line(
 	line_t *line,
-	const char **pos,
-	const char *end)
+	char const **pos,
+	char const *end)
 {
 	const string_ref_t name = {*pos, find_char_and_skip(pos, end, " ")};
 	const string_ref_t handler = {*pos, find_char_and_skip(pos, end, " ")};
@@ -86,7 +86,7 @@ static void parse_line(
 	line->args = args;
 }
 
-static bool expect_not_empty(const string_ref_t *str, const char *message)
+static bool expect_not_empty(const string_ref_t *str, char const *message)
 {
 	if (is_string_ref_empty(str))
 	{
@@ -117,15 +117,15 @@ static const loadable_handler_t *find_handler(
 
 bool load_directory(
 	struct directory_t *directory,
-	const char *begin,
-	const char *end,
+	char const *begin,
+	char const *end,
 	const loadable_handler_t *handlers_begin,
 	const loadable_handler_t *handlers_end,
-	const char *current_fs_dir
+	char const *current_fs_dir
 	)
 {
 	line_t line;
-	const char *pos = begin;
+	char const *pos = begin;
 	buffer_t entries;
 
 	assert(!directory->default_);

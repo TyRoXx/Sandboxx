@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 
-const char *http_status_message(http_status_t status)
+char const *http_status_message(http_status_t status)
 {
 	switch (status)
 	{
@@ -36,7 +36,7 @@ void http_response_destroy(http_response_t *response)
 	function_call(&response->destroy_body);
 }
 
-http_header_t *http_response_header(http_response_t *response, const char *key)
+http_header_t *http_response_header(http_response_t *response, char const *key)
 {
 	size_t i;
 

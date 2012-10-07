@@ -15,12 +15,12 @@ static void close_file(void *file)
 	fclose(file);
 }
 
-static bool handle_request(const char *path, struct directory_entry_t *entry, struct http_response_t *response)
+static bool handle_request(char const *path, struct directory_entry_t *entry, struct http_response_t *response)
 {
-	const char * const parent = entry->data;
+	char const * const parent = entry->data;
 	char *full_path;
 	FILE *file;
-	const char *error_message;
+	char const *error_message;
 
 	if (strstr(path, ".."))
 	{
@@ -76,10 +76,10 @@ static void destroy_fs_dir(directory_entry_t *entry)
 
 bool initialize_file_system(
 	struct directory_entry_t *entry,
-	const char *args,
+	char const *args,
 	const struct loadable_handler_t *handlers_begin,
 	const struct loadable_handler_t *handlers_end,
-	const char *current_fs_dir
+	char const *current_fs_dir
 	)
 {
 	entry->data = path_join(current_fs_dir, args);

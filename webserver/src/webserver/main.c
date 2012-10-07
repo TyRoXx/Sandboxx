@@ -67,7 +67,7 @@ typedef struct client_t
 client_t;
 
 
-static const directory_t *find_directory_by_host(const client_t *client, const char *host)
+static const directory_t *find_directory_by_host(const client_t *client, char const *host)
 {
 	const location_t *loc, *result = 0;
 	const size_t significant_host_length = string_index_of(host, ':');
@@ -92,7 +92,7 @@ static const directory_t *find_directory_by_host(const client_t *client, const c
 static void handle_request(client_t *client, const http_request_t *request)
 {
 	http_response_t response = {0};
-	const char *url = request->url;
+	char const *url = request->url;
 	const directory_t * const directory = find_directory_by_host(client, request->host);
 
 	if (!directory)
@@ -113,7 +113,7 @@ static void handle_request(client_t *client, const http_request_t *request)
 	{
 		char buffer[8192];
 		size_t i;
-		const char * const status_message = http_status_message(response.status);
+		char const * const status_message = http_status_message(response.status);
 		bool send_failed = false;
 
 		fprintf(stderr, "Sending response\n");
@@ -250,7 +250,7 @@ static void handle_client(
 	}
 }
 
-static bool load_location(location_t *loc, const char *host, const char *path)
+static bool load_location(location_t *loc, char const *host, char const *path)
 {
 	static const loadable_handler_t handlers[] =
 	{
@@ -310,7 +310,7 @@ static void destroy_locations(location_t *locations_begin, location_t *locations
 int main(int argc, char **argv)
 {
 	const unsigned short acceptor_port = ((argc >= 2) ? (unsigned short)atoi(argv[1]) : 8080);
-	const char * const settings_file_name = ((argc >= 3) ? argv[2] : "settings.txt");
+	char const * const settings_file_name = ((argc >= 3) ? argv[2] : "settings.txt");
 	socket_t acceptor, client;
 	location_t *locations_begin, *locations_end, *loc;
 	settings_t settings;

@@ -4,7 +4,7 @@
 #include <assert.h>
 
 
-static bool is_last_char(const char *str, char c)
+static bool is_last_char(char const *str, char c)
 {
 	const size_t len = strlen(str);
 	if (len == 0)
@@ -14,7 +14,7 @@ static bool is_last_char(const char *str, char c)
 	return (str[len - 1] == c);
 }
 
-char *path_join(const char *parent, const char *child)
+char *path_join(char const *parent, char const *child)
 {
 	const bool parent_has_slash = is_last_char(parent, '/');
 	const bool child_has_slash = (*child == '/');

@@ -14,21 +14,21 @@ typedef struct loadable_handler_t
 	char *name;
 	bool (*initialize)(
 		struct directory_entry_t *,
-		const char *, 
+		char const *, 
 		const struct loadable_handler_t *,
 		const struct loadable_handler_t *,
-		const char *);
+		char const *);
 }
 loadable_handler_t;
 
 
 bool load_directory(
 	struct directory_t *directory,
-	const char *begin,
-	const char *end,
+	char const *begin,
+	char const *end,
 	const loadable_handler_t *handlers_begin,
 	const loadable_handler_t *handlers_end,
-	const char *current_fs_dir
+	char const *current_fs_dir
 	);
 
 

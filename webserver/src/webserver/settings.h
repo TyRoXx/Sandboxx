@@ -23,7 +23,7 @@ typedef struct settings_t
 settings_t;
 
 
-bool settings_create(settings_t *s, const char *begin, const char *end);
+bool settings_create(settings_t *s, char const *begin, char const *end);
 void settings_destroy(settings_t *s);
 
 

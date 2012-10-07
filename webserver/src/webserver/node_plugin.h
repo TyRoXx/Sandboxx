@@ -14,11 +14,11 @@ struct http_response_t;
 typedef struct node_plugin_request_handler_t
 {
 	bool (*function)(
-		const char *method,
-		const char *url,
-		const char *host,
-		const char * const *request_headers,
-		const char *request_body,
+		char const *method,
+		char const *url,
+		char const *host,
+		char const * const *request_headers,
+		char const *request_body,
 		size_t request_body_size,
 		char **response_headers,
 		char **response_body,
@@ -45,7 +45,7 @@ typedef struct node_plugin_t
 node_plugin_t;
 
 
-bool node_plugin_load(node_plugin_t *plugin, const char *library_file);
+bool node_plugin_load(node_plugin_t *plugin, char const *library_file);
 bool node_plugin_handle_request(
 	node_plugin_t *plugin,
 	const struct http_request_t *request,
