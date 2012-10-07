@@ -21,7 +21,8 @@ char *path_join(const char *parent, const char *child)
 		(*parent == '\0');
 	const size_t parent_length = strlen(parent);
 	const size_t child_length = strlen(child);
-	const size_t total_length = parent_length + child_length + !parent_has_slash;
+	const bool do_insert_slash = (parent_length > 0) && (child_length > 0) && !parent_has_slash;
+	const size_t total_length = parent_length + child_length + do_insert_slash;
 	char *joined = malloc(total_length + 1);
 	if (joined)
 	{
@@ -29,7 +30,7 @@ char *path_join(const char *parent, const char *child)
 		memcpy(joined, parent, parent_length);
 		dest += parent_length;
 
-		if (!parent_has_slash)
+		if (do_insert_slash)
 		{
 			*dest = '/';
 			++dest;

@@ -21,4 +21,6 @@ void test_path()
 {
 	check_join_equal(".", "abc", "./abc");
 	check_join_equal("parent", "child", "parent/child");
+	check_join_equal("parent/", "child", "parent/child");
+	check_join_equal("parent/child", "", "parent/child");
 }
