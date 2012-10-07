@@ -103,8 +103,8 @@ bool socket_receive(socket_t socket, void *data, size_t size, size_t *received)
 
 bool socket_send(socket_t socket, const void *data, size_t size)
 {
-	const char *remaining = data;
-	const char * const end = (remaining + size);
+	char const *remaining = data;
+	char const * const end = (remaining + size);
 
 	while (remaining < end)
 	{
@@ -121,7 +121,7 @@ bool socket_send(socket_t socket, const void *data, size_t size)
 
 void socket_shutdown(socket_t socket)
 {
-	const int how =
+	int const how =
 #ifdef _WIN32
 		SD_BOTH
 #else

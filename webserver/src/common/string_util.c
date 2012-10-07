@@ -5,13 +5,13 @@
 
 char *string_duplicate(const char *original)
 {
-	const size_t length = strlen(original);
+	size_t const length = strlen(original);
 	return data_duplicate(original, length + 1);
 }
 
 char *data_duplicate(const char *data, size_t size)
 {
-	char *duplicate = malloc(size);
+	char * const duplicate = malloc(size);
 	if (duplicate)
 	{
 		memcpy(duplicate, data, size);
@@ -19,9 +19,9 @@ char *data_duplicate(const char *data, size_t size)
 	return duplicate;
 }
 
-size_t string_index_of(const char * const str, const char c)
+size_t string_index_of(const char *str, char c)
 {
-	const char *s = str;
+	char const *s = str;
 	while ((*s != '\0') && (*s != c))
 	{
 		++s;

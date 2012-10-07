@@ -24,10 +24,11 @@ char *path_join(const char *parent, const char *child)
 		(parent_length > 0) && (child_length > 0) &&
 		!parent_has_slash && !child_has_slash;
 	const size_t total_length = (parent_length + child_length + do_insert_slash);
-	char *joined = malloc(total_length + 1);
+	char * const joined = malloc(total_length + 1);
 	if (joined)
 	{
 		char *dest = joined;
+
 		memcpy(joined, parent, parent_length);
 		dest += parent_length;
 

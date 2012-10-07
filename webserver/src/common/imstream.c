@@ -12,7 +12,7 @@ imstream_impl_t;
 static void fetch(istream_t *this)
 {
 	imstream_impl_t * const impl = this->impl;
-	const char *end = impl->data + impl->size;
+	char const * const end = impl->data + impl->size;
 
 	if (this->end != end)
 	{

@@ -18,7 +18,7 @@ static void fetch(istream_t *this)
 	ifstream_impl_t * const impl = this->impl;
 	buffer_t * const buffer = &impl->buffer;
 	FILE * const file = impl->file;
-	const size_t old_buffer_size = buffer->size;
+	size_t const old_buffer_size = buffer->size;
 	size_t read;
 
 	if (!buffer_resize(buffer, old_buffer_size + ReadSize))
