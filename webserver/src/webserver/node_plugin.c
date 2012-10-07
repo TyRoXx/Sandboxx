@@ -1,4 +1,6 @@
 #include "node_plugin.h"
+#include "http/http_request.h"
+#include "http/http_response.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -32,12 +34,39 @@ static bool load_memory_functions(node_plugin_t *plugin)
 	return false;
 }
 
+typedef bool (*np_request_handler_fn)(
+	const char *method,
+	const char *url,
+	const char *host,
+	const char * const *request_headers,
+	const char *request_body,
+	size_t request_body_size,
+	char **response_headers,
+	char **response_body);
+
+static bool request_handle_v0_call(
+	const char *method,
+	const char *url,
+	const char *host,
+	const char * const *request_headers,
+	const char *request_body,
+	size_t request_body_size,
+	char **response_headers,
+	char **response_body,
+	void *data)
+{
+	np_request_handler_fn const function = data;
+	return function(
+		method, url, host, request_headers, request_body, request_body_size,
+		response_headers, response_body);
+}
+
 static bool load_request_handler_v0(node_plugin_t *plugin)
 {
 	node_plugin_request_handler_t *handler = &plugin->request_handler;
 
 	const char * const function_name = "np_handle_request";
-	void * const function = dyn_lib_find(plugin->library, function_name);
+	np_request_handler_fn const function = dyn_lib_find(plugin->library, function_name);
 	if (!function)
 	{
 		fprintf(stderr, "Plugin %s: Could not find function %s\n",
@@ -46,8 +75,8 @@ static bool load_request_handler_v0(node_plugin_t *plugin)
 		return false;
 	}
 
-	handler->function = function;
-	handler->data = 0;
+	handler->function = request_handle_v0_call;
+	handler->data = function;
 	handler->cleanup = 0;
 	return true;
 }
@@ -106,6 +135,38 @@ bool node_plugin_load(node_plugin_t *plugin, const char *library_file)
 
 on_error:
 	node_plugin_destroy(plugin);
+	return false;
+}
+
+bool node_plugin_handle_request(
+	node_plugin_t *plugin,
+	const struct http_request_t *request,
+	struct http_response_t *response)
+{
+	//currently no headers
+	char *null_ptr = 0;
+	char **request_headers = &null_ptr;
+
+	//API expects these to be null
+	char *response_headers = 0;
+	char *response_body = 0;
+
+	if (plugin->request_handler.function(
+		"GET", //TODO
+		request->url,
+		request->host,
+		request_headers,
+		0,
+		0,
+		&response_headers,
+		&response_body,
+		plugin->request_handler.data
+		))
+	{
+		//TODO: convert response
+		return true;
+	}
+
 	return false;
 }
 
