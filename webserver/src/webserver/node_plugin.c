@@ -144,8 +144,8 @@ bool node_plugin_handle_request(
 	struct http_response_t *response)
 {
 	//currently no headers
-	char *null_ptr = 0;
-	char **request_headers = &null_ptr;
+	char const * const null_ptr = 0;
+	char const * const * const request_headers = &null_ptr;
 
 	//API expects these to be null
 	char *response_headers = 0;
