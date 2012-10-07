@@ -16,13 +16,14 @@ static bool is_last_char(const char *str, char c)
 
 char *path_join(const char *parent, const char *child)
 {
-	const bool parent_has_slash =
-		is_last_char(parent, '/') ||
-		(*parent == '\0');
+	const bool parent_has_slash = is_last_char(parent, '/');
+	const bool child_has_slash = (*child == '/');
 	const size_t parent_length = strlen(parent);
 	const size_t child_length = strlen(child);
-	const bool do_insert_slash = (parent_length > 0) && (child_length > 0) && !parent_has_slash;
-	const size_t total_length = parent_length + child_length + do_insert_slash;
+	const bool do_insert_slash =
+		(parent_length > 0) && (child_length > 0) &&
+		!parent_has_slash && !child_has_slash;
+	const size_t total_length = (parent_length + child_length + do_insert_slash);
 	char *joined = malloc(total_length + 1);
 	if (joined)
 	{
