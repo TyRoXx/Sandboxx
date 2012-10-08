@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 
 		p0::compiler compiler(
 			unit_name,
-			p0::compiler::source_range(source.data(), source.data() + source.size())
+			p0::source_range(source.data(), source.data() + source.size())
 			);
 
 		p0::intermediate::unit const compiled_unit = compiler.compile();
