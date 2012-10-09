@@ -19,18 +19,15 @@ namespace p0
 			function();
 			explicit function(
 				instruction_vector body,
-				size_t parameters,
-				size_t locals
+				size_t parameters
 				);
 			instruction_vector const &body() const;
 			size_t parameters() const;
-			size_t locals() const;
 
 		private:
 
 			instruction_vector m_body;
 			size_t m_parameters;
-			size_t m_locals;
 		};
 	}
 }
