@@ -73,7 +73,9 @@ int main(int argc, char **argv)
 			argv[2] :
 			(source_file_name.substr(source_file_name.find('.')) + ".p0i");
 
-		p0::source_range source_range(source.data(), source.data() + source.size());
+		p0::source_range source_range(
+			source.data(),
+			source.data() + source.size());
 
 		size_t error_counter = 0;
 
@@ -92,7 +94,8 @@ int main(int argc, char **argv)
 
 		std::ofstream target_file(
 			target_file_name,
-			std::ios::binary);
+			std::ios::binary
+			);
 		if (!target_file)
 		{
 			throw std::runtime_error("Could not open target file " + target_file_name);

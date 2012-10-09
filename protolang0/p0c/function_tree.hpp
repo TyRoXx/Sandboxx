@@ -11,9 +11,22 @@
 
 namespace p0
 {
+	struct name_expression_tree;
+	struct integer_10_expression_tree;
+
+
+	struct expression_tree_visitor
+	{
+		virtual ~expression_tree_visitor();
+		virtual void visit(name_expression_tree &expression) = 0;
+		virtual void visit(integer_10_expression_tree &expression) = 0;
+	};
+
+
 	struct expression_tree
 	{
 		virtual ~expression_tree();
+		virtual void accept(expression_tree_visitor &visitor) = 0;
 	};
 
 
@@ -22,11 +35,26 @@ namespace p0
 		explicit name_expression_tree(
 			source_range name
 			);
+		virtual void accept(expression_tree_visitor &visitor) override;
 		source_range const &name() const;
 
 	private:
 
 		source_range m_name;
+	};
+
+
+	struct integer_10_expression_tree : expression_tree
+	{
+		explicit integer_10_expression_tree(
+			source_range value
+			);
+		virtual void accept(expression_tree_visitor &visitor) override;
+		source_range const &value() const;
+
+	private:
+
+		source_range m_value;
 	};
 
 

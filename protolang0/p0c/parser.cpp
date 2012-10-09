@@ -121,7 +121,13 @@ namespace p0
 			return std::unique_ptr<expression_tree>(
 				new name_expression_tree(
 					first.content
-					));
+				));
+
+		case token_type::integer_10:
+			return std::unique_ptr<expression_tree>(
+				new integer_10_expression_tree(
+					first.content
+				));
 
 		case token_type::parenthesis_left:
 			{

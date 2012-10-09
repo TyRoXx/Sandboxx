@@ -3,6 +3,11 @@
 
 namespace p0
 {
+	expression_tree_visitor::~expression_tree_visitor()
+	{
+	}
+
+
 	expression_tree::~expression_tree()
 	{
 	}
@@ -20,7 +25,30 @@ namespace p0
 		return m_name;
 	}
 
+	void name_expression_tree::accept(expression_tree_visitor &visitor)
+	{
+		visitor.visit(*this);
+	}
 
+
+	integer_10_expression_tree::integer_10_expression_tree(
+		source_range value
+		)
+		: m_value(value)
+	{
+	}
+
+	source_range const &integer_10_expression_tree::value() const
+	{
+		return m_value;
+	}
+
+	void integer_10_expression_tree::accept(expression_tree_visitor &visitor)
+	{
+		visitor.visit(*this);
+	}
+
+	
 	statement_tree::~statement_tree()
 	{
 	}
