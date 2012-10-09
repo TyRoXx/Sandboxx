@@ -55,17 +55,6 @@ namespace
 		cerr << "    " << line << '\n';
 		return true;
 	}
-
-	std::string make_output_file_name(
-		std::string const &input_file_name
-		)
-	{
-		return std::string(
-			input_file_name.begin(),
-			std::find(input_file_name.begin(), input_file_name.end(), '.')
-			) +
-			".p0i";
-	}
 }
 
 int main(int argc, char **argv)
@@ -82,7 +71,7 @@ int main(int argc, char **argv)
 		auto const source = read_file(source_file_name);
 		std::string const target_file_name = (argc >= 3) ?
 			argv[2] :
-			make_output_file_name(source_file_name);
+			"out.p0i";
 
 		p0::source_range source_range(
 			source.data(),
