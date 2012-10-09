@@ -13,6 +13,7 @@ namespace p0
 {
 	struct name_expression_tree;
 	struct integer_10_expression_tree;
+	struct call_expression_tree;
 
 
 	struct expression_tree_visitor
@@ -20,6 +21,7 @@ namespace p0
 		virtual ~expression_tree_visitor();
 		virtual void visit(name_expression_tree &expression) = 0;
 		virtual void visit(integer_10_expression_tree &expression) = 0;
+		virtual void visit(call_expression_tree &expression) = 0;
 	};
 
 
@@ -58,6 +60,26 @@ namespace p0
 	};
 
 
+	struct call_expression_tree : expression_tree
+	{
+		typedef std::vector<std::unique_ptr<expression_tree>> expression_vector;
+
+
+		explicit call_expression_tree(
+			std::unique_ptr<expression_tree> function,
+			expression_vector arguments
+			);
+		virtual void accept(expression_tree_visitor &visitor) override;
+		expression_tree const &function() const;
+		expression_vector const &arguments() const;
+
+	private:
+
+		std::unique_ptr<expression_tree> m_function;
+		expression_vector m_arguments;
+	};
+
+
 	struct statement_tree
 	{
 		virtual ~statement_tree();
@@ -76,6 +98,19 @@ namespace p0
 	private:
 
 		std::string m_name;
+		std::unique_ptr<expression_tree> m_value;
+	};
+
+
+	struct return_tree : statement_tree
+	{
+		explicit return_tree(
+			std::unique_ptr<expression_tree> value
+			);
+		expression_tree const &value() const;
+
+	private:
+
 		std::unique_ptr<expression_tree> m_value;
 	};
 

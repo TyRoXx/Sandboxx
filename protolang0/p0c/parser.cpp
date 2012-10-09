@@ -69,36 +69,33 @@ namespace p0
 		token const first = m_scanner.next_token();
 		switch (first.type)
 		{
-		case token_type::identifier:
+		case token_type::var:
 			{
-				auto const keyword = source_range_to_string(first.content);
-				if (keyword == "var")
-				{
-					token const name_token = m_scanner.next_token();
-					expect_token_type(
-						name_token,
-						token_type::identifier,
-						"Name of declared variable expected");
+				token const name_token = m_scanner.next_token();
+				expect_token_type(
+					name_token,
+					token_type::identifier,
+					"Name of declared variable expected");
 
-					token const assign_token = m_scanner.next_token();
-					expect_token_type(
-						assign_token,
-						token_type::assign,
-						"Assignment operator '=' expected");
+				token const assign_token = m_scanner.next_token();
+				expect_token_type(
+					assign_token,
+					token_type::assign,
+					"Assignment operator '=' expected");
 
-					auto value = parse_expression();
-					return std::unique_ptr<statement_tree>(new declaration_tree(
-						source_range_to_string(name_token.content),
-						std::move(value)
-						));
-				}
-				else
-				{
-					throw compiler_error(
-						"Unexpected identifier",
-						first.content
-						);
-				}
+				auto value = parse_expression();
+				return std::unique_ptr<statement_tree>(new declaration_tree(
+					source_range_to_string(name_token.content),
+					std::move(value)
+					));
+			}
+
+		case token_type::return_:
+			{
+				auto value = parse_expression();
+				return std::unique_ptr<statement_tree>(new return_tree(
+					std::move(value)
+					));
 			}
 
 		case token_type::end_of_file:

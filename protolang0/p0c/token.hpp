@@ -13,6 +13,9 @@ namespace p0
 		enum Enum
 		{
 			identifier,
+			var,
+			function,
+			return_,
 			integer_10,
 			parenthesis_left,
 			parenthesis_right,

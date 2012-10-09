@@ -48,7 +48,32 @@ namespace p0
 		visitor.visit(*this);
 	}
 
-	
+
+	call_expression_tree::call_expression_tree(
+		std::unique_ptr<expression_tree> function,
+		expression_vector arguments
+		)
+		: m_function(std::move(function))
+		, m_arguments(std::move(arguments))
+	{
+	}
+
+	void call_expression_tree::accept(expression_tree_visitor &visitor)
+	{
+		visitor.visit(*this);
+	}
+
+	expression_tree const &call_expression_tree::function() const
+	{
+		return *m_function;
+	}
+
+	call_expression_tree::expression_vector const &call_expression_tree::arguments() const
+	{
+		return m_arguments;
+	}
+
+
 	statement_tree::~statement_tree()
 	{
 	}
@@ -69,6 +94,19 @@ namespace p0
 	}
 
 	expression_tree const &declaration_tree::value() const
+	{
+		return *m_value;
+	}
+
+
+	return_tree::return_tree(
+		std::unique_ptr<expression_tree> value
+		)
+		: m_value(std::move(value))
+	{
+	}
+
+	expression_tree const &return_tree::value() const
 	{
 		return *m_value;
 	}

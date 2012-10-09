@@ -41,6 +41,47 @@ namespace p0
 				is_identifer_first(c) ||
 				is_digit_10(c);
 		}
+
+		bool is_keyword(source_range content, char const *keyword)
+		{
+			for (auto i = content.begin(); i != content.end(); ++i)
+			{
+				if (*i != *keyword)
+				{
+					return false;
+				}
+			}
+
+			return (*keyword == '\0');
+		}
+
+		struct keyword
+		{
+			char const *content;
+			token_type::Enum token;
+		};
+
+		token_type::Enum find_keyword(source_range content)
+		{
+			static std::array<keyword, 3> const keywords =
+			{{
+				{"var", token_type::var},
+				{"function", token_type::function},
+				{"return", token_type::return_},
+			}};
+
+			using namespace std;
+
+			for (auto k = begin(keywords); k != end(keywords); ++k)
+			{
+				if (is_keyword(content, k->content))
+				{
+					return k->token;
+				}
+			}
+
+			return token_type::identifier;
+		}
 	}
 
 
@@ -79,9 +120,16 @@ namespace p0
 					is_identifier_tail(*m_pos));
 				auto const identifier_end = m_pos;
 
+				source_range const range(
+					identifier_begin,
+					identifier_end
+					);
+
+				auto const type = find_keyword(range);
+				
 				return token(
-					token_type::identifier,
-					source_range(identifier_begin, identifier_end)
+					type,
+					range
 					);
 			}
 
@@ -139,7 +187,8 @@ namespace p0
 				}
 				while (
 					(m_pos != m_end) &&
-					(*m_pos != '\n'));
+					(*m_pos != '\n')
+					);
 				continue;
 			}
 
@@ -152,6 +201,7 @@ namespace p0
 		++m_pos;
 		return token(
 			type,
-			source_range((m_pos - 1), m_pos));
+			source_range((m_pos - 1), m_pos)
+			);
 	}
 }
