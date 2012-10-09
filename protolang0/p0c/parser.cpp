@@ -85,10 +85,9 @@ namespace p0
 			return std::unique_ptr<statement_tree>();
 
 		default:
-			throw compiler_error(
-				"Unexpected token",
-				first.content
-				);
+			return std::unique_ptr<statement_tree>(new expression_statement_tree(
+				parse_expression()
+				));
 		}
 	}
 

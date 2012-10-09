@@ -78,6 +78,14 @@ namespace p0
 				}
 			}
 
+			virtual void visit(expression_statement_tree const &statement) const override
+			{
+				m_code_generator.generate_expression(
+					statement.expression(),
+					m_emitter
+					);
+			}
+
 		private:
 
 			code_generator &m_code_generator;
@@ -89,5 +97,51 @@ namespace p0
 			emitter
 			);
 		statement_tree.accept(visitor);
+	}
+
+	void code_generator::generate_expression(
+		expression_tree const &expression_tree,
+		intermediate::emitter &emitter
+		)
+	{
+		struct expression_generator : expression_tree_visitor
+		{
+			explicit expression_generator(
+				code_generator &code_generator,
+				intermediate::emitter &emitter
+				)
+				: m_code_generator(code_generator)
+				, m_emitter(emitter)
+			{
+			}
+
+			virtual void visit(name_expression_tree const &expression) override
+			{
+			}
+
+			virtual void visit(integer_10_expression_tree const &expression) override
+			{
+			}
+
+			virtual void visit(call_expression_tree const &expression) override
+			{
+			}
+
+			virtual void visit(function_tree const &expression) override
+			{
+				m_code_generator.generate_function(expression);
+			}
+
+		private:
+
+			code_generator &m_code_generator;
+			intermediate::emitter &m_emitter;
+		};
+
+		expression_generator visitor(
+			*this,
+			emitter
+			);
+		expression_tree.accept(visitor);
 	}
 }

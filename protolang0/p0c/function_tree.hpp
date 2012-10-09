@@ -105,6 +105,7 @@ namespace p0
 	struct declaration_tree;
 	struct return_tree;
 	struct block_tree;
+	struct expression_statement_tree;
 
 
 	struct statement_tree_visitor
@@ -113,6 +114,7 @@ namespace p0
 		virtual void visit(declaration_tree const &statement) const = 0;
 		virtual void visit(return_tree const &statement) const = 0;
 		virtual void visit(block_tree const &statement) const = 0;
+		virtual void visit(expression_statement_tree const &statement) const = 0;
 	};
 
 
@@ -168,6 +170,20 @@ namespace p0
 	private:
 
 		statement_vector m_body;
+	};
+
+
+	struct expression_statement_tree : statement_tree
+	{
+		explicit expression_statement_tree(
+			std::unique_ptr<expression_tree> expression
+			);
+		virtual void accept(statement_tree_visitor &visitor) const override;
+		expression_tree const &expression() const;
+
+	private:
+
+		std::unique_ptr<expression_tree> m_expression;
 	};
 }
 

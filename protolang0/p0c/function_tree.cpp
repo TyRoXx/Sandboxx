@@ -177,4 +177,22 @@ namespace p0
 	{
 		return m_body;
 	}
+
+
+	expression_statement_tree::expression_statement_tree(
+		std::unique_ptr<expression_tree> expression
+		)
+		: m_expression(std::move(expression))
+	{
+	}
+
+	void expression_statement_tree::accept(statement_tree_visitor &visitor) const
+	{
+		visitor.visit(*this);
+	}
+
+	expression_tree const &expression_statement_tree::expression() const
+	{
+		return *m_expression;
+	}
 }
