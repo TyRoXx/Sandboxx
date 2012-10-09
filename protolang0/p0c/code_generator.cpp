@@ -38,8 +38,14 @@ namespace p0
 			emitter
 			);
 
+		//TODO
+		size_t parameters = 0;
+		size_t locals = 0;
+
 		m_functions[function_index] = intermediate::function(
-			std::move(instructions)
+			std::move(instructions),
+			parameters,
+			locals
 			);
 	}
 
