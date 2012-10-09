@@ -11,7 +11,6 @@ namespace p0
 			const unit &unit
 			)
 		{
-			file.write(unit.name().data(), unit.name().size());
 		}
 	}
 }

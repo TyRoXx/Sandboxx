@@ -6,15 +6,15 @@ namespace p0
 	namespace intermediate
 	{
 		unit::unit(
-			std::string name
+			function_vector functions
 			)
-			: m_name(std::move(name))
+			: m_functions(std::move(functions))
 		{
 		}
 
-		const std::string &unit::name() const
+		unit::function_vector const &unit::functions() const
 		{
-			return m_name;
+			return m_functions;
 		}
 	}
 }

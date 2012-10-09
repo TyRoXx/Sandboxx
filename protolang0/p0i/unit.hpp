@@ -3,7 +3,8 @@
 #define P0I_UNIT_HPP
 
 
-#include <string>
+#include <vector>
+#include "function.hpp"
 
 
 namespace p0
@@ -12,14 +13,17 @@ namespace p0
 	{
 		struct unit
 		{
+			typedef std::vector<function> function_vector;
+
+
 			explicit unit(
-				std::string name
+				function_vector functions
 				);
-			const std::string &name() const;
+			function_vector const &functions() const;
 			
 		private:
 
-			std::string m_name;
+			function_vector m_functions;
 		};
 	}
 }

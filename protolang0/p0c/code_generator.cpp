@@ -13,6 +13,10 @@ namespace p0
 
 	intermediate::unit code_generator::generate_unit()
 	{
-		return intermediate::unit("");
+		intermediate::unit::function_vector functions;
+
+		return intermediate::unit(
+			std::move(functions)
+			);
 	}
 }
