@@ -16,6 +16,7 @@ namespace p0
 			enum Enum
 			{
 				nothing,
+				return_,
 				count_,
 			};
 		};
@@ -36,7 +37,7 @@ namespace p0
 			instruction();
 			explicit instruction(
 				instruction_type::Enum type,
-				argument_array const &arguments
+				argument_array const &arguments = argument_array()
 				);
 			instruction_type::Enum type() const;
 			argument_array const &arguments() const;

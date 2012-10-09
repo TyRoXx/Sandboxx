@@ -11,6 +11,11 @@ namespace p0
 	struct function_tree;
 	struct statement_tree;
 
+	namespace intermediate
+	{
+		struct emitter;
+	}
+
 
 	struct code_generator
 	{
@@ -30,7 +35,7 @@ namespace p0
 			);
 		void generate_statement(
 			statement_tree const &statement_tree,
-			intermediate::function::instruction_vector &instructions
+			intermediate::emitter &emitter
 			);
 	};
 }

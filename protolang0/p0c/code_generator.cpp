@@ -1,5 +1,6 @@
 #include "code_generator.hpp"
 #include "function_tree.hpp"
+#include "p0i/emitter.hpp"
 
 
 namespace p0
@@ -30,6 +31,11 @@ namespace p0
 		m_functions.resize(function_index + 1);
 
 		intermediate::function::instruction_vector instructions;
+		intermediate::emitter emitter(instructions);
+		generate_statement(
+			function.body(),
+			emitter
+			);
 
 		m_functions[function_index] = intermediate::function(
 			std::move(instructions)
@@ -38,15 +44,15 @@ namespace p0
 
 	void code_generator::generate_statement(
 		statement_tree const &statement_tree,
-		intermediate::function::instruction_vector &instructions
+		intermediate::emitter &emitter
 		)
 	{
 		struct statement_generator : statement_tree_visitor
 		{
 			explicit statement_generator(
-				intermediate::function::instruction_vector &instructions
+				intermediate::emitter &emitter
 				)
-				: m_instructions(instructions)
+				: m_emitter(emitter)
 			{
 			}
 
@@ -56,6 +62,7 @@ namespace p0
 
 			virtual void visit(return_tree const &statement) const override
 			{
+				m_emitter.return_();
 			}
 
 			virtual void visit(block_tree const &statement) const override
@@ -64,10 +71,10 @@ namespace p0
 
 		private:
 
-			intermediate::function::instruction_vector &m_instructions;
+			intermediate::emitter &m_emitter;
 		};
 
-		statement_generator visitor(instructions);
+		statement_generator visitor(emitter);
 		statement_tree.accept(visitor);
 	}
 }
