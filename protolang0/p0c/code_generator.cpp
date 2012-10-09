@@ -7,7 +7,7 @@
 namespace p0
 {
 	code_generator::code_generator(
-		expression_tree const &tree
+		function_tree const &tree
 		)
 		: m_tree(tree)
 	{
@@ -15,7 +15,9 @@ namespace p0
 
 	intermediate::unit code_generator::generate_unit()
 	{
-		//TODO
+		generate_function(
+			m_tree
+			);
 
 		return intermediate::unit(
 			std::move(m_functions)
@@ -135,6 +137,10 @@ namespace p0
 			virtual void visit(function_tree const &expression) override
 			{
 				m_code_generator.generate_function(expression);
+			}
+
+			virtual void visit(null_expression_tree const &expression) override
+			{
 			}
 
 		private:

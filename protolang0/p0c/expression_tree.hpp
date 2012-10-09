@@ -15,6 +15,7 @@ namespace p0
 	struct integer_10_expression_tree;
 	struct call_expression_tree;
 	struct function_tree;
+	struct null_expression_tree;
 
 
 	struct expression_tree_visitor
@@ -24,6 +25,7 @@ namespace p0
 		virtual void visit(integer_10_expression_tree const &expression) = 0;
 		virtual void visit(call_expression_tree const &expression) = 0;
 		virtual void visit(function_tree const &expression) = 0;
+		virtual void visit(null_expression_tree const &expression) = 0;
 	};
 
 
@@ -106,6 +108,12 @@ namespace p0
 
 		std::unique_ptr<statement_tree> m_body;
 		name_vector m_parameters;
+	};
+
+
+	struct null_expression_tree : expression_tree
+	{
+		virtual void accept(expression_tree_visitor &visitor) const override;
 	};
 }
 

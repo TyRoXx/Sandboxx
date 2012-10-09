@@ -118,4 +118,10 @@ namespace p0
 	{
 		return m_parameters;
 	}
+
+
+	void null_expression_tree::accept(expression_tree_visitor &visitor) const
+	{
+		visitor.visit(*this);
+	}
 }

@@ -13,6 +13,7 @@
 			call f()
 			call g(1, 2, 3)
 			call h(null)
+			null
 		}
 	}
 }

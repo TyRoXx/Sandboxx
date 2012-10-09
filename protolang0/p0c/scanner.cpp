@@ -63,12 +63,13 @@ namespace p0
 
 		token_type::Enum find_keyword(source_range content)
 		{
-			static std::array<keyword, 4> const keywords =
+			static std::array<keyword, 5> const keywords =
 			{{
 				{"var", token_type::var},
 				{"function", token_type::function},
 				{"return", token_type::return_},
 				{"call", token_type::call},
+				{"null", token_type::null},
 			}};
 
 			using namespace std;

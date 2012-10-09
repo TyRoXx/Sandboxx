@@ -17,6 +17,7 @@ namespace p0
 			function,
 			return_,
 			call,
+			null,
 			integer_10,
 			parenthesis_left,
 			parenthesis_right,

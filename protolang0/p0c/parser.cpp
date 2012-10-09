@@ -31,7 +31,7 @@ namespace p0
 		assert(m_error_handler);
 	}
 
-	std::unique_ptr<expression_tree> parser::parse_unit()
+	std::unique_ptr<function_tree> parser::parse_unit()
 	{
 		return parse_function();
 	}
@@ -191,6 +191,13 @@ namespace p0
 				return parse_function();
 			}
 
+		case token_type::null:
+			{
+				return std::unique_ptr<expression_tree>(
+					new null_expression_tree
+					);
+			}
+
 		default:
 			throw compiler_error(
 				"Expression expected",
@@ -199,10 +206,11 @@ namespace p0
 		}
 	}
 
-	std::unique_ptr<expression_tree> parser::parse_function()
+	std::unique_ptr<function_tree> parser::parse_function()
 	{
 		function_tree::name_vector parameters;
 
+		//the parameter list is optional
 		if (try_skip_token(
 			token_type::parenthesis_left
 			))
@@ -240,7 +248,7 @@ namespace p0
 			);
 
 		auto body = parse_block();
-		return std::unique_ptr<expression_tree>(new function_tree(
+		return std::unique_ptr<function_tree>(new function_tree(
 			std::move(body),
 			std::move(parameters)
 			));

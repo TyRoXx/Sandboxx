@@ -21,13 +21,13 @@ namespace p0
 	struct code_generator
 	{
 		explicit code_generator(
-			expression_tree const &tree
+			function_tree const &tree
 			);
 		intermediate::unit generate_unit();
 
 	private:
 
-		expression_tree const &m_tree;
+		function_tree const &m_tree;
 		intermediate::unit::function_vector m_functions;
 
 
