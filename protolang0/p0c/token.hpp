@@ -8,7 +8,7 @@
 
 namespace p0
 {
-	struct token_type
+	namespace token_type
 	{
 		enum Enum
 		{

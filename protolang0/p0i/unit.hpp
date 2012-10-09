@@ -3,8 +3,8 @@
 #define P0I_UNIT_HPP
 
 
-#include <vector>
 #include "function.hpp"
+#include <vector>
 
 
 namespace p0
