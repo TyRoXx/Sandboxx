@@ -1,0 +1,14 @@
+{
+	; comment
+	;
+	;;;
+	
+	var x = 0
+	{
+		{
+			var i = x
+			var f = function { return 123 }
+			call f()
+		}
+	}
+}
