@@ -16,6 +16,7 @@ namespace p0
 			var,
 			function,
 			return_,
+			call,
 			integer_10,
 			parenthesis_left,
 			parenthesis_right,

@@ -128,11 +128,33 @@ namespace p0
 
 		case token_type::parenthesis_left:
 			{
-				std::unique_ptr<expression_tree> value = parse_expression();
+				auto value = parse_expression();
 				auto const closing_parenthesis = m_scanner.next_token();
 				expect_token_type(closing_parenthesis, token_type::parenthesis_right,
 					"Closing parenthesis ')' expected");
 				return std::move(value);
+			}
+
+		case token_type::call:
+			{
+				auto function = parse_expression();
+
+				auto const opening_parenthesis = m_scanner.next_token();
+				expect_token_type(opening_parenthesis, token_type::parenthesis_left,
+					"Opening parenthesis '(' expected");
+
+				call_expression_tree::expression_vector arguments;
+
+				//TODO
+
+				auto const closing_parenthesis = m_scanner.next_token();
+				expect_token_type(closing_parenthesis, token_type::parenthesis_right,
+					"Closing parenthesis ')' expected");
+
+				return std::unique_ptr<expression_tree>(new call_expression_tree(
+					std::move(function),
+					std::move(arguments)
+					));
 			}
 
 		default:
