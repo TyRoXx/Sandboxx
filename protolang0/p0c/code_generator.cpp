@@ -50,9 +50,11 @@ namespace p0
 		struct statement_generator : statement_tree_visitor
 		{
 			explicit statement_generator(
+				code_generator &code_generator,
 				intermediate::emitter &emitter
 				)
-				: m_emitter(emitter)
+				: m_code_generator(code_generator)
+				, m_emitter(emitter)
 			{
 			}
 
@@ -67,14 +69,25 @@ namespace p0
 
 			virtual void visit(block_tree const &statement) const override
 			{
+				for (auto s = begin(statement.body()); s != end(statement.body()); ++s)
+				{
+					m_code_generator.generate_statement(
+						**s,
+						m_emitter
+						);
+				}
 			}
 
 		private:
 
+			code_generator &m_code_generator;
 			intermediate::emitter &m_emitter;
 		};
 
-		statement_generator visitor(emitter);
+		statement_generator visitor(
+			*this,
+			emitter
+			);
 		statement_tree.accept(visitor);
 	}
 }
