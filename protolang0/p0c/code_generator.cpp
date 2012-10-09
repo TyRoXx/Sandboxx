@@ -22,17 +22,52 @@ namespace p0
 
 
 	void code_generator::generate_function(
-		const function_tree &function
+		function_tree const &function
 		)
 	{
-		intermediate::function::instruction_vector instructions;
-
 		//reserve a function index for later insertion
 		auto const function_index = m_functions.size();
 		m_functions.resize(function_index + 1);
-		
+
+		intermediate::function::instruction_vector instructions;
+
 		m_functions[function_index] = intermediate::function(
 			std::move(instructions)
 			);
+	}
+
+	void code_generator::generate_statement(
+		statement_tree const &statement_tree,
+		intermediate::function::instruction_vector &instructions
+		)
+	{
+		struct statement_generator : statement_tree_visitor
+		{
+			explicit statement_generator(
+				intermediate::function::instruction_vector &instructions
+				)
+				: m_instructions(instructions)
+			{
+			}
+
+			virtual void visit(declaration_tree const &statement) const override
+			{
+			}
+
+			virtual void visit(return_tree const &statement) const override
+			{
+			}
+
+			virtual void visit(block_tree const &statement) const override
+			{
+			}
+
+		private:
+
+			intermediate::function::instruction_vector &m_instructions;
+		};
+
+		statement_generator visitor(instructions);
+		statement_tree.accept(visitor);
 	}
 }

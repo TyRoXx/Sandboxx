@@ -74,6 +74,11 @@ namespace p0
 	}
 
 
+	statement_tree_visitor::~statement_tree_visitor()
+	{
+	}
+
+
 	statement_tree::~statement_tree()
 	{
 	}

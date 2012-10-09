@@ -9,6 +9,7 @@
 namespace p0
 {
 	struct function_tree;
+	struct statement_tree;
 
 
 	struct code_generator
@@ -25,7 +26,11 @@ namespace p0
 
 
 		void generate_function(
-			const function_tree &function
+			function_tree const &function
+			);
+		void generate_statement(
+			statement_tree const &statement_tree,
+			intermediate::function::instruction_vector &instructions
 			);
 	};
 }
