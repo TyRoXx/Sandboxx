@@ -3,6 +3,8 @@
 #include "parser.hpp"
 #include "code_generator.hpp"
 
+#include "expression_tree.hpp"
+
 
 namespace p0
 {
@@ -22,7 +24,9 @@ namespace p0
 
 		auto const tree = parser.parse_unit();
 
-		code_generator generator(tree);
+		code_generator generator(
+			*tree
+			);
 
 		return generator.generate_unit();
 	}

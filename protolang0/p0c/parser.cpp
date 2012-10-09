@@ -1,6 +1,8 @@
 #include "parser.hpp"
 #include "compiler_error.hpp"
 #include "scanner.hpp"
+#include "expression_tree.hpp"
+#include "statement_tree.hpp"
 #include <cassert>
 
 
@@ -29,17 +31,11 @@ namespace p0
 		assert(error_handler);
 	}
 
-	function_tree parser::parse_unit()
+	std::unique_ptr<expression_tree> parser::parse_unit()
 	{
 		return parse_function();
 	}
 
-
-	function_tree parser::parse_function()
-	{
-		auto body = parse_block();
-		return function_tree(std::move(body));
-	}
 
 	std::unique_ptr<statement_tree> parser::parse_statement()
 	{
@@ -194,11 +190,7 @@ namespace p0
 					"Opening brace '{' of function body expected"
 					);
 
-				auto body = parse_block();
-
-				return std::unique_ptr<expression_tree>(new function_tree(
-					std::move(body)
-					));
+				return parse_function();
 			}
 
 		default:
@@ -207,6 +199,14 @@ namespace p0
 				first.content
 				);
 		}
+	}
+
+	std::unique_ptr<expression_tree> parser::parse_function()
+	{
+		auto body = parse_block();
+		return std::unique_ptr<expression_tree>(new function_tree(
+			std::move(body)
+			));
 	}
 
 	void parser::expect_token_type(const token &token, token_type::Enum type, const std::string &message) const

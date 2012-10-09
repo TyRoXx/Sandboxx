@@ -8,9 +8,9 @@
 
 namespace p0
 {
-	struct function_tree;
 	struct statement_tree;
 	struct expression_tree;
+	struct function_tree;
 
 	namespace intermediate
 	{
@@ -21,13 +21,13 @@ namespace p0
 	struct code_generator
 	{
 		explicit code_generator(
-			function_tree const &tree
+			expression_tree const &tree
 			);
 		intermediate::unit generate_unit();
 
 	private:
 
-		function_tree const &m_tree;
+		expression_tree const &m_tree;
 		intermediate::unit::function_vector m_functions;
 
 

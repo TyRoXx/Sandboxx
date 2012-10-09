@@ -3,7 +3,6 @@
 #define P0C_PARSER_HPP
 
 
-#include "function_tree.hpp"
 #include "token.hpp"
 #include <functional>
 
@@ -12,6 +11,8 @@ namespace p0
 {
 	struct scanner;
 	struct compiler_error;
+	struct statement_tree;
+	struct expression_tree;
 
 
 	struct parser
@@ -23,7 +24,7 @@ namespace p0
 			scanner &scanner,
 			compiler_error_handler error_handler
 			);
-		function_tree parse_unit();
+		std::unique_ptr<expression_tree> parse_unit();
 
 	private:
 
@@ -33,10 +34,10 @@ namespace p0
 		bool m_is_next_token;
 
 
-		function_tree parse_function();
 		std::unique_ptr<statement_tree> parse_statement();
 		std::unique_ptr<statement_tree> parse_block();
 		std::unique_ptr<expression_tree> parse_expression();
+		std::unique_ptr<expression_tree> parse_function();
 		void expect_token_type(const token &token, token_type::Enum type, const std::string &message) const;
 		token const &peek_token();
 		token pop_token();
