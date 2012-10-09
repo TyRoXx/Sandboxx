@@ -55,6 +55,17 @@ namespace
 		cerr << "    " << line << '\n';
 		return true;
 	}
+
+	std::string make_output_file_name(
+		std::string const &input_file_name
+		)
+	{
+		return std::string(
+			input_file_name.begin(),
+			std::find(input_file_name.begin(), input_file_name.end(), '.')
+			) +
+			".p0i";
+	}
 }
 
 int main(int argc, char **argv)
@@ -71,17 +82,22 @@ int main(int argc, char **argv)
 		auto const source = read_file(source_file_name);
 		std::string const target_file_name = (argc >= 3) ?
 			argv[2] :
-			(source_file_name.substr(source_file_name.find('.')) + ".p0i");
+			make_output_file_name(source_file_name);
 
 		p0::source_range source_range(
 			source.data(),
 			source.data() + source.size());
 
 		size_t error_counter = 0;
+		auto const handle_error = std::bind(print_error_return_true,
+			source_range,
+			std::ref(error_counter),
+			std::placeholders::_1
+			);
 
 		p0::compiler compiler(
 			source_range,
-			std::bind(print_error_return_true, source_range, std::ref(error_counter), std::placeholders::_1)
+			handle_error
 			);
 
 		p0::intermediate::unit const compiled_unit = compiler.compile();
