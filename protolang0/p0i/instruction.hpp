@@ -17,6 +17,8 @@ namespace p0
 			{
 				nothing,
 				return_,
+				allocate,
+				deallocate,
 				count_,
 			};
 		};
@@ -28,7 +30,7 @@ namespace p0
 		{
 			enum
 			{
-				max_arguments = 3
+				max_arguments = 3,
 			};
 
 			typedef std::array<instruction_argument, max_arguments> argument_array;

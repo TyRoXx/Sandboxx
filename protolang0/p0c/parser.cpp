@@ -103,7 +103,9 @@ namespace p0
 					//end of file
 					break;
 				}
-				body.push_back(std::move(statement));
+				body.push_back(
+					std::move(statement)
+					);
 			}
 			catch (compiler_error const &e)
 			{
@@ -142,8 +144,11 @@ namespace p0
 			{
 				auto value = parse_expression();
 				auto const closing_parenthesis = pop_token();
-				expect_token_type(closing_parenthesis, token_type::parenthesis_right,
-					"Closing parenthesis ')' expected");
+				expect_token_type(
+					closing_parenthesis,
+					token_type::parenthesis_right,
+					"Closing parenthesis ')' expected"
+					);
 				return std::move(value);
 			}
 
@@ -152,8 +157,11 @@ namespace p0
 				auto function = parse_expression();
 
 				auto const opening_parenthesis = pop_token();
-				expect_token_type(opening_parenthesis, token_type::parenthesis_left,
-					"Opening parenthesis '(' expected");
+				expect_token_type(
+					opening_parenthesis,
+					token_type::parenthesis_left,
+					"Opening parenthesis '(' expected"
+					);
 
 				call_expression_tree::expression_vector arguments;
 
@@ -165,7 +173,9 @@ namespace p0
 					}
 
 					auto argument = parse_expression();
-					arguments.push_back(std::move(argument));
+					arguments.push_back(
+						std::move(argument)
+						);
 
 					if (!try_skip_token(token_type::comma))
 					{
