@@ -39,11 +39,12 @@ namespace p0
 
 	std::unique_ptr<statement_tree> parser::parse_statement()
 	{
-		token const first = pop_token();
+		token const first = peek_token();
 		switch (first.type)
 		{
 		case token_type::var:
 			{
+				pop_token();
 				token const name_token = pop_token();
 				expect_token_type(
 					name_token,
@@ -65,6 +66,7 @@ namespace p0
 
 		case token_type::return_:
 			{
+				pop_token();
 				auto value = parse_expression();
 				return std::unique_ptr<statement_tree>(new return_tree(
 					std::move(value)
@@ -73,6 +75,7 @@ namespace p0
 
 		case token_type::brace_left:
 			{
+				pop_token();
 				auto body = parse_block();
 				return std::move(body);
 			}
@@ -148,9 +151,7 @@ namespace p0
 			{
 				auto function = parse_expression();
 
-				auto const opening_parenthesis = pop_token();
-				expect_token_type(
-					opening_parenthesis,
+				skip_token(
 					token_type::parenthesis_left,
 					"Opening parenthesis '(' expected"
 					);
@@ -187,11 +188,6 @@ namespace p0
 
 		case token_type::function:
 			{
-				skip_token(
-					token_type::brace_left,
-					"Opening brace '{' of function body expected"
-					);
-
 				return parse_function();
 			}
 
