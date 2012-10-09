@@ -88,7 +88,12 @@ int main(int argc, char **argv)
 
 		if (error_counter)
 		{
-			cerr << error_counter << " errors\n";
+			cerr << error_counter << " error";
+			if (error_counter != 1)
+			{
+				cerr << "s";
+			}
+			cerr << "\n";
 			return 1;
 		}
 
@@ -106,7 +111,7 @@ int main(int argc, char **argv)
 			compiled_unit
 			);
 	}
-	catch (const std::runtime_error &e)
+	catch (std::runtime_error const &e)
 	{
 		cerr << e.what() << '\n';
 		return 1;

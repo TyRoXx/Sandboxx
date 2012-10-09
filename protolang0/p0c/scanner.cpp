@@ -44,7 +44,7 @@ namespace p0
 
 		bool is_keyword(source_range content, char const *keyword)
 		{
-			for (auto i = content.begin(); i != content.end(); ++i)
+			for (auto i = content.begin(); i != content.end(); ++i, ++keyword)
 			{
 				if (*i != *keyword)
 				{
@@ -96,12 +96,12 @@ namespace p0
 
 	token scanner::next_token()
 	{
+		skip_whitespace();
+
 		if (m_pos == m_end)
 		{
 			return token(token_type::end_of_file, source_range(m_end, m_end));
 		}
-
-		skip_whitespace();
 
 		switch (*m_pos)
 		{

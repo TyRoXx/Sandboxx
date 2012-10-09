@@ -28,7 +28,7 @@ namespace p0
 		, m_error_handler(std::move(error_handler))
 		, m_is_next_token(false)
 	{
-		assert(error_handler);
+		assert(m_error_handler);
 	}
 
 	std::unique_ptr<expression_tree> parser::parse_unit()
@@ -48,13 +48,13 @@ namespace p0
 				expect_token_type(
 					name_token,
 					token_type::identifier,
-					"Name of declared variable expected");
+					"Name of declared variable expected"
+					);
 
-				token const assign_token = pop_token();
-				expect_token_type(
-					assign_token,
+				skip_token(
 					token_type::assign,
-					"Assignment operator '=' expected");
+					"Assignment operator '=' expected"
+					);
 
 				auto value = parse_expression();
 				return std::unique_ptr<statement_tree>(new declaration_tree(
@@ -205,6 +205,11 @@ namespace p0
 
 	std::unique_ptr<expression_tree> parser::parse_function()
 	{
+		skip_token(
+			token_type::brace_left,
+			"Opening brace '{' of function body expected"
+			);
+
 		auto body = parse_block();
 		return std::unique_ptr<expression_tree>(new function_tree(
 			std::move(body)
