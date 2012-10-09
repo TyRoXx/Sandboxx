@@ -87,8 +87,12 @@ namespace p0
 
 	struct function_tree : expression_tree
 	{
+		typedef std::vector<source_range> name_vector;
+
+
 		explicit function_tree(
-			std::unique_ptr<statement_tree> body
+			std::unique_ptr<statement_tree> body,
+			name_vector parameters
 			);
 		function_tree(function_tree &&other);
 		~function_tree();
@@ -96,10 +100,12 @@ namespace p0
 		void swap(function_tree &other);
 		virtual void accept(expression_tree_visitor &visitor) const override;
 		statement_tree const &body() const;
+		name_vector const &parameters() const;
 
 	private:
 
 		std::unique_ptr<statement_tree> m_body;
+		name_vector m_parameters;
 	};
 }
 

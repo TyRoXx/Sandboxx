@@ -76,9 +76,11 @@ namespace p0
 
 
 	function_tree::function_tree(
-		std::unique_ptr<statement_tree> body
+		std::unique_ptr<statement_tree> body,
+		name_vector parameters
 		)
 		: m_body(std::move(body))
+		, m_parameters(std::move(parameters))
 	{
 	}
 
@@ -110,5 +112,10 @@ namespace p0
 	statement_tree const &function_tree::body() const
 	{
 		return *m_body;
+	}
+
+	function_tree::name_vector const &function_tree::parameters() const
+	{
+		return m_parameters;
 	}
 }

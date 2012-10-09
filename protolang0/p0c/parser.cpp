@@ -201,6 +201,39 @@ namespace p0
 
 	std::unique_ptr<expression_tree> parser::parse_function()
 	{
+		function_tree::name_vector parameters;
+
+		if (try_skip_token(
+			token_type::parenthesis_left
+			))
+		{
+			for (;;)
+			{
+				auto const name = peek_token();
+				if (name.type == token_type::identifier)
+				{
+					pop_token();
+					parameters.push_back(name.content);
+
+					if (!try_skip_token(
+						token_type::comma
+						))
+					{
+						break;
+					}
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			skip_token(
+				token_type::parenthesis_right,
+				"Closing parenthesis ')' after parameter list expected"
+				);
+		}
+
 		skip_token(
 			token_type::brace_left,
 			"Opening brace '{' of function body expected"
@@ -208,7 +241,8 @@ namespace p0
 
 		auto body = parse_block();
 		return std::unique_ptr<expression_tree>(new function_tree(
-			std::move(body)
+			std::move(body),
+			std::move(parameters)
 			));
 	}
 

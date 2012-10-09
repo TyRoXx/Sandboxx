@@ -8,7 +8,11 @@
 		{
 			var i = x
 			var f = function { return 123 }
+			var g = function (a, b, c) { return call add(a, b) }
+			var h = function (s) { }
 			call f()
+			call g(1, 2, 3)
+			call h(null)
 		}
 	}
 }
