@@ -109,6 +109,11 @@ namespace p0
 		case ')': return eat_single_char_token(token_type::parenthesis_right);
 		case '=': return eat_single_char_token(token_type::assign);
 		case ',': return eat_single_char_token(token_type::comma);
+		case '+': return eat_single_char_token(token_type::plus);
+		case '-': return eat_single_char_token(token_type::minus);
+		case '*': return eat_single_char_token(token_type::star);
+		case '/': return eat_single_char_token(token_type::slash);
+		case '.': return eat_single_char_token(token_type::dot);
 
 		default:
 			if (is_identifer_first(*m_pos))

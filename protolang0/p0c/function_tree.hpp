@@ -19,16 +19,16 @@ namespace p0
 	struct expression_tree_visitor
 	{
 		virtual ~expression_tree_visitor();
-		virtual void visit(name_expression_tree &expression) = 0;
-		virtual void visit(integer_10_expression_tree &expression) = 0;
-		virtual void visit(call_expression_tree &expression) = 0;
+		virtual void visit(name_expression_tree const &expression) = 0;
+		virtual void visit(integer_10_expression_tree const &expression) = 0;
+		virtual void visit(call_expression_tree const &expression) = 0;
 	};
 
 
 	struct expression_tree
 	{
 		virtual ~expression_tree();
-		virtual void accept(expression_tree_visitor &visitor) = 0;
+		virtual void accept(expression_tree_visitor &visitor) const = 0;
 	};
 
 
@@ -37,7 +37,7 @@ namespace p0
 		explicit name_expression_tree(
 			source_range name
 			);
-		virtual void accept(expression_tree_visitor &visitor) override;
+		virtual void accept(expression_tree_visitor &visitor) const override;
 		source_range const &name() const;
 
 	private:
@@ -51,7 +51,7 @@ namespace p0
 		explicit integer_10_expression_tree(
 			source_range value
 			);
-		virtual void accept(expression_tree_visitor &visitor) override;
+		virtual void accept(expression_tree_visitor &visitor) const override;
 		source_range const &value() const;
 
 	private:
@@ -69,7 +69,7 @@ namespace p0
 			std::unique_ptr<expression_tree> function,
 			expression_vector arguments
 			);
-		virtual void accept(expression_tree_visitor &visitor) override;
+		virtual void accept(expression_tree_visitor &visitor) const override;
 		expression_tree const &function() const;
 		expression_vector const &arguments() const;
 
@@ -80,9 +80,22 @@ namespace p0
 	};
 
 
+	struct declaration_tree;
+	struct return_tree;
+
+
+	struct statement_tree_visitor
+	{
+		virtual ~statement_tree_visitor();
+		virtual void visit(declaration_tree const &statement) const = 0;
+		virtual void visit(return_tree const &statement) const = 0;
+	};
+
+
 	struct statement_tree
 	{
 		virtual ~statement_tree();
+		virtual void accept(statement_tree_visitor &visitor) const = 0;
 	};
 
 
@@ -92,6 +105,7 @@ namespace p0
 			std::string name,
 			std::unique_ptr<expression_tree> value
 			);
+		virtual void accept(statement_tree_visitor &visitor) const override;
 		std::string const &name() const;
 		expression_tree const &value() const;
 
@@ -107,6 +121,7 @@ namespace p0
 		explicit return_tree(
 			std::unique_ptr<expression_tree> value
 			);
+		virtual void accept(statement_tree_visitor &visitor) const override;
 		expression_tree const &value() const;
 
 	private:

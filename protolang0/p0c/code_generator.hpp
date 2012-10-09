@@ -21,6 +21,12 @@ namespace p0
 	private:
 
 		function_tree const &m_tree;
+		intermediate::unit::function_vector m_functions;
+
+
+		void generate_function(
+			const function_tree &function
+			);
 	};
 }
 

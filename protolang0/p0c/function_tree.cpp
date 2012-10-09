@@ -25,7 +25,7 @@ namespace p0
 		return m_name;
 	}
 
-	void name_expression_tree::accept(expression_tree_visitor &visitor)
+	void name_expression_tree::accept(expression_tree_visitor &visitor) const
 	{
 		visitor.visit(*this);
 	}
@@ -43,7 +43,7 @@ namespace p0
 		return m_value;
 	}
 
-	void integer_10_expression_tree::accept(expression_tree_visitor &visitor)
+	void integer_10_expression_tree::accept(expression_tree_visitor &visitor) const
 	{
 		visitor.visit(*this);
 	}
@@ -58,7 +58,7 @@ namespace p0
 	{
 	}
 
-	void call_expression_tree::accept(expression_tree_visitor &visitor)
+	void call_expression_tree::accept(expression_tree_visitor &visitor) const
 	{
 		visitor.visit(*this);
 	}
@@ -88,6 +88,11 @@ namespace p0
 	{
 	}
 
+	void declaration_tree::accept(statement_tree_visitor &visitor) const
+	{
+		visitor.visit(*this);
+	}
+
 	std::string const &declaration_tree::name() const
 	{
 		return m_name;
@@ -104,6 +109,11 @@ namespace p0
 		)
 		: m_value(std::move(value))
 	{
+	}
+
+	void return_tree::accept(statement_tree_visitor &visitor) const
+	{
+		visitor.visit(*this);
 	}
 
 	expression_tree const &return_tree::value() const

@@ -22,6 +22,11 @@ namespace p0
 			parenthesis_right,
 			assign,
 			comma,
+			plus,
+			minus,
+			star,
+			slash,
+			dot,
 			end_of_file,
 		};
 	};
