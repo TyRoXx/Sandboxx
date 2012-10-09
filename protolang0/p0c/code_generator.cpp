@@ -63,16 +63,16 @@ namespace p0
 			{
 			}
 
-			virtual void visit(declaration_tree const &statement) const override
+			virtual void visit(declaration_tree const &statement) override
 			{
 			}
 
-			virtual void visit(return_tree const &statement) const override
+			virtual void visit(return_tree const &statement) override
 			{
 				m_emitter.return_();
 			}
 
-			virtual void visit(block_tree const &statement) const override
+			virtual void visit(block_tree const &statement) override
 			{
 				for (auto s = begin(statement.body()); s != end(statement.body()); ++s)
 				{
@@ -83,7 +83,7 @@ namespace p0
 				}
 			}
 
-			virtual void visit(expression_statement_tree const &statement) const override
+			virtual void visit(expression_statement_tree const &statement) override
 			{
 				m_code_generator.generate_expression(
 					statement.expression(),

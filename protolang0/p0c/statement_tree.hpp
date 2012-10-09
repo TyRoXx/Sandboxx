@@ -21,10 +21,10 @@ namespace p0
 	struct statement_tree_visitor
 	{
 		virtual ~statement_tree_visitor();
-		virtual void visit(declaration_tree const &statement) const = 0;
-		virtual void visit(return_tree const &statement) const = 0;
-		virtual void visit(block_tree const &statement) const = 0;
-		virtual void visit(expression_statement_tree const &statement) const = 0;
+		virtual void visit(declaration_tree const &statement) = 0;
+		virtual void visit(return_tree const &statement) = 0;
+		virtual void visit(block_tree const &statement) = 0;
+		virtual void visit(expression_statement_tree const &statement) = 0;
 	};
 
 
