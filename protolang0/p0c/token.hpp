@@ -21,6 +21,7 @@ namespace p0
 			parenthesis_left,
 			parenthesis_right,
 			assign,
+			comma,
 			end_of_file,
 		};
 	};

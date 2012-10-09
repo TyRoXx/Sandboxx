@@ -24,6 +24,7 @@ namespace p0
 		)
 		: m_scanner(scanner)
 		, m_error_handler(std::move(error_handler))
+		, m_is_next_token(false)
 	{
 		assert(error_handler);
 	}
@@ -66,18 +67,18 @@ namespace p0
 
 	std::unique_ptr<statement_tree> parser::parse_statement()
 	{
-		token const first = m_scanner.next_token();
+		token const first = pop_token();
 		switch (first.type)
 		{
 		case token_type::var:
 			{
-				token const name_token = m_scanner.next_token();
+				token const name_token = pop_token();
 				expect_token_type(
 					name_token,
 					token_type::identifier,
 					"Name of declared variable expected");
 
-				token const assign_token = m_scanner.next_token();
+				token const assign_token = pop_token();
 				expect_token_type(
 					assign_token,
 					token_type::assign,
@@ -111,7 +112,7 @@ namespace p0
 
 	std::unique_ptr<expression_tree> parser::parse_expression()
 	{
-		auto const first = m_scanner.next_token();
+		auto const first = pop_token();
 		switch (first.type)
 		{
 		case token_type::identifier:
@@ -129,7 +130,7 @@ namespace p0
 		case token_type::parenthesis_left:
 			{
 				auto value = parse_expression();
-				auto const closing_parenthesis = m_scanner.next_token();
+				auto const closing_parenthesis = pop_token();
 				expect_token_type(closing_parenthesis, token_type::parenthesis_right,
 					"Closing parenthesis ')' expected");
 				return std::move(value);
@@ -139,17 +140,31 @@ namespace p0
 			{
 				auto function = parse_expression();
 
-				auto const opening_parenthesis = m_scanner.next_token();
+				auto const opening_parenthesis = pop_token();
 				expect_token_type(opening_parenthesis, token_type::parenthesis_left,
 					"Opening parenthesis '(' expected");
 
 				call_expression_tree::expression_vector arguments;
 
-				//TODO
+				for (;;)
+				{
+					if (try_skip_token(token_type::parenthesis_right))
+					{
+						break;
+					}
 
-				auto const closing_parenthesis = m_scanner.next_token();
-				expect_token_type(closing_parenthesis, token_type::parenthesis_right,
-					"Closing parenthesis ')' expected");
+					auto argument = parse_expression();
+					arguments.push_back(std::move(argument));
+
+					if (!try_skip_token(token_type::comma))
+					{
+						skip_token(
+							token_type::parenthesis_right,
+							"Comma or closing parenthesis expected"
+							);
+						break;
+					}
+				}
 
 				return std::unique_ptr<expression_tree>(new call_expression_tree(
 					std::move(function),
@@ -172,6 +187,53 @@ namespace p0
 			throw compiler_error(
 				message,
 				token.content
+				);
+		}
+	}
+
+	token const &parser::peek_token()
+	{
+		if (!m_is_next_token)
+		{
+			m_next_token = m_scanner.next_token();
+			m_is_next_token = true;
+		}
+
+		return m_next_token;
+	}
+
+	token parser::pop_token()
+	{
+		if (m_is_next_token)
+		{
+			m_is_next_token = false;
+			return m_next_token;
+		}
+		else
+		{
+			return m_scanner.next_token();
+		}
+	}
+
+	bool parser::try_skip_token(token_type::Enum type)
+	{
+		auto const token = peek_token();
+		if (token.type == type)
+		{
+			pop_token();
+			return true;
+		}
+
+		return false;
+	}
+
+	void parser::skip_token(token_type::Enum type, char const *message)
+	{
+		if (!try_skip_token(type))
+		{
+			throw compiler_error(
+				message,
+				peek_token().content
 				);
 		}
 	}
