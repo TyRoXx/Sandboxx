@@ -123,14 +123,21 @@ namespace p0
 					first.content
 					));
 
+		case token_type::parenthesis_left:
+			{
+				std::unique_ptr<expression_tree> value = parse_expression();
+				auto const closing_parenthesis = m_scanner.next_token();
+				expect_token_type(closing_parenthesis, token_type::parenthesis_right,
+					"Closing parenthesis ')' expected");
+				return std::move(value);
+			}
+
 		default:
 			throw compiler_error(
 				"Expression expected",
 				first.content
 				);
 		}
-
-		return std::unique_ptr<expression_tree>();
 	}
 
 	void parser::expect_token_type(const token &token, token_type::Enum type, const std::string &message) const

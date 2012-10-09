@@ -30,9 +30,12 @@ namespace
 
 	bool print_error_return_true(
 		p0::source_range source,
+		size_t &error_counter,
 		const p0::compiler_error &error
 		)
 	{
+		++error_counter;
+
 		auto const pos = error.position();
 		size_t const line_index = std::count(
 			source.begin(),
@@ -72,12 +75,20 @@ int main(int argc, char **argv)
 
 		p0::source_range source_range(source.data(), source.data() + source.size());
 
+		size_t error_counter = 0;
+
 		p0::compiler compiler(
 			source_range,
-			std::bind(print_error_return_true, source_range, std::placeholders::_1)
+			std::bind(print_error_return_true, source_range, std::ref(error_counter), std::placeholders::_1)
 			);
 
 		p0::intermediate::unit const compiled_unit = compiler.compile();
+
+		if (error_counter)
+		{
+			cerr << error_counter << " errors\n";
+			return 1;
+		}
 
 		std::ofstream target_file(
 			target_file_name,
@@ -95,5 +106,6 @@ int main(int argc, char **argv)
 	catch (const std::runtime_error &e)
 	{
 		cerr << e.what() << '\n';
+		return 1;
 	}
 }
