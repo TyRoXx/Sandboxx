@@ -63,6 +63,9 @@ namespace p0
 
 		switch (*m_pos)
 		{
+		case '(': return eat_single_char_token(token_type::parenthesis_left);
+		case ')': return eat_single_char_token(token_type::parenthesis_right);
+
 		default:
 			if (is_identifer_first(*m_pos))
 			{
@@ -142,5 +145,11 @@ namespace p0
 
 			break;
 		}
+	}
+
+	token scanner::eat_single_char_token(token_type::Enum type)
+	{
+		++m_pos;
+		return token(type, source_range((m_pos - 1), m_pos));
 	}
 }

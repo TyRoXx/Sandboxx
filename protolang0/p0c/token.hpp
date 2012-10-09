@@ -14,6 +14,8 @@ namespace p0
 		{
 			identifier,
 			integer_10,
+			parenthesis_left,
+			parenthesis_right,
 			end_of_file,
 		};
 	};

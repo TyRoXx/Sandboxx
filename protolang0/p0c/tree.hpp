@@ -5,6 +5,9 @@
 
 namespace p0
 {
+	struct unit_tree
+	{
+	};
 }
 
 

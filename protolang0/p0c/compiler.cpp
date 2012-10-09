@@ -1,4 +1,7 @@
 #include "compiler.hpp"
+#include "scanner.hpp"
+#include "parser.hpp"
+#include "code_generator.hpp"
 
 
 namespace p0
@@ -14,8 +17,13 @@ namespace p0
 
 	intermediate::unit compiler::compile()
 	{
-		return intermediate::unit(
-			m_unit_name
-			);
+		scanner scanner(m_source);
+		parser parser(scanner);
+
+		unit_tree const tree = parser.parse_unit();
+
+		code_generator generator(tree);
+
+		return generator.generate_unit();
 	}
 }

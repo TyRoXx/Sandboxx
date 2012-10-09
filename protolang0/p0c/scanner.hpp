@@ -24,6 +24,7 @@ namespace p0
 
 
 		void skip_whitespace();
+		token eat_single_char_token(token_type::Enum type);
 	};
 }
 
