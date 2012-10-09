@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "compiler.hpp"
+#include "compiler_error.hpp"
 #include "p0i/save_unit.hpp"
 using namespace std;
 
@@ -26,6 +27,31 @@ namespace
 			std::istreambuf_iterator<char>()
 			);
 	}
+
+	bool print_error_return_true(
+		p0::source_range source,
+		const p0::compiler_error &error
+		)
+	{
+		auto const pos = error.position();
+		size_t const line_index = std::count(
+			source.begin(),
+			pos.begin(),
+			'\n'); //TODO O(n) instead of O(n^2)
+
+		auto const end_of_line = std::find(pos.begin(), source.end(), '\n');
+		auto const line_length = std::distance(pos.begin(), end_of_line);
+		auto const hint_length = std::min<size_t>(70, line_length);
+
+		std::string const line(
+			pos.begin(),
+			pos.begin() + hint_length
+			);
+
+		cerr << '(' << (line_index + 1) << "): " << error.what() << '\n';
+		cerr << "    " << line << '\n';
+		return true;
+	}
 }
 
 int main(int argc, char **argv)
@@ -44,9 +70,11 @@ int main(int argc, char **argv)
 			argv[2] :
 			(source_file_name.substr(source_file_name.find('.')) + ".p0i");
 
+		p0::source_range source_range(source.data(), source.data() + source.size());
+
 		p0::compiler compiler(
-			"",
-			p0::source_range(source.data(), source.data() + source.size())
+			source_range,
+			std::bind(print_error_return_true, source_range, std::placeholders::_1)
 			);
 
 		p0::intermediate::unit const compiled_unit = compiler.compile();

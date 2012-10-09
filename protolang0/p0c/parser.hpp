@@ -5,23 +5,30 @@
 
 #include "function_tree.hpp"
 #include "token.hpp"
+#include <functional>
 
 
 namespace p0
 {
 	struct scanner;
+	struct compiler_error;
 
 
 	struct parser
 	{
+		typedef std::function<bool (const compiler_error &)> compiler_error_handler;
+
+
 		explicit parser(
-			scanner &scanner
+			scanner &scanner,
+			compiler_error_handler error_handler
 			);
 		function_tree parse_unit();
 
 	private:
 
 		scanner &m_scanner;
+		compiler_error_handler const m_error_handler;
 
 
 		function_tree parse_function();

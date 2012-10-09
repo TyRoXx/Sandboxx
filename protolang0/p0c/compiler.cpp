@@ -7,18 +7,18 @@
 namespace p0
 {
 	compiler::compiler(
-		std::string unit_name,
-		source_range source
+		source_range source,
+		compiler_error_handler error_handler
 		)
-		: m_unit_name(std::move(unit_name))
-		, m_source(source)
+		: m_source(source)
+		, m_error_handler(std::move(error_handler))
 	{
 	}
 
 	intermediate::unit compiler::compile()
 	{
 		scanner scanner(m_source);
-		parser parser(scanner);
+		parser parser(scanner, m_error_handler);
 
 		auto const tree = parser.parse_unit();
 

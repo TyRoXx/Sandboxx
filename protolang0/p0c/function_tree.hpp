@@ -3,6 +3,7 @@
 #define P0C_FUNCTION_TREE_HPP
 
 
+#include "source_range.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -13,6 +14,19 @@ namespace p0
 	struct expression_tree
 	{
 		virtual ~expression_tree();
+	};
+
+
+	struct name_expression_tree : expression_tree
+	{
+		explicit name_expression_tree(
+			source_range name
+			);
+		source_range const &name() const;
+
+	private:
+
+		source_range m_name;
 	};
 
 

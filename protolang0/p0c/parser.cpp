@@ -1,6 +1,7 @@
 #include "parser.hpp"
 #include "compiler_error.hpp"
 #include "scanner.hpp"
+#include <cassert>
 
 
 namespace p0
@@ -18,10 +19,13 @@ namespace p0
 
 
 	parser::parser(
-		scanner &scanner
+		scanner &scanner,
+		compiler_error_handler error_handler
 		)
 		: m_scanner(scanner)
+		, m_error_handler(std::move(error_handler))
 	{
+		assert(error_handler);
 	}
 
 	function_tree parser::parse_unit()
@@ -46,8 +50,14 @@ namespace p0
 				}
 				body.push_back(std::move(statement));
 			}
-			catch (compiler_error const &)
+			catch (compiler_error const &e)
 			{
+				if (!m_error_handler(e))
+				{
+					throw;
+				}
+				
+				m_scanner.skip_line();
 			}
 		}
 
@@ -104,6 +114,22 @@ namespace p0
 
 	std::unique_ptr<expression_tree> parser::parse_expression()
 	{
+		auto const first = m_scanner.next_token();
+		switch (first.type)
+		{
+		case token_type::identifier:
+			return std::unique_ptr<expression_tree>(
+				new name_expression_tree(
+					first.content
+					));
+
+		default:
+			throw compiler_error(
+				"Expression expected",
+				first.content
+				);
+		}
+
 		return std::unique_ptr<expression_tree>();
 	}
 

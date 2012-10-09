@@ -8,6 +8,19 @@ namespace p0
 	}
 
 
+	name_expression_tree::name_expression_tree(
+		source_range name
+		)
+		: m_name(name)
+	{
+	}
+
+	source_range const &name_expression_tree::name() const
+	{
+		return m_name;
+	}
+
+
 	statement_tree::~statement_tree()
 	{
 	}
