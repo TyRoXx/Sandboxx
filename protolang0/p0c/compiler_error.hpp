@@ -18,6 +18,7 @@ namespace p0
 		source_range const &position() const;
 
 	private:
+
 		source_range m_position;
 	};
 }

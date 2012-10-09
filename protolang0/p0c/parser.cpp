@@ -77,9 +77,6 @@ namespace p0
 				return std::move(body);
 			}
 
-		case token_type::end_of_file:
-			return std::unique_ptr<statement_tree>();
-
 		default:
 			return std::unique_ptr<statement_tree>(new expression_statement_tree(
 				parse_expression()
@@ -98,11 +95,6 @@ namespace p0
 			try
 			{
 				auto statement = parse_statement();
-				if (!statement)
-				{
-					//end of file
-					break;
-				}
 				body.push_back(
 					std::move(statement)
 					);
