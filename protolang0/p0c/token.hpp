@@ -16,6 +16,7 @@ namespace p0
 			integer_10,
 			parenthesis_left,
 			parenthesis_right,
+			assign,
 			end_of_file,
 		};
 	};

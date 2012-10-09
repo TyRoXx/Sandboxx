@@ -8,19 +8,19 @@
 
 namespace p0
 {
-	struct unit_tree;
+	struct function_tree;
 
 
 	struct code_generator
 	{
 		explicit code_generator(
-			unit_tree const &tree
+			function_tree const &tree
 			);
 		intermediate::unit generate_unit();
 
 	private:
 
-		unit_tree const &m_tree;
+		function_tree const &m_tree;
 	};
 }
 

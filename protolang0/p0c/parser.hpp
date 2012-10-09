@@ -3,7 +3,8 @@
 #define P0C_PARSER_HPP
 
 
-#include "tree.hpp"
+#include "function_tree.hpp"
+#include "token.hpp"
 
 
 namespace p0
@@ -16,11 +17,17 @@ namespace p0
 		explicit parser(
 			scanner &scanner
 			);
-		unit_tree parse_unit();
+		function_tree parse_unit();
 
 	private:
 
 		scanner &m_scanner;
+
+
+		function_tree parse_function();
+		std::unique_ptr<statement_tree> parse_statement();
+		std::unique_ptr<expression_tree> parse_expression();
+		void expect_token_type(const token &token, token_type::Enum type, const std::string &message) const;
 	};
 }
 

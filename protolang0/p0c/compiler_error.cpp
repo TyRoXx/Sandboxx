@@ -1,9 +1,9 @@
-#include "lexical_error.hpp"
+#include "compiler_error.hpp"
 
 
 namespace p0
 {
-	lexical_error::lexical_error(
+	compiler_error::compiler_error(
 		const std::string &message,
 		source_range position
 		)
@@ -12,7 +12,7 @@ namespace p0
 	{
 	}
 
-	source_range const &lexical_error::position() const
+	source_range const &compiler_error::position() const
 	{
 		return m_position;
 	}

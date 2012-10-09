@@ -1,11 +1,11 @@
 #include "code_generator.hpp"
-#include "tree.hpp"
+#include "function_tree.hpp"
 
 
 namespace p0
 {
 	code_generator::code_generator(
-		unit_tree const &tree
+		function_tree const &tree
 		)
 		: m_tree(tree)
 	{

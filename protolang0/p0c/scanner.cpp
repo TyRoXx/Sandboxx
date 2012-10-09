@@ -1,5 +1,5 @@
 #include "scanner.hpp"
-#include "lexical_error.hpp"
+#include "compiler_error.hpp"
 #include <cctype>
 
 
@@ -103,7 +103,7 @@ namespace p0
 					);
 			}
 
-			throw lexical_error(
+			throw compiler_error(
 				"Unexpected character",
 				source_range(m_pos, m_pos + 1)
 				);
@@ -150,6 +150,8 @@ namespace p0
 	token scanner::eat_single_char_token(token_type::Enum type)
 	{
 		++m_pos;
-		return token(type, source_range((m_pos - 1), m_pos));
+		return token(
+			type,
+			source_range((m_pos - 1), m_pos));
 	}
 }

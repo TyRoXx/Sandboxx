@@ -20,7 +20,7 @@ namespace p0
 		scanner scanner(m_source);
 		parser parser(scanner);
 
-		unit_tree const tree = parser.parse_unit();
+		auto const tree = parser.parse_unit();
 
 		code_generator generator(tree);
 
