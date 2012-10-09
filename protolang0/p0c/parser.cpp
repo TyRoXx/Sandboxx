@@ -37,31 +37,7 @@ namespace p0
 
 	function_tree parser::parse_function()
 	{
-		function_tree::statements body;
-
-		for (;;)
-		{
-			try
-			{
-				auto statement = parse_statement();
-				if (!statement)
-				{
-					//end of file
-					break;
-				}
-				body.push_back(std::move(statement));
-			}
-			catch (compiler_error const &e)
-			{
-				if (!m_error_handler(e))
-				{
-					throw;
-				}
-				
-				m_scanner.skip_line();
-			}
-		}
-
+		auto body = parse_block();
 		return function_tree(std::move(body));
 	}
 
@@ -108,6 +84,38 @@ namespace p0
 				first.content
 				);
 		}
+	}
+
+	std::unique_ptr<statement_tree> parser::parse_block()
+	{
+		block_tree::statement_vector body;
+
+		for (;;)
+		{
+			try
+			{
+				auto statement = parse_statement();
+				if (!statement)
+				{
+					//end of file
+					break;
+				}
+				body.push_back(std::move(statement));
+			}
+			catch (compiler_error const &e)
+			{
+				if (!m_error_handler(e))
+				{
+					throw;
+				}
+
+				m_scanner.skip_line();
+			}
+		}
+
+		return std::unique_ptr<statement_tree>(new block_tree(
+			std::move(body)
+			));
 	}
 
 	std::unique_ptr<expression_tree> parser::parse_expression()

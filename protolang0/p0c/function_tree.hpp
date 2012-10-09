@@ -82,6 +82,7 @@ namespace p0
 
 	struct declaration_tree;
 	struct return_tree;
+	struct block_tree;
 
 
 	struct statement_tree_visitor
@@ -89,6 +90,7 @@ namespace p0
 		virtual ~statement_tree_visitor();
 		virtual void visit(declaration_tree const &statement) const = 0;
 		virtual void visit(return_tree const &statement) const = 0;
+		virtual void visit(block_tree const &statement) const = 0;
 	};
 
 
@@ -130,22 +132,36 @@ namespace p0
 	};
 
 
+	struct block_tree : statement_tree
+	{
+		typedef std::vector<std::unique_ptr<statement_tree>> statement_vector;
+
+
+		explicit block_tree(
+			statement_vector body
+			);
+		virtual void accept(statement_tree_visitor &visitor) const override;
+		statement_vector const &body() const;
+
+	private:
+
+		statement_vector m_body;
+	};
+
+
 	struct function_tree
 	{
-		typedef std::vector<std::unique_ptr<statement_tree>> statements;
-
-
 		explicit function_tree(
-			statements body
+			std::unique_ptr<statement_tree> body
 			);
 		function_tree(function_tree &&other);
 		function_tree &operator = (function_tree &&other);
 		void swap(function_tree &other);
-		statements const &body() const;
+		statement_tree const &body() const;
 
 	private:
 
-		statements m_body;
+		std::unique_ptr<statement_tree> m_body;
 	};
 }
 

@@ -122,8 +122,26 @@ namespace p0
 	}
 
 
+	block_tree::block_tree(
+		statement_vector body
+		)
+		: m_body(std::move(body))
+	{
+	}
+
+	void block_tree::accept(statement_tree_visitor &visitor) const
+	{
+		visitor.visit(*this);
+	}
+
+	block_tree::statement_vector const &block_tree::body() const
+	{
+		return m_body;
+	}
+
+
 	function_tree::function_tree(
-		statements body
+		std::unique_ptr<statement_tree> body
 		)
 		: m_body(std::move(body))
 	{
@@ -145,8 +163,8 @@ namespace p0
 		m_body.swap(other.m_body);
 	}
 
-	function_tree::statements const &function_tree::body() const
+	statement_tree const &function_tree::body() const
 	{
-		return m_body;
+		return *m_body;
 	}
 }

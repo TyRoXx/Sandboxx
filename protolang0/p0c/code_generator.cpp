@@ -30,11 +30,7 @@ namespace p0
 		//reserve a function index for later insertion
 		auto const function_index = m_functions.size();
 		m_functions.resize(function_index + 1);
-
-		for (auto s = begin(function.body()); s != end(function.body()); ++s)
-		{
-		}
-
+		
 		m_functions[function_index] = intermediate::function(
 			std::move(instructions)
 			);

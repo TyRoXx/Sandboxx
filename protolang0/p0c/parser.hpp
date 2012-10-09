@@ -35,6 +35,7 @@ namespace p0
 
 		function_tree parse_function();
 		std::unique_ptr<statement_tree> parse_statement();
+		std::unique_ptr<statement_tree> parse_block();
 		std::unique_ptr<expression_tree> parse_expression();
 		void expect_token_type(const token &token, token_type::Enum type, const std::string &message) const;
 		token const &peek_token();
