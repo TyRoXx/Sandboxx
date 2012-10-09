@@ -75,6 +75,12 @@ namespace p0
 					));
 			}
 
+		case token_type::brace_left:
+			{
+				auto body = parse_block();
+				return std::move(body);
+			}
+
 		case token_type::end_of_file:
 			return std::unique_ptr<statement_tree>();
 
@@ -90,7 +96,9 @@ namespace p0
 	{
 		block_tree::statement_vector body;
 
-		for (;;)
+		while (!try_skip_token(
+			token_type::brace_right
+			))
 		{
 			try
 			{
@@ -177,6 +185,20 @@ namespace p0
 				return std::unique_ptr<expression_tree>(new call_expression_tree(
 					std::move(function),
 					std::move(arguments)
+					));
+			}
+
+		case token_type::function:
+			{
+				skip_token(
+					token_type::brace_left,
+					"Opening brace '{' of function body expected"
+					);
+
+				auto body = parse_block();
+
+				return std::unique_ptr<expression_tree>(new function_tree(
+					std::move(body)
 					));
 			}
 

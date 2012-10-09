@@ -20,6 +20,8 @@ namespace p0
 			integer_10,
 			parenthesis_left,
 			parenthesis_right,
+			brace_left,
+			brace_right,
 			assign,
 			comma,
 			plus,

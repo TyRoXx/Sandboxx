@@ -107,6 +107,8 @@ namespace p0
 		{
 		case '(': return eat_single_char_token(token_type::parenthesis_left);
 		case ')': return eat_single_char_token(token_type::parenthesis_right);
+		case '{': return eat_single_char_token(token_type::brace_left);
+		case '}': return eat_single_char_token(token_type::brace_right);
 		case '=': return eat_single_char_token(token_type::assign);
 		case ',': return eat_single_char_token(token_type::comma);
 		case '+': return eat_single_char_token(token_type::plus);

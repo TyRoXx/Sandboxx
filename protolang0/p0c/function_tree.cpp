@@ -74,6 +74,40 @@ namespace p0
 	}
 
 
+	function_tree::function_tree(
+		std::unique_ptr<statement_tree> body
+		)
+		: m_body(std::move(body))
+	{
+	}
+
+	function_tree::function_tree(function_tree &&other)
+		: m_body(std::move(other.m_body))
+	{
+	}
+
+	function_tree &function_tree::operator = (function_tree &&other)
+	{
+		function_tree(std::move(other)).swap(*this);
+		return *this;
+	}
+
+	void function_tree::swap(function_tree &other)
+	{
+		m_body.swap(other.m_body);
+	}
+
+	void function_tree::accept(expression_tree_visitor &visitor) const
+	{
+		visitor.visit(*this);
+	}
+
+	statement_tree const &function_tree::body() const
+	{
+		return *m_body;
+	}
+
+
 	statement_tree_visitor::~statement_tree_visitor()
 	{
 	}
@@ -142,34 +176,5 @@ namespace p0
 	block_tree::statement_vector const &block_tree::body() const
 	{
 		return m_body;
-	}
-
-
-	function_tree::function_tree(
-		std::unique_ptr<statement_tree> body
-		)
-		: m_body(std::move(body))
-	{
-	}
-
-	function_tree::function_tree(function_tree &&other)
-		: m_body(std::move(other.m_body))
-	{
-	}
-
-	function_tree &function_tree::operator = (function_tree &&other)
-	{
-		function_tree(std::move(other)).swap(*this);
-		return *this;
-	}
-
-	void function_tree::swap(function_tree &other)
-	{
-		m_body.swap(other.m_body);
-	}
-
-	statement_tree const &function_tree::body() const
-	{
-		return *m_body;
 	}
 }

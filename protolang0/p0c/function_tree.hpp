@@ -14,6 +14,7 @@ namespace p0
 	struct name_expression_tree;
 	struct integer_10_expression_tree;
 	struct call_expression_tree;
+	struct function_tree;
 
 
 	struct expression_tree_visitor
@@ -22,6 +23,7 @@ namespace p0
 		virtual void visit(name_expression_tree const &expression) = 0;
 		virtual void visit(integer_10_expression_tree const &expression) = 0;
 		virtual void visit(call_expression_tree const &expression) = 0;
+		virtual void visit(function_tree const &expression) = 0;
 	};
 
 
@@ -77,6 +79,26 @@ namespace p0
 
 		std::unique_ptr<expression_tree> m_function;
 		expression_vector m_arguments;
+	};
+
+
+	struct statement_tree;
+
+
+	struct function_tree : expression_tree
+	{
+		explicit function_tree(
+			std::unique_ptr<statement_tree> body
+			);
+		function_tree(function_tree &&other);
+		function_tree &operator = (function_tree &&other);
+		void swap(function_tree &other);
+		virtual void accept(expression_tree_visitor &visitor) const override;
+		statement_tree const &body() const;
+
+	private:
+
+		std::unique_ptr<statement_tree> m_body;
 	};
 
 
@@ -146,22 +168,6 @@ namespace p0
 	private:
 
 		statement_vector m_body;
-	};
-
-
-	struct function_tree
-	{
-		explicit function_tree(
-			std::unique_ptr<statement_tree> body
-			);
-		function_tree(function_tree &&other);
-		function_tree &operator = (function_tree &&other);
-		void swap(function_tree &other);
-		statement_tree const &body() const;
-
-	private:
-
-		std::unique_ptr<statement_tree> m_body;
 	};
 }
 
