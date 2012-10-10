@@ -4,6 +4,7 @@
 
 
 #include "expression_tree.hpp"
+#include "reference.hpp"
 #include "p0i/emitter.hpp"
 
 
@@ -16,6 +17,7 @@ namespace p0
 	{
 		explicit expression_code_generator(
 			intermediate::emitter &emitter,
+			reference destination,
 			symbol_table &symbols
 			);
 		virtual void visit(name_expression_tree const &expression) override;
@@ -27,6 +29,7 @@ namespace p0
 	private:
 
 		intermediate::emitter &m_emitter;
+		reference m_destination;
 		symbol_table &m_symbols;
 	};
 
@@ -34,6 +37,7 @@ namespace p0
 	void generate_expression(
 		expression_tree const &tree,
 		intermediate::emitter &emitter,
+		reference destination,
 		symbol_table &symbols
 		);
 }

@@ -19,4 +19,9 @@ namespace p0
 	{
 		return m_local_address;
 	}
+
+	bool reference::is_valid() const
+	{
+		return (m_local_address != reference().local_address());
+	}
 }

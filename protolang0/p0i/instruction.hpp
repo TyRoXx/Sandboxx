@@ -20,6 +20,7 @@ namespace p0
 				allocate,
 				deallocate,
 				set_from_constant,
+				set_null,
 				copy,
 				add,
 				mul,

@@ -15,6 +15,7 @@ namespace p0
 			size_t local_address
 			);
 		size_t local_address() const;
+		bool is_valid() const;
 
 	private:
 

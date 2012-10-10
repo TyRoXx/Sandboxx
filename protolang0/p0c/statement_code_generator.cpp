@@ -53,6 +53,7 @@ namespace p0
 		generate_expression(
 			statement.expression(),
 			m_emitter,
+			reference(),
 			m_symbols
 			);
 	}

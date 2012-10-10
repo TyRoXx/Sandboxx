@@ -31,6 +31,16 @@ namespace p0
 				));
 		}
 
+		void emitter::set_null(
+			instruction_argument destination
+			)
+		{
+			push_instruction(instruction(
+				instruction_type::set_null,
+				destination
+				));
+		}
+
 		void emitter::copy(
 			instruction_argument destination,
 			instruction_argument source

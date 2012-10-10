@@ -24,6 +24,9 @@ namespace p0
 				instruction_argument destination,
 				instruction_argument constant
 				);
+			void set_null(
+				instruction_argument destination
+				);
 			void copy(
 				instruction_argument destination,
 				instruction_argument source
