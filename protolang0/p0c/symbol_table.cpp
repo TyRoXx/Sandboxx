@@ -3,6 +3,13 @@
 
 namespace p0
 {
+	symbol_table::symbol_table(
+		symbol_table const *parent
+		)
+		: m_parent(parent)
+	{
+	}
+
 	bool symbol_table::add_symbol(
 		std::string name,
 		symbol symbol
@@ -26,6 +33,7 @@ namespace p0
 	{
 		auto const s = m_symbols_by_name.find(name);
 		return (s == m_symbols_by_name.end()) ?
-			0 : &(s->second);
+			(m_parent ? m_parent->find_symbol(name) : 0) :
+			&(s->second);
 	}
 }

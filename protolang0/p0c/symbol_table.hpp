@@ -12,6 +12,9 @@ namespace p0
 {
 	struct symbol_table
 	{
+		explicit symbol_table(
+			symbol_table const *parent
+			);
 		bool add_symbol(
 			std::string name,
 			symbol symbol
@@ -25,6 +28,7 @@ namespace p0
 		typedef std::map<std::string, symbol> symbols_by_name;
 
 
+		symbol_table const * const m_parent;
 		symbols_by_name m_symbols_by_name;
 	};
 }

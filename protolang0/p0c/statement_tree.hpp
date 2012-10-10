@@ -40,17 +40,17 @@ namespace p0
 	struct declaration_tree : statement_tree
 	{
 		explicit declaration_tree(
-			std::string name,
+			source_range name,
 			std::unique_ptr<expression_tree> value
 			);
 		~declaration_tree();
 		virtual void accept(statement_tree_visitor &visitor) const override;
-		std::string const &name() const;
+		source_range const &name() const;
 		expression_tree const &value() const;
 
 	private:
 
-		std::string m_name;
+		source_range m_name;
 		std::unique_ptr<expression_tree> m_value;
 	};
 

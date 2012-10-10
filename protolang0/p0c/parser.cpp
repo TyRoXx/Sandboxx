@@ -47,7 +47,7 @@ namespace p0
 
 				auto value = parse_expression();
 				return std::unique_ptr<statement_tree>(new declaration_tree(
-					source_range_to_string(name_token.content),
+					name_token.content,
 					std::move(value)
 					));
 			}

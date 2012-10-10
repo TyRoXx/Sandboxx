@@ -11,6 +11,7 @@ namespace p0
 	struct statement_tree;
 	struct expression_tree;
 	struct function_tree;
+	struct symbol_table;
 
 	namespace intermediate
 	{
@@ -36,11 +37,13 @@ namespace p0
 			);
 		void generate_statement(
 			statement_tree const &statement_tree,
-			intermediate::emitter &emitter
+			intermediate::emitter &emitter,
+			symbol_table &symbols
 			);
 		void generate_expression(
 			expression_tree const &expression_tree,
-			intermediate::emitter &emitter
+			intermediate::emitter &emitter,
+			symbol_table &symbols
 			);
 	};
 }

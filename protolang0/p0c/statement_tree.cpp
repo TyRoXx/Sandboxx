@@ -15,7 +15,7 @@ namespace p0
 
 
 	declaration_tree::declaration_tree(
-		std::string name,
+		source_range name,
 		std::unique_ptr<expression_tree> value
 		)
 		: m_name(std::move(name))
@@ -32,7 +32,7 @@ namespace p0
 		visitor.visit(*this);
 	}
 
-	std::string const &declaration_tree::name() const
+	source_range const &declaration_tree::name() const
 	{
 		return m_name;
 	}

@@ -37,11 +37,13 @@ namespace p0
 		intermediate::function::instruction_vector instructions;
 		intermediate::emitter emitter(instructions);
 
-		symbol_table symbols;
+		symbol_table parameter_symbols(
+			nullptr
+			);
 		for (auto p = begin(function.parameters()), e = end(function.parameters()); p != e; ++p)
 		{
 			auto name = source_range_to_string(*p);
-			symbols.add_symbol(
+			parameter_symbols.add_symbol(
 				std::move(name),
 				symbol()
 				);
@@ -49,7 +51,8 @@ namespace p0
 
 		generate_statement(
 			function.body(),
-			emitter
+			emitter,
+			parameter_symbols
 			);
 		
 		m_functions[function_index] = intermediate::function(
@@ -60,22 +63,29 @@ namespace p0
 
 	void code_generator::generate_statement(
 		statement_tree const &statement_tree,
-		intermediate::emitter &emitter
+		intermediate::emitter &emitter,
+		symbol_table &symbols
 		)
 	{
 		struct statement_generator : statement_tree_visitor
 		{
 			explicit statement_generator(
 				code_generator &code_generator,
-				intermediate::emitter &emitter
+				intermediate::emitter &emitter,
+				symbol_table &symbols
 				)
 				: m_code_generator(code_generator)
 				, m_emitter(emitter)
+				, m_symbols(symbols)
 			{
 			}
 
 			virtual void visit(declaration_tree const &statement) override
 			{
+				m_symbols.add_symbol(
+					source_range_to_string(statement.name()),
+					symbol()
+					);
 			}
 
 			virtual void visit(return_tree const &statement) override
@@ -85,11 +95,14 @@ namespace p0
 
 			virtual void visit(block_tree const &statement) override
 			{
+				symbol_table block_symbols(&m_symbols);
+
 				for (auto s = begin(statement.body()); s != end(statement.body()); ++s)
 				{
 					m_code_generator.generate_statement(
 						**s,
-						m_emitter
+						m_emitter,
+						block_symbols
 						);
 				}
 			}
@@ -98,7 +111,8 @@ namespace p0
 			{
 				m_code_generator.generate_expression(
 					statement.expression(),
-					m_emitter
+					m_emitter,
+					m_symbols
 					);
 			}
 
@@ -110,28 +124,33 @@ namespace p0
 
 			code_generator &m_code_generator;
 			intermediate::emitter &m_emitter;
+			symbol_table &m_symbols;
 		};
 
 		statement_generator visitor(
 			*this,
-			emitter
+			emitter,
+			symbols
 			);
 		statement_tree.accept(visitor);
 	}
 
 	void code_generator::generate_expression(
 		expression_tree const &expression_tree,
-		intermediate::emitter &emitter
+		intermediate::emitter &emitter,
+		symbol_table &symbols
 		)
 	{
 		struct expression_generator : expression_tree_visitor
 		{
 			explicit expression_generator(
 				code_generator &code_generator,
-				intermediate::emitter &emitter
+				intermediate::emitter &emitter,
+				symbol_table &symbols
 				)
 				: m_code_generator(code_generator)
 				, m_emitter(emitter)
+				, m_symbols(symbols)
 			{
 			}
 
@@ -161,11 +180,13 @@ namespace p0
 
 			code_generator &m_code_generator;
 			intermediate::emitter &m_emitter;
+			symbol_table &m_symbols;
 		};
 
 		expression_generator visitor(
 			*this,
-			emitter
+			emitter,
+			symbols
 			);
 		expression_tree.accept(visitor);
 	}
