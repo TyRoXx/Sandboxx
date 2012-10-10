@@ -1,0 +1,70 @@
+#include "statement_code_generator.hpp"
+#include "symbol_table.hpp"
+#include "expression_code_generator.hpp"
+
+
+namespace p0
+{
+	statement_code_generator::statement_code_generator(
+		intermediate::emitter &emitter,
+		symbol_table &symbols
+		)
+		: m_emitter(emitter)
+		, m_symbols(symbols)
+	{
+	}
+
+	void statement_code_generator::visit(declaration_tree const &statement)
+	{
+		m_symbols.add_symbol(
+			source_range_to_string(statement.name()),
+			symbol()
+			);
+	}
+
+	void statement_code_generator::visit(return_tree const &statement)
+	{
+		m_emitter.return_();
+	}
+
+	void statement_code_generator::visit(block_tree const &statement)
+	{
+		symbol_table block_symbols(&m_symbols);
+
+		for (auto s = begin(statement.body()); s != end(statement.body()); ++s)
+		{
+			generate_statement(
+				**s,
+				m_emitter,
+				block_symbols
+				);
+		}
+	}
+
+	void statement_code_generator::visit(expression_statement_tree const &statement)
+	{
+		generate_expression(
+			statement.expression(),
+			m_emitter,
+			m_symbols
+			);
+	}
+
+	void statement_code_generator::visit(assignment_tree const &statement)
+	{
+	}
+
+
+	void generate_statement(
+		statement_tree const &tree,
+		intermediate::emitter &emitter,
+		symbol_table &symbols
+		)
+	{
+		statement_code_generator generator(
+			emitter,
+			symbols
+			);
+		tree.accept(generator);
+	}
+}

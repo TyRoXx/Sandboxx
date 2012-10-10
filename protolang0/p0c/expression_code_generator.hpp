@@ -29,6 +29,13 @@ namespace p0
 		intermediate::emitter &m_emitter;
 		symbol_table &m_symbols;
 	};
+
+
+	void generate_expression(
+		expression_tree const &tree,
+		intermediate::emitter &emitter,
+		symbol_table &symbols
+		);
 }
 
 

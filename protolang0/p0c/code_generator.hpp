@@ -42,16 +42,6 @@ namespace p0
 		void generate_function(
 			function_tree const &function
 			);
-		void generate_statement(
-			statement_tree const &statement_tree,
-			intermediate::emitter &emitter,
-			symbol_table &symbols
-			);
-		void generate_expression(
-			expression_tree const &expression_tree,
-			intermediate::emitter &emitter,
-			symbol_table &symbols
-			);
 	};
 }
 

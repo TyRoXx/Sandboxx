@@ -32,4 +32,18 @@ namespace p0
 	{
 		m_emitter.copy(0, 0);
 	}
+
+
+	void generate_expression(
+		expression_tree const &tree,
+		intermediate::emitter &emitter,
+		symbol_table &symbols
+		)
+	{
+		expression_code_generator generator(
+			emitter,
+			symbols
+			);
+		tree.accept(generator);
+	}
 }
