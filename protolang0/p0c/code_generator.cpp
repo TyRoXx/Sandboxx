@@ -1,6 +1,7 @@
 #include "code_generator.hpp"
 #include "expression_tree.hpp"
 #include "statement_tree.hpp"
+#include "symbol_table.hpp"
 #include "p0i/emitter.hpp"
 
 
@@ -35,17 +36,25 @@ namespace p0
 
 		intermediate::function::instruction_vector instructions;
 		intermediate::emitter emitter(instructions);
+
+		symbol_table symbols;
+		for (auto p = begin(function.parameters()), e = end(function.parameters()); p != e; ++p)
+		{
+			auto name = source_range_to_string(*p);
+			symbols.add_symbol(
+				std::move(name),
+				symbol()
+				);
+		}
+
 		generate_statement(
 			function.body(),
 			emitter
 			);
-
-		//TODO
-		size_t parameters = 0;
-
+		
 		m_functions[function_index] = intermediate::function(
 			std::move(instructions),
-			parameters
+			function.parameters().size()
 			);
 	}
 

@@ -4,11 +4,24 @@
 
 
 #include <boost/range/iterator_range.hpp>
+#include <string>
 
 
 namespace p0
 {
 	typedef boost::iterator_range<const char *> source_range;
+
+
+	namespace
+	{
+		std::string source_range_to_string(source_range source)
+		{
+			return std::string(
+				source.begin(),
+				source.end()
+				);
+		}
+	}
 }
 
 

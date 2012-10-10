@@ -8,18 +8,6 @@
 
 namespace p0
 {
-	namespace
-	{
-		std::string source_range_to_string(source_range source)
-		{
-			return std::string(
-				source.begin(),
-				source.end()
-				);
-		}
-	}
-
-
 	parser::parser(
 		scanner &scanner,
 		compiler_error_handler error_handler
