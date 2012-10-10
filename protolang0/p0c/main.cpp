@@ -15,7 +15,7 @@ namespace
 		cout << "p0c [source file] [target file]\n";
 	}
 
-	std::vector<char> read_file(const std::string &path)
+	std::vector<char> read_file(std::string const &path)
 	{
 		std::ifstream file(path, std::ios::binary);
 		if (!file)

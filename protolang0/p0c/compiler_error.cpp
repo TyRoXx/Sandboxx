@@ -4,7 +4,7 @@
 namespace p0
 {
 	compiler_error::compiler_error(
-		const std::string &message,
+		std::string const &message,
 		source_range position
 		)
 		: std::runtime_error(message)

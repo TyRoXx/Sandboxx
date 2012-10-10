@@ -276,7 +276,7 @@ namespace p0
 			));
 	}
 
-	void parser::expect_token_type(const token &token, token_type::Enum type, const std::string &message) const
+	void parser::expect_token_type(token const &token, token_type::Enum type, std::string const &message) const
 	{
 		if (token.type != type)
 		{

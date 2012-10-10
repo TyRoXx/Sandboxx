@@ -41,7 +41,7 @@ namespace p0
 		std::unique_ptr<expression_tree> parse_expression();
 		std::unique_ptr<expression_tree> parse_primary_expression();
 		std::unique_ptr<function_tree> parse_function();
-		void expect_token_type(const token &token, token_type::Enum type, const std::string &message) const;
+		void expect_token_type(token const &token, token_type::Enum type, std::string const &message) const;
 		token const &peek_token();
 		token pop_token();
 		bool try_skip_token(token_type::Enum type);

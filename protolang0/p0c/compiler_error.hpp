@@ -12,7 +12,7 @@ namespace p0
 	struct compiler_error : std::runtime_error
 	{
 		explicit compiler_error(
-			const std::string &message,
+			std::string const &message,
 			source_range position
 			);
 		source_range const &position() const;
