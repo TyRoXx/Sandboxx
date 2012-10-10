@@ -35,10 +35,6 @@ namespace
 		)
 	{
 		auto const pos = error.position();
-		size_t const line_index = std::count(
-			source.begin(),
-			pos.begin(),
-			'\n'); //TODO O(n) instead of O(n^2)
 
 		typedef std::reverse_iterator<p0::source_range::iterator> reverse_source_iterator;
 
@@ -52,7 +48,6 @@ namespace
 			reverse_source_iterator(source.begin()),
 			'\n').base();
 
-		auto const line_length = std::distance(begin_of_line, end_of_line);
 		auto const half_hint = 74 / 2;
 		auto const hint_begin = std::max(pos.begin() - half_hint, begin_of_line);
 		auto const hint_end   = std::min(pos.begin() + half_hint, end_of_line);
@@ -78,6 +73,11 @@ namespace
 				break;
 			}
 		});
+
+		size_t const line_index = std::count(
+			source.begin(),
+			pos.begin(),
+			'\n'); //TODO O(n) instead of O(n^2)
 
 		out << (line_index + 1) << ": " << error.what() << '\n';
 		out << hint << '\n';
