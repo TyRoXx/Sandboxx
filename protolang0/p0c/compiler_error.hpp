@@ -4,7 +4,7 @@
 
 
 #include "source_range.hpp"
-#include <exception>
+#include <stdexcept>
 
 
 namespace p0

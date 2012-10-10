@@ -5,6 +5,7 @@
 
 #include "instruction.hpp"
 #include <vector>
+#include <cstddef>
 
 
 namespace p0
