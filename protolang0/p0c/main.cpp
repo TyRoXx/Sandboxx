@@ -28,14 +28,12 @@ namespace
 			);
 	}
 
-	bool print_error_return_true(
+	void pretty_print_error(
+		std::ostream &out,
 		p0::source_range source,
-		size_t &error_counter,
-		const p0::compiler_error &error
+		p0::compiler_error const &error
 		)
 	{
-		++error_counter;
-
 		auto const pos = error.position();
 		size_t const line_index = std::count(
 			source.begin(),
@@ -51,8 +49,20 @@ namespace
 			pos.begin() + hint_length
 			);
 
-		cerr << '(' << (line_index + 1) << "): " << error.what() << '\n';
-		cerr << "    " << line << '\n';
+		out << '(' << (line_index + 1) << "): " << error.what() << '\n';
+		out << "    " << line << '\n';
+	}
+
+	bool print_error_return_true(
+		std::ostream &out,
+		p0::source_range source,
+		p0::compiler_error const &error,
+		size_t &error_counter
+		)
+	{
+		++error_counter;
+
+		pretty_print_error(out, source, error);
 		return true;
 	}
 }
@@ -64,61 +74,72 @@ int main(int argc, char **argv)
 		print_help();
 		return 0;
 	}
-	
+
+	auto &error_out = std::cerr;
 	try
 	{
 		std::string const source_file_name = argv[1];
-		auto const source = read_file(source_file_name);
+		auto const source_file_content = read_file(source_file_name);
 		std::string const target_file_name = (argc >= 3) ?
-			argv[2] :
-			"out.p0i";
+			argv[2] : "out.p0i";
 
-		p0::source_range source_range(
-			source.data(),
-			source.data() + source.size());
+		p0::source_range const source(
+			source_file_content.data(),
+			source_file_content.data() + source_file_content.size()
+			);
 
 		size_t error_counter = 0;
 		auto const handle_error = std::bind(print_error_return_true,
-			source_range,
-			std::ref(error_counter),
-			std::placeholders::_1
+			std::ref(error_out),
+			source,
+			std::placeholders::_1,
+			std::ref(error_counter)
 			);
 
-		p0::compiler compiler(
-			source_range,
-			handle_error
-			);
+		try
+		{
+			p0::compiler compiler(
+				source,
+				handle_error
+				);
 
-		p0::intermediate::unit const compiled_unit = compiler.compile();
+			p0::intermediate::unit const compiled_unit = compiler.compile();
+
+			std::ofstream target_file(
+				target_file_name,
+				std::ios::binary
+				);
+			if (!target_file)
+			{
+				throw std::runtime_error("Could not open target file " + target_file_name);
+			}
+
+			p0::intermediate::save_unit(
+				target_file,
+				compiled_unit
+				);
+		}
+		catch (p0::compiler_error const &e)
+		{
+			handle_error(
+				e
+				);
+		}
 
 		if (error_counter)
 		{
-			cerr << error_counter << " error";
+			error_out << error_counter << " error";
 			if (error_counter != 1)
 			{
-				cerr << "s";
+				error_out << "s";
 			}
-			cerr << "\n";
+			error_out << "\n";
 			return 1;
 		}
-
-		std::ofstream target_file(
-			target_file_name,
-			std::ios::binary
-			);
-		if (!target_file)
-		{
-			throw std::runtime_error("Could not open target file " + target_file_name);
-		}
-
-		p0::intermediate::save_unit(
-			target_file,
-			compiled_unit
-			);
 	}
 	catch (std::runtime_error const &e)
 	{
-		cerr << e.what() << '\n';
+		error_out << e.what() << '\n';
 		return 1;
 	}
 }

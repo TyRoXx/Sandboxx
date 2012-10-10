@@ -45,6 +45,7 @@ namespace p0
 		token pop_token();
 		bool try_skip_token(token_type::Enum type);
 		void skip_token(token_type::Enum type, char const *message);
+		void skip_line();
 	};
 }
 

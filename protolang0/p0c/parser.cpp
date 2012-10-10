@@ -95,10 +95,24 @@ namespace p0
 	{
 		block_tree::statement_vector body;
 
-		while (!try_skip_token(
-			token_type::brace_right
-			))
+		for (;;)
 		{
+			//end of the block
+			if (try_skip_token(
+				token_type::brace_right
+				))
+			{
+				break;
+			}
+
+			if (peek_token().type == token_type::end_of_file)
+			{
+				throw compiler_error(
+					"Unexpected end of file in block",
+					m_scanner.next_token().content
+					);
+			}
+
 			try
 			{
 				auto statement = parse_statement();
@@ -113,7 +127,7 @@ namespace p0
 					throw;
 				}
 
-				m_scanner.skip_line();
+				skip_line();
 			}
 		}
 
@@ -319,5 +333,11 @@ namespace p0
 				peek_token().content
 				);
 		}
+	}
+
+	void parser::skip_line()
+	{
+		m_scanner.skip_line();
+		m_is_next_token = false;
 	}
 }
