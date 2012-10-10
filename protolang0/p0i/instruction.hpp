@@ -42,7 +42,7 @@ namespace p0
 		{
 			enum
 			{
-				max_arguments = 3,
+				max_arguments = 2,
 			};
 
 			typedef std::array<instruction_argument, max_arguments> argument_array;
