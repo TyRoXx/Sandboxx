@@ -15,7 +15,7 @@ namespace p0
 
 		void save_unit(
 			std::ostream &file,
-			const unit &unit
+			unit const &unit
 			);
 	}
 }

@@ -93,6 +93,10 @@ namespace p0
 					);
 			}
 
+			virtual void visit(assignment_tree const &statement) override
+			{
+			}
+
 		private:
 
 			code_generator &m_code_generator;
@@ -141,6 +145,7 @@ namespace p0
 
 			virtual void visit(null_expression_tree const &expression) override
 			{
+				m_emitter.copy(0, 0);
 			}
 
 		private:

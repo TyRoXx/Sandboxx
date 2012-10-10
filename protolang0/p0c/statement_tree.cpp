@@ -103,4 +103,29 @@ namespace p0
 	{
 		return *m_expression;
 	}
+
+
+	assignment_tree::assignment_tree(
+		std::unique_ptr<expression_tree> destination,
+		std::unique_ptr<expression_tree> source
+		)
+		: m_destination(std::move(destination))
+		, m_source(std::move(source))
+	{
+	}
+
+	void assignment_tree::accept(statement_tree_visitor &visitor) const
+	{
+		visitor.visit(*this);
+	}
+
+	expression_tree const &assignment_tree::destination() const
+	{
+		return *m_destination;
+	}
+
+	expression_tree const &assignment_tree::source() const
+	{
+		return *m_source;
+	}
 }

@@ -81,9 +81,25 @@ namespace p0
 			}
 
 		default:
-			return std::unique_ptr<statement_tree>(new expression_statement_tree(
-				parse_expression()
-				));
+			{
+				auto left = parse_expression();
+
+				if (try_skip_token(token_type::assign))
+				{
+					auto right = parse_expression();
+
+					return std::unique_ptr<statement_tree>(new assignment_tree(
+						std::move(left),
+						std::move(right)
+						));
+				}
+				else
+				{
+					return std::unique_ptr<statement_tree>(new expression_statement_tree(
+						std::move(left)
+						));
+				}
+			}
 		}
 	}
 
@@ -119,6 +135,11 @@ namespace p0
 	}
 
 	std::unique_ptr<expression_tree> parser::parse_expression()
+	{
+		return parse_primary_expression();
+	}
+
+	std::unique_ptr<expression_tree> parser::parse_primary_expression()
 	{
 		auto const first = pop_token();
 		switch (first.type)

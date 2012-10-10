@@ -37,7 +37,7 @@ namespace p0
 			)
 		{
 			push_instruction(instruction(
-				instruction_type::set_from_constant,
+				instruction_type::copy,
 				destination,
 				source
 				));
@@ -49,7 +49,7 @@ namespace p0
 			)
 		{
 			push_instruction(instruction(
-				instruction_type::set_from_constant,
+				instruction_type::add,
 				destination,
 				summand
 				));

@@ -16,6 +16,7 @@ namespace p0
 	struct block_tree;
 	struct expression_statement_tree;
 	struct expression_tree;
+	struct assignment_tree;
 
 
 	struct statement_tree_visitor
@@ -25,6 +26,7 @@ namespace p0
 		virtual void visit(return_tree const &statement) = 0;
 		virtual void visit(block_tree const &statement) = 0;
 		virtual void visit(expression_statement_tree const &statement) = 0;
+		virtual void visit(assignment_tree const &expression) = 0;
 	};
 
 
@@ -97,6 +99,23 @@ namespace p0
 	private:
 
 		std::unique_ptr<expression_tree> m_expression;
+	};
+
+
+	struct assignment_tree : statement_tree
+	{
+		explicit assignment_tree(
+			std::unique_ptr<expression_tree> destination,
+			std::unique_ptr<expression_tree> source
+			);
+		virtual void accept(statement_tree_visitor &visitor) const override;
+		expression_tree const &destination() const;
+		expression_tree const &source() const;
+
+	private:
+
+		std::unique_ptr<expression_tree> m_destination;
+		std::unique_ptr<expression_tree> m_source;
 	};
 }
 
