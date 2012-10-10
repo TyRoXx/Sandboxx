@@ -17,6 +17,7 @@
 			var p = null
 			p = null
 			function (a, b) {}
+			;var i = 0
 		}
 	}
 }

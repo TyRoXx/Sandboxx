@@ -1,6 +1,7 @@
 #include "statement_code_generator.hpp"
 #include "symbol_table.hpp"
 #include "expression_code_generator.hpp"
+#include "compiler_error.hpp"
 
 
 namespace p0
@@ -16,10 +17,16 @@ namespace p0
 
 	void statement_code_generator::visit(declaration_tree const &statement)
 	{
-		m_symbols.add_symbol(
+		if (!m_symbols.add_symbol(
 			source_range_to_string(statement.name()),
 			symbol()
-			);
+			))
+		{
+			throw compiler_error(
+				"Name of local variable is already in use",
+				statement.name()
+				);
+		}
 	}
 
 	void statement_code_generator::visit(return_tree const &statement)
