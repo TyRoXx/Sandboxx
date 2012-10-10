@@ -20,13 +20,31 @@ namespace p0
 				instruction_vector &destination
 				);
 			void return_();
+			void set_from_constant(
+				instruction_argument destination,
+				instruction_argument constant
+				);
+			void copy(
+				instruction_argument destination,
+				instruction_argument source
+				);
+			void add(
+				instruction_argument destination,
+				instruction_argument summand
+				);
+			void allocate(
+				instruction_argument size
+				);
+			void deallocate(
+				instruction_argument size
+				);
 
 		private:
 
 			instruction_vector &m_destination;
 
 
-			size_t push_instruction(
+			void push_instruction(
 				instruction const &instruction
 				);
 		};

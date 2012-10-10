@@ -19,6 +19,9 @@ namespace p0
 				return_,
 				allocate,
 				deallocate,
+				set_from_constant,
+				copy,
+				add,
 				count_,
 			};
 		};
@@ -40,6 +43,15 @@ namespace p0
 			explicit instruction(
 				instruction_type::Enum type,
 				argument_array const &arguments = argument_array()
+				);
+			explicit instruction(
+				instruction_type::Enum type,
+				instruction_argument argument0
+				);
+			explicit instruction(
+				instruction_type::Enum type,
+				instruction_argument argument0,
+				instruction_argument argument1
 				);
 			instruction_type::Enum type() const;
 			argument_array const &arguments() const;

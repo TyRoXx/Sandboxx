@@ -19,6 +19,26 @@ namespace p0
 		{
 		}
 
+		instruction::instruction(
+			instruction_type::Enum type,
+			instruction_argument argument0
+			)
+			: m_type(type)
+		{
+			m_arguments[0] = argument0;
+		}
+
+		instruction::instruction(
+			instruction_type::Enum type,
+			instruction_argument argument0,
+			instruction_argument argument1
+			)
+			: m_type(type)
+		{
+			m_arguments[0] = argument0;
+			m_arguments[1] = argument1;
+		}
+
 		instruction_type::Enum instruction::type() const
 		{
 			return m_type;
