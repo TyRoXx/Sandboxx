@@ -2,15 +2,18 @@
 #include "expression_tree.hpp"
 #include "statement_tree.hpp"
 #include "symbol_table.hpp"
+#include "compiler_error.hpp"
 #include "p0i/emitter.hpp"
 
 
 namespace p0
 {
 	code_generator::code_generator(
-		function_tree const &tree
+		function_tree const &tree,
+		compiler_error_handler error_handler
 		)
 		: m_tree(tree)
+		, m_error_handler(std::move(error_handler))
 	{
 	}
 
@@ -43,10 +46,17 @@ namespace p0
 		for (auto p = begin(function.parameters()), e = end(function.parameters()); p != e; ++p)
 		{
 			auto name = source_range_to_string(*p);
-			parameter_symbols.add_symbol(
+
+			if (!parameter_symbols.add_symbol(
 				std::move(name),
 				symbol()
-				);
+				))
+			{
+				m_error_handler(compiler_error(
+					"Duplicated parameter name",
+					*p
+					));
+			}
 		}
 
 		generate_statement(

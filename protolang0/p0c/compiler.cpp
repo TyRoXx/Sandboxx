@@ -19,13 +19,20 @@ namespace p0
 
 	intermediate::unit compiler::compile()
 	{
-		scanner scanner(m_source);
-		parser parser(scanner, m_error_handler);
+		scanner scanner(
+			m_source
+			);
+
+		parser parser(
+			scanner,
+			m_error_handler
+			);
 
 		auto const tree = parser.parse_unit();
 
 		code_generator generator(
-			*tree
+			*tree,
+			m_error_handler
 			);
 
 		return generator.generate_unit();

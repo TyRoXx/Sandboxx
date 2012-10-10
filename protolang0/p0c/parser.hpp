@@ -19,7 +19,7 @@ namespace p0
 
 	struct parser
 	{
-		typedef std::function<bool (const compiler_error &)> compiler_error_handler;
+		typedef std::function<bool (compiler_error const &)> compiler_error_handler;
 
 
 		explicit parser(

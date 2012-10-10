@@ -40,17 +40,50 @@ namespace
 			pos.begin(),
 			'\n'); //TODO O(n) instead of O(n^2)
 
-		auto const end_of_line = std::find(pos.begin(), source.end(), '\n');
-		auto const line_length = std::distance(pos.begin(), end_of_line);
-		auto const hint_length = std::min<size_t>(70, line_length);
+		typedef std::reverse_iterator<p0::source_range::iterator> reverse_source_iterator;
 
-		std::string const line(
+		auto const end_of_line = std::find(
 			pos.begin(),
-			pos.begin() + hint_length
+			source.end(),
+			'\n');
+
+		auto const begin_of_line = std::find(
+			reverse_source_iterator(pos.begin()),
+			reverse_source_iterator(source.begin()),
+			'\n').base();
+
+		auto const line_length = std::distance(begin_of_line, end_of_line);
+		auto const half_hint = 74 / 2;
+		auto const hint_begin = std::max(pos.begin() - half_hint, begin_of_line);
+		auto const hint_end   = std::min(pos.begin() + half_hint, end_of_line);
+
+		std::string hint(
+			hint_begin,
+			hint_end
 			);
 
-		out << '(' << (line_index + 1) << "): " << error.what() << '\n';
-		out << "    " << line << '\n';
+		std::for_each(
+			begin(hint),
+			end(hint),
+			[](char &c)
+		{
+			switch (c)
+			{
+			case '\r':
+			case '\t':
+				c = ' ';
+				break;
+
+			default:
+				break;
+			}
+		});
+
+		out << (line_index + 1) << ": " << error.what() << '\n';
+		out << hint << '\n';
+
+		auto const error_char_index = std::distance(hint_begin, pos.begin());
+		out << std::string(error_char_index, ' ') << "^\n";
 	}
 
 	bool print_error_return_true(
