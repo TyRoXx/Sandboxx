@@ -38,17 +38,18 @@ namespace
 
 		typedef std::reverse_iterator<p0::source_range::iterator> reverse_source_iterator;
 
-		auto const end_of_line = std::find(
-			pos.begin(),
-			source.end(),
-			'\n');
-
 		auto const begin_of_line = std::find(
 			reverse_source_iterator(pos.begin()),
 			reverse_source_iterator(source.begin()),
 			'\n').base();
 
-		auto const half_hint = 74 / 2;
+		auto const end_of_line = std::find(
+			pos.begin(),
+			source.end(),
+			'\n');
+
+		auto const max_hint_length = 72;
+		auto const half_hint = (max_hint_length / 2);
 		auto const hint_begin = std::max(pos.begin() - half_hint, begin_of_line);
 		auto const hint_end   = std::min(pos.begin() + half_hint, end_of_line);
 
