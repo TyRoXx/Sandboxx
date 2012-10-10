@@ -23,7 +23,7 @@ namespace p0
 			};
 		};
 
-		typedef std::uint_fast64_t instruction_argument;
+		typedef std::uint64_t instruction_argument;
 
 
 		struct instruction
