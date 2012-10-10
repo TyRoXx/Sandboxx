@@ -84,24 +84,8 @@ namespace p0
 	{
 	}
 
-	function_tree::function_tree(function_tree &&other)
-		: m_body(std::move(other.m_body))
-	{
-	}
-
 	function_tree::~function_tree()
 	{
-	}
-
-	function_tree &function_tree::operator = (function_tree &&other)
-	{
-		function_tree(std::move(other)).swap(*this);
-		return *this;
-	}
-
-	void function_tree::swap(function_tree &other)
-	{
-		m_body.swap(other.m_body);
 	}
 
 	void function_tree::accept(expression_tree_visitor &visitor) const

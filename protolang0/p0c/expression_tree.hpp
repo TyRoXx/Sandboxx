@@ -96,10 +96,7 @@ namespace p0
 			std::unique_ptr<statement_tree> body,
 			name_vector parameters
 			);
-		function_tree(function_tree &&other);
 		~function_tree();
-		function_tree &operator = (function_tree &&other);
-		void swap(function_tree &other);
 		virtual void accept(expression_tree_visitor &visitor) const override;
 		statement_tree const &body() const;
 		name_vector const &parameters() const;
