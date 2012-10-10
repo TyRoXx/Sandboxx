@@ -22,7 +22,16 @@ namespace p0
 				set_from_constant,
 				copy,
 				add,
-				count_,
+				mul,
+				div,
+				negate,
+				not_,
+				and_,
+				or_,
+				xor_,
+				equal,
+				less,
+				greater,
 			};
 		};
 
