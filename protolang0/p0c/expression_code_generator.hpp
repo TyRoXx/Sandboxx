@@ -11,11 +11,13 @@
 namespace p0
 {
 	struct symbol_table;
+	struct code_generator;
 
 
 	struct expression_code_generator : expression_tree_visitor
 	{
 		explicit expression_code_generator(
+			code_generator &function_generator,
 			intermediate::emitter &emitter,
 			reference destination,
 			symbol_table &symbols
@@ -28,6 +30,7 @@ namespace p0
 
 	private:
 
+		code_generator &m_function_generator;
 		intermediate::emitter &m_emitter;
 		reference m_destination;
 		symbol_table &m_symbols;
@@ -36,6 +39,7 @@ namespace p0
 
 	void generate_expression(
 		expression_tree const &tree,
+		code_generator &function_generator,
 		intermediate::emitter &emitter,
 		reference destination,
 		symbol_table &symbols

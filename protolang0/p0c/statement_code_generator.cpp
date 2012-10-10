@@ -7,10 +7,12 @@
 namespace p0
 {
 	statement_code_generator::statement_code_generator(
+		code_generator &function_generator,
 		intermediate::emitter &emitter,
 		symbol_table &symbols
 		)
-		: m_emitter(emitter)
+		: m_function_generator(function_generator)
+		, m_emitter(emitter)
 		, m_symbols(symbols)
 	{
 	}
@@ -42,6 +44,7 @@ namespace p0
 		{
 			generate_statement(
 				**s,
+				m_function_generator,
 				m_emitter,
 				block_symbols
 				);
@@ -52,6 +55,7 @@ namespace p0
 	{
 		generate_expression(
 			statement.expression(),
+			m_function_generator,
 			m_emitter,
 			reference(),
 			m_symbols
@@ -65,11 +69,13 @@ namespace p0
 
 	void generate_statement(
 		statement_tree const &tree,
+		code_generator &function_generator,
 		intermediate::emitter &emitter,
 		symbol_table &symbols
 		)
 	{
 		statement_code_generator generator(
+			function_generator,
 			emitter,
 			symbols
 			);

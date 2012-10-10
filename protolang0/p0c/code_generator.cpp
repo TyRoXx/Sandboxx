@@ -29,8 +29,7 @@ namespace p0
 			);
 	}
 
-
-	void code_generator::generate_function(
+	size_t code_generator::generate_function(
 		function_tree const &function
 		)
 	{
@@ -62,6 +61,7 @@ namespace p0
 
 		generate_statement(
 			function.body(),
+			*this,
 			emitter,
 			parameter_symbols
 			);
@@ -70,5 +70,7 @@ namespace p0
 			std::move(instructions),
 			function.parameters().size()
 			);
+
+		return function_index;
 	}
 }

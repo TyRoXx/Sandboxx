@@ -10,11 +10,13 @@
 namespace p0
 {
 	struct symbol_table;
+	struct code_generator;
 
 
 	struct statement_code_generator : statement_tree_visitor
 	{
 		explicit statement_code_generator(
+			code_generator &function_generator,
 			intermediate::emitter &emitter,
 			symbol_table &symbols
 			);
@@ -26,6 +28,7 @@ namespace p0
 
 	private:
 
+		code_generator &m_function_generator;
 		intermediate::emitter &m_emitter;
 		symbol_table &m_symbols;
 	};
@@ -33,6 +36,7 @@ namespace p0
 
 	void generate_statement(
 		statement_tree const &tree,
+		code_generator &function_generator,
 		intermediate::emitter &emitter,
 		symbol_table &symbols
 		);

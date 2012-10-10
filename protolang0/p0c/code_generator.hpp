@@ -31,17 +31,15 @@ namespace p0
 			compiler_error_handler error_handler
 			);
 		intermediate::unit generate_unit();
+		size_t generate_function(
+			function_tree const &function
+			);
 
 	private:
 
 		function_tree const &m_tree;
 		compiler_error_handler m_error_handler;
 		intermediate::unit::function_vector m_functions;
-
-
-		void generate_function(
-			function_tree const &function
-			);
 	};
 }
 

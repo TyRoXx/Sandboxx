@@ -3,11 +3,12 @@
 #define P0C_SYMBOL_HPP
 
 
+#include "reference.hpp"
+
+
 namespace p0
 {
-	struct symbol
-	{
-	};
+	typedef reference symbol;
 }
 
 
