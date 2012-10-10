@@ -3,6 +3,7 @@
 #include "statement_tree.hpp"
 #include "symbol_table.hpp"
 #include "compiler_error.hpp"
+#include "expression_code_generator.hpp"
 #include "p0i/emitter.hpp"
 
 
@@ -151,50 +152,7 @@ namespace p0
 		symbol_table &symbols
 		)
 	{
-		struct expression_generator : expression_tree_visitor
-		{
-			explicit expression_generator(
-				code_generator &code_generator,
-				intermediate::emitter &emitter,
-				symbol_table &symbols
-				)
-				: m_code_generator(code_generator)
-				, m_emitter(emitter)
-				, m_symbols(symbols)
-			{
-			}
-
-			virtual void visit(name_expression_tree const &expression) override
-			{
-			}
-
-			virtual void visit(integer_10_expression_tree const &expression) override
-			{
-			}
-
-			virtual void visit(call_expression_tree const &expression) override
-			{
-			}
-
-			virtual void visit(function_tree const &expression) override
-			{
-				m_code_generator.generate_function(expression);
-			}
-
-			virtual void visit(null_expression_tree const &expression) override
-			{
-				m_emitter.copy(0, 0);
-			}
-
-		private:
-
-			code_generator &m_code_generator;
-			intermediate::emitter &m_emitter;
-			symbol_table &m_symbols;
-		};
-
-		expression_generator visitor(
-			*this,
+		expression_code_generator visitor(
 			emitter,
 			symbols
 			);
