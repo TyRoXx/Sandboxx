@@ -17,7 +17,6 @@ namespace p0
 			);
 		token next_token();
 		void skip_line();
-		bool is_at_end() const;
 
 	private:
 

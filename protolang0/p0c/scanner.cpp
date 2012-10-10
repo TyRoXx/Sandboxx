@@ -179,11 +179,6 @@ namespace p0
 		}
 	}
 
-	bool scanner::is_at_end() const
-	{
-		return (m_pos == m_end);
-	}
-
 
 	void scanner::skip_whitespace()
 	{
