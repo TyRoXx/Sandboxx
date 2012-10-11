@@ -21,7 +21,12 @@ namespace p0
 
 	std::unique_ptr<function_tree> parser::parse_unit()
 	{
-		return parse_function();
+		auto main_function = parse_function();
+		skip_token(
+			token_type::end_of_file,
+			"End of file after main function expected"
+			);
+		return main_function;
 	}
 
 
@@ -91,34 +96,49 @@ namespace p0
 		}
 	}
 
+	struct end_of_file_error : compiler_error
+	{
+		explicit end_of_file_error(
+			std::string message,
+			source_range position
+			)
+			: compiler_error(std::move(message), position)
+		{
+		}
+	};
+
 	std::unique_ptr<statement_tree> parser::parse_block()
 	{
 		block_tree::statement_vector body;
 
 		for (;;)
 		{
-			//end of the block
-			if (try_skip_token(
-				token_type::brace_right
-				))
-			{
-				break;
-			}
-
-			if (peek_token().type == token_type::end_of_file)
-			{
-				throw compiler_error(
-					"Unexpected end of file in block",
-					m_scanner.next_token().content
-					);
-			}
-
 			try
 			{
+				if (peek_token().type == token_type::end_of_file)
+				{
+					throw end_of_file_error(
+						"Unexpected end of file in block",
+						m_scanner.next_token().content
+						);
+				}
+
+				//end of the block
+				if (try_skip_token(
+					token_type::brace_right
+					))
+				{
+					break;
+				}
+
 				auto statement = parse_statement();
 				body.push_back(
 					std::move(statement)
 					);
+			}
+			catch (end_of_file_error const &e)
+			{
+				throw;
 			}
 			catch (compiler_error const &e)
 			{
