@@ -63,6 +63,7 @@ namespace p0
 
 		token_type::Enum find_keyword(source_range content)
 		{
+			//a rather simple (= slow) approach of finding keywords
 			static std::array<keyword, 8> const keywords =
 			{{
 				{"var", token_type::var},
@@ -104,7 +105,10 @@ namespace p0
 
 		if (m_pos == m_end)
 		{
-			return token(token_type::end_of_file, source_range(m_end, m_end));
+			return token(
+				token_type::end_of_file,
+				source_range(m_end, m_end)
+				);
 		}
 
 		switch (*m_pos)
@@ -140,7 +144,7 @@ namespace p0
 					);
 
 				auto const type = find_keyword(range);
-				
+
 				return token(
 					type,
 					range
@@ -193,6 +197,7 @@ namespace p0
 				continue;
 			}
 
+			//a comment starts with a semicolon and ends after the current line
 			if (*m_pos == ';')
 			{
 				do

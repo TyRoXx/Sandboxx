@@ -111,6 +111,10 @@ namespace p0
 	{
 		block_tree::statement_vector body;
 
+		//this block is only left with:
+		//	break - on the closing '}'
+		//	end_of_file_error - becase the block is incomplete in the input
+		//	compiler_error - when the error handling function returns false
 		for (;;)
 		{
 			try
@@ -138,6 +142,7 @@ namespace p0
 			}
 			catch (end_of_file_error const &e)
 			{
+				//this error is best handled at the top-most level
 				throw;
 			}
 			catch (compiler_error const &e)
@@ -147,6 +152,9 @@ namespace p0
 					throw;
 				}
 
+				//Try again at the next line to find more potential errors.
+				//The next statement does not necessarily start on the very next
+				//line, but this is a good approximation for real world sources.
 				skip_line();
 			}
 		}
@@ -159,6 +167,11 @@ namespace p0
 	std::unique_ptr<expression_tree> parser::parse_expression()
 	{
 		auto left = parse_primary_expression();
+
+		//postfix call syntax like in C++
+		//f(a, b, c)
+		//left = f
+		//arguments = {a, b, c}
 
 		while (try_skip_token(
 			token_type::parenthesis_left
@@ -218,6 +231,7 @@ namespace p0
 
 		case token_type::parenthesis_left:
 			{
+				//any expression can be enclosed in parentheses
 				auto value = parse_expression();
 				auto const closing_parenthesis = pop_token();
 				expect_token_type(
