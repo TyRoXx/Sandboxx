@@ -128,4 +128,73 @@ namespace p0
 	{
 		return *m_source;
 	}
+
+
+	if_tree::if_tree(
+		std::unique_ptr<expression_tree> condition,
+		std::unique_ptr<statement_tree> on_true,
+		std::unique_ptr<statement_tree> on_false
+		)
+		: m_condition(std::move(condition))
+		, m_on_true(std::move(on_true))
+		, m_on_false(std::move(on_false))
+	{
+	}
+
+	void if_tree::accept(statement_tree_visitor &visitor) const
+	{
+		visitor.visit(*this);
+	}
+
+	expression_tree const &if_tree::condition() const
+	{
+		return *m_condition;
+	}
+
+	statement_tree const &if_tree::on_true() const
+	{
+		return *m_on_true;
+	}
+
+	statement_tree const &if_tree::on_false() const
+	{
+		return *m_on_false;
+	}
+
+
+	while_tree::while_tree(
+		std::unique_ptr<expression_tree> condition,
+		std::unique_ptr<statement_tree> body
+		)
+		: m_condition(std::move(condition))
+		, m_body(std::move(body))
+	{
+	}
+
+	void while_tree::accept(statement_tree_visitor &visitor) const
+	{
+		visitor.visit(*this);
+	}
+
+	expression_tree const &while_tree::condition() const
+	{
+		return *m_condition;
+	}
+
+	statement_tree const &while_tree::body() const
+	{
+		return *m_body;
+	}
+
+
+	void break_tree::accept(statement_tree_visitor &visitor) const
+	{
+		visitor.visit(*this);
+	}
+
+
+	void continue_tree::accept(statement_tree_visitor &visitor) const
+	{
+		visitor.visit(*this);
+	}
 }

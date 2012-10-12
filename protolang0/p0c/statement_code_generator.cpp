@@ -29,6 +29,15 @@ namespace p0
 				statement.name()
 				);
 		}
+
+		//TODO
+		generate_expression(
+			statement.value(),
+			m_function_generator,
+			m_emitter,
+			reference(44),
+			m_symbols
+			);
 	}
 
 	void statement_code_generator::visit(return_tree const &statement)
@@ -63,6 +72,39 @@ namespace p0
 	}
 
 	void statement_code_generator::visit(assignment_tree const &statement)
+	{
+		//TODO
+
+		generate_expression(
+			statement.destination(),
+			m_function_generator,
+			m_emitter,
+			reference(22),
+			m_symbols
+			);
+
+		generate_expression(
+			statement.source(),
+			m_function_generator,
+			m_emitter,
+			reference(33),
+			m_symbols
+			);
+	}
+
+	void statement_code_generator::visit(if_tree const &expression)
+	{
+	}
+
+	void statement_code_generator::visit(while_tree const &expression)
+	{
+	}
+
+	void statement_code_generator::visit(break_tree const &expression)
+	{
+	}
+
+	void statement_code_generator::visit(continue_tree const &expression)
 	{
 	}
 

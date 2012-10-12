@@ -33,10 +33,12 @@ namespace p0
 				function const &function
 				)
 			{
+				file << "function\n";
 				for (auto i = begin(function.body()); i != end(function.body()); ++i)
 				{
 					save_instruction(file, *i);
 				}
+				file << "end\n";
 			}
 		}
 

@@ -7,16 +7,16 @@
 	{
 		{
 			var i = x
-			var f = function { return 123 }
-			var g = function (a, b, c) { return add(a, b) }
-			var h = function (s) { }
+			var f = function { var a = 0 a = a return 123 }
+			var g = function (a, b, c) { a = c return add(a, b) }
+			var h = function (s) { var a = s }
 			f()
 			g(1, 2, 3)
 			h(null)
 			null
 			var p = null
 			p = null
-			function (a, b) {}
+			function (a, b) {a = b}
 			;var i = 0
 		}
 	}

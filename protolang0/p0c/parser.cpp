@@ -140,7 +140,7 @@ namespace p0
 					std::move(statement)
 					);
 			}
-			catch (end_of_file_error const &e)
+			catch (end_of_file_error const &)
 			{
 				//this error is best handled at the top-most level
 				throw;
