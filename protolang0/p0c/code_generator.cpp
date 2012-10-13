@@ -69,4 +69,11 @@ namespace p0
 
 		return function_index;
 	}
+
+	void code_generator::handle_error(
+		compiler_error const &error
+		)
+	{
+		m_error_handler(error);
+	}
 }

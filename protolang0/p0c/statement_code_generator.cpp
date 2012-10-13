@@ -2,6 +2,7 @@
 #include "symbol_table.hpp"
 #include "lvalue_generator.hpp"
 #include "rvalue_generator.hpp"
+#include "code_generator.hpp"
 #include "compiler_error.hpp"
 
 
@@ -42,12 +43,19 @@ namespace p0
 
 		for (auto s = begin(statement.body()); s != end(statement.body()); ++s)
 		{
-			generate_statement(
-				**s,
-				m_function_generator,
-				m_emitter,
-				block_symbols
-				);
+			try
+			{
+				generate_statement(
+					**s,
+					m_function_generator,
+					m_emitter,
+					block_symbols
+					);
+			}
+			catch (compiler_error const &e)
+			{
+				m_function_generator.handle_error(e);
+			}
 		}
 	}
 

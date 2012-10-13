@@ -75,15 +75,23 @@ namespace
 			}
 		});
 
+		out << error.what() << '\n';
+
 		size_t const line_index = std::count(
 			source.begin(),
 			pos.begin(),
 			'\n'); //TODO O(n) instead of O(n^2)
 
-		out << (line_index + 1) << ": " << error.what() << '\n';
-		out << hint << '\n';
+		std::ostringstream line_label_formatter;
+		line_label_formatter << (line_index + 1) << ": ";
+		auto const line_label = line_label_formatter.str();
 
-		auto const error_char_index = std::distance(hint_begin, pos.begin());
+		out << line_label << hint << '\n';
+
+		auto const error_char_index =
+			line_label.size() +
+			std::distance(hint_begin, pos.begin());
+
 		out << std::string(error_char_index, ' ') << "^\n";
 	}
 

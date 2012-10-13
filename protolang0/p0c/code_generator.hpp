@@ -34,6 +34,9 @@ namespace p0
 		size_t generate_function(
 			function_tree const &function
 			);
+		void handle_error(
+			compiler_error const &error
+			);
 
 	private:
 
