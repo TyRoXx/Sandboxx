@@ -30,11 +30,11 @@ namespace p0
 		virtual void visit(return_tree const &statement) = 0;
 		virtual void visit(block_tree const &statement) = 0;
 		virtual void visit(expression_statement_tree const &statement) = 0;
-		virtual void visit(assignment_tree const &expression) = 0;
-		virtual void visit(if_tree const &expression) = 0;
-		virtual void visit(while_tree const &expression) = 0;
-		virtual void visit(break_tree const &expression) = 0;
-		virtual void visit(continue_tree const &expression) = 0;
+		virtual void visit(assignment_tree const &statement) = 0;
+		virtual void visit(if_tree const &statement) = 0;
+		virtual void visit(while_tree const &statement) = 0;
+		virtual void visit(break_tree const &statement) = 0;
+		virtual void visit(continue_tree const &statement) = 0;
 	};
 
 
@@ -137,7 +137,7 @@ namespace p0
 		virtual void accept(statement_tree_visitor &visitor) const override;
 		expression_tree const &condition() const;
 		statement_tree const &on_true() const;
-		statement_tree const &on_false() const;
+		statement_tree const *on_false() const;
 
 	private:
 

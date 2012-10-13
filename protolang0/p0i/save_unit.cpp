@@ -2,6 +2,7 @@
 #include "unit.hpp"
 #include "function.hpp"
 #include <algorithm>
+#include <iomanip>
 
 
 namespace p0
@@ -17,14 +18,19 @@ namespace p0
 			{
 				using namespace std;
 
-				file << instruction.type();
+				auto const &info = get_instruction_info(instruction.type());
+
+				file << "  ";
+				file << std::setw(18) << std::left << info.name;
+
 				std::for_each(
 					begin(instruction.arguments()),
-					end(instruction.arguments()),
+					begin(instruction.arguments()) + info.argument_count,
 					[&file](instruction_argument arg)
 				{
-					file << ' ' << arg;
+					file << ' ' << std::setw(6) << arg;
 				});
+
 				file << '\n';
 			}
 

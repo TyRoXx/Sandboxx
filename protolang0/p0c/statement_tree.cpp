@@ -156,9 +156,9 @@ namespace p0
 		return *m_on_true;
 	}
 
-	statement_tree const &if_tree::on_false() const
+	statement_tree const *if_tree::on_false() const
 	{
-		return *m_on_false;
+		return m_on_false.get();
 	}
 
 

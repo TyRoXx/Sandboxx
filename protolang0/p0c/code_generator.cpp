@@ -45,17 +45,13 @@ namespace p0
 			);
 		for (auto p = begin(function.parameters()), e = end(function.parameters()); p != e; ++p)
 		{
-			auto name = source_range_to_string(*p);
-
-			if (!parameter_symbols.add_symbol(
-				std::move(name),
-				symbol(33)
-				))
+			try
 			{
-				m_error_handler(compiler_error(
-					"Duplicated parameter name",
-					*p
-					));
+				parameter_symbols.declare_variable(*p);
+			}
+			catch (compiler_error const &e)
+			{
+				m_error_handler(e);
 			}
 		}
 

@@ -1,4 +1,5 @@
 #include "symbol_table.hpp"
+#include "compiler_error.hpp"
 
 
 namespace p0
@@ -7,27 +8,38 @@ namespace p0
 		symbol_table const *parent
 		)
 		: m_parent(parent)
+		, m_next_local_address(parent ? parent->m_next_local_address : 0)
 	{
 	}
 
-	bool symbol_table::add_symbol(
-		std::string name,
-		symbol symbol
+	reference symbol_table::declare_variable(
+		source_range name
 		)
 	{
-		auto const s = m_symbols_by_name.find(name);
-		if (s == m_symbols_by_name.end())
+		//non-const for moving later
+		std::string name_str = source_range_to_string(name);
+
+		auto const s = m_symbols_by_name.find(name_str);
+		if (s != m_symbols_by_name.end())
 		{
-			m_symbols_by_name.insert(
-				s,
-				std::make_pair(std::move(name), symbol));
-			return true;
+			throw compiler_error(
+				"Name of local variable is already in use",
+				name
+				);
 		}
 
-		return false;
+		reference const variable_address(m_next_local_address);
+
+		m_symbols_by_name.insert(
+			s,
+			std::make_pair(std::move(name_str), variable_address)
+			);
+
+		++m_next_local_address;
+		return variable_address;
 	}
 
-	symbol const *symbol_table::find_symbol(
+	reference const *symbol_table::find_symbol(
 		std::string const &name
 		) const
 	{

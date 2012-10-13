@@ -20,22 +20,13 @@ namespace p0
 
 	void statement_code_generator::visit(declaration_tree const &statement)
 	{
-		if (!m_symbols.add_symbol(
-			source_range_to_string(statement.name()),
-			symbol(55)
-			))
-		{
-			throw compiler_error(
-				"Name of local variable is already in use",
-				statement.name()
-				);
-		}
+		auto const address = m_symbols.declare_variable(statement.name());
 
 		rvalue_generator source(
 			m_function_generator,
 			m_emitter,
 			m_symbols,
-			reference(55)
+			address
 			);
 		statement.value().accept(source);
 	}
@@ -68,6 +59,7 @@ namespace p0
 			m_symbols,
 			reference() //discard result
 			);
+		statement.expression().accept(value);
 	}
 
 	void statement_code_generator::visit(assignment_tree const &statement)
@@ -96,19 +88,57 @@ namespace p0
 		statement.source().accept(source);
 	}
 
-	void statement_code_generator::visit(if_tree const &expression)
+	void statement_code_generator::visit(if_tree const &statement)
+	{
+		//TODO
+
+		{
+			reference const condition_address; //TODO
+			rvalue_generator condition(
+				m_function_generator,
+				m_emitter,
+				m_symbols,
+				condition_address
+				);
+			statement.condition().accept(condition);
+		}
+
+		generate_statement(
+			statement.on_true(),
+			m_function_generator,
+			m_emitter,
+			m_symbols
+			);
+
+		auto const * const on_false = statement.on_false();
+		if (on_false)
+		{
+			generate_statement(
+				*on_false,
+				m_function_generator,
+				m_emitter,
+				m_symbols
+				);
+		}
+	}
+
+	void statement_code_generator::visit(while_tree const &statement)
+	{
+		//TODO
+
+		generate_statement(
+			statement.body(),
+			m_function_generator,
+			m_emitter,
+			m_symbols
+			);
+	}
+
+	void statement_code_generator::visit(break_tree const &statement)
 	{
 	}
 
-	void statement_code_generator::visit(while_tree const &expression)
-	{
-	}
-
-	void statement_code_generator::visit(break_tree const &expression)
-	{
-	}
-
-	void statement_code_generator::visit(continue_tree const &expression)
+	void statement_code_generator::visit(continue_tree const &statement)
 	{
 	}
 

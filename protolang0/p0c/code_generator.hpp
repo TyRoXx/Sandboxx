@@ -38,7 +38,7 @@ namespace p0
 	private:
 
 		function_tree const &m_tree;
-		compiler_error_handler m_error_handler;
+		compiler_error_handler const m_error_handler;
 		intermediate::unit::function_vector m_functions;
 	};
 }

@@ -33,10 +33,10 @@ namespace p0
 		virtual void visit(block_tree const &statement) override;
 		virtual void visit(expression_statement_tree const &statement) override;
 		virtual void visit(assignment_tree const &statement) override;
-		virtual void visit(if_tree const &expression) override;
-		virtual void visit(while_tree const &expression) override;
-		virtual void visit(break_tree const &expression) override;
-		virtual void visit(continue_tree const &expression) override;
+		virtual void visit(if_tree const &statement) override;
+		virtual void visit(while_tree const &statement) override;
+		virtual void visit(break_tree const &statement) override;
+		virtual void visit(continue_tree const &statement) override;
 	};
 
 

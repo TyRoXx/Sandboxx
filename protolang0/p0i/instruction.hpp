@@ -34,10 +34,21 @@ namespace p0
 				equal,
 				less,
 				greater,
+
+				count_,
 			};
 		};
 
 		typedef std::uint64_t instruction_argument;
+
+
+		struct instruction_info
+		{
+			char const *name;
+			size_t argument_count;
+		};
+
+		instruction_info const &get_instruction_info(instruction_type::Enum instruction);
 
 
 		struct instruction

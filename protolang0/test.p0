@@ -10,13 +10,13 @@
 			var f = function { var a = 0 a = a return 123 }
 			var g = function (a, b, c) { a = c return add(a, b) }
 			var h = function (s) { var a = s }
+			function (a, b) {a = b a = b a = b b = a b = 1 b = 2}
 			f()
 			g(1, 2, 3)
 			h(null)
 			null
 			var p = null
 			p = null
-			function (a, b) {a = b}
 			;var i = 0
 			if p
 			{
