@@ -110,7 +110,15 @@ namespace p0
 
 	struct null_expression_tree : expression_tree
 	{
+		explicit null_expression_tree(
+			source_range position
+			);
 		virtual void accept(expression_tree_visitor &visitor) const override;
+		source_range const &position() const;
+
+	private:
+
+		source_range m_position;
 	};
 }
 

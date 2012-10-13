@@ -21,6 +21,7 @@ namespace p0
 				deallocate,
 				set_from_constant,
 				set_null,
+				set_function,
 				copy,
 				add,
 				mul,

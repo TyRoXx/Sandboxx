@@ -27,6 +27,10 @@ namespace p0
 			void set_null(
 				instruction_argument destination
 				);
+			void set_function(
+				instruction_argument destination,
+				instruction_argument function_id
+				);
 			void copy(
 				instruction_argument destination,
 				instruction_argument source

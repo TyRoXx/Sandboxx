@@ -104,8 +104,20 @@ namespace p0
 	}
 
 
+	null_expression_tree::null_expression_tree(
+		source_range position
+		)
+		: m_position(position)
+	{
+	}
+
 	void null_expression_tree::accept(expression_tree_visitor &visitor) const
 	{
 		visitor.visit(*this);
+	}
+
+	source_range const &null_expression_tree::position() const
+	{
+		return m_position;
 	}
 }

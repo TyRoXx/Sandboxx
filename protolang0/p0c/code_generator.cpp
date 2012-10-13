@@ -49,7 +49,7 @@ namespace p0
 
 			if (!parameter_symbols.add_symbol(
 				std::move(name),
-				symbol()
+				symbol(33)
 				))
 			{
 				m_error_handler(compiler_error(

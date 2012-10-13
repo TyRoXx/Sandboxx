@@ -311,7 +311,7 @@ namespace p0
 		case token_type::null:
 			{
 				return std::unique_ptr<expression_tree>(
-					new null_expression_tree
+					new null_expression_tree(first.content)
 					);
 			}
 

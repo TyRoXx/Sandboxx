@@ -1,6 +1,8 @@
 #include "statement_code_generator.hpp"
 #include "symbol_table.hpp"
 #include "expression_code_generator.hpp"
+#include "lvalue_generator.hpp"
+#include "rvalue_generator.hpp"
 #include "compiler_error.hpp"
 
 
@@ -21,7 +23,7 @@ namespace p0
 	{
 		if (!m_symbols.add_symbol(
 			source_range_to_string(statement.name()),
-			symbol()
+			symbol(55)
 			))
 		{
 			throw compiler_error(
@@ -30,14 +32,13 @@ namespace p0
 				);
 		}
 
-		//TODO
-		generate_expression(
-			statement.value(),
+		rvalue_generator source(
 			m_function_generator,
 			m_emitter,
-			reference(44),
-			m_symbols
+			m_symbols,
+			reference(55)
 			);
+		statement.value().accept(source);
 	}
 
 	void statement_code_generator::visit(return_tree const &statement)
@@ -73,23 +74,28 @@ namespace p0
 
 	void statement_code_generator::visit(assignment_tree const &statement)
 	{
-		//TODO
-
-		generate_expression(
-			statement.destination(),
+		// local variable (reference)
+		// table element
+		// temporary -> error
+		lvalue_generator destination(
 			m_function_generator,
 			m_emitter,
-			reference(22),
 			m_symbols
 			);
+		statement.destination().accept(destination);
 
-		generate_expression(
-			statement.source(),
+		assert(destination.address().is_valid());
+		
+		// local variable (reference)
+		// table element
+		// temporary
+		rvalue_generator source(
 			m_function_generator,
 			m_emitter,
-			reference(33),
-			m_symbols
+			m_symbols,
+			destination.address()
 			);
+		statement.source().accept(source);
 	}
 
 	void statement_code_generator::visit(if_tree const &expression)
