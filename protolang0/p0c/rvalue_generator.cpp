@@ -64,7 +64,43 @@ namespace p0
 
 	void rvalue_generator::visit(call_expression_tree const &expression)
 	{
-		//TODO
+		auto const function_address = reference(66); //TODO
+
+		rvalue_generator function(
+			m_function_generator,
+			m_emitter,
+			m_symbols,
+			function_address
+			);
+		expression.function().accept(function);
+
+		size_t argument_address = 77; //TODO
+
+		for (auto arg = expression.arguments().begin(), end = expression.arguments().end();
+			arg != end; ++arg)
+		{
+			rvalue_generator argument(
+				m_function_generator,
+				m_emitter,
+				m_symbols,
+				reference(argument_address)
+				);
+			(*arg)->accept(argument);
+
+			++argument_address;
+		}
+
+		m_emitter.call(
+			expression.arguments().size()
+			);
+
+		if (m_destination.is_valid())
+		{
+			m_emitter.copy(
+				m_destination.local_address(),
+				76 //TODO
+				);
+		}
 	}
 
 	void rvalue_generator::visit(function_tree const &expression)

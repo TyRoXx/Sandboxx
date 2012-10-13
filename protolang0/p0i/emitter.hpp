@@ -45,6 +45,9 @@ namespace p0
 			void deallocate(
 				instruction_argument size
 				);
+			void call(
+				instruction_argument argument_count
+				);
 
 		private:
 

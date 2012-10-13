@@ -97,6 +97,16 @@ namespace p0
 				));
 		}
 
+		void emitter::call(
+			instruction_argument argument_count
+			)
+		{
+			push_instruction(instruction(
+				instruction_type::call,
+				argument_count
+				));
+		}
+
 
 		void emitter::push_instruction(
 			instruction const &instruction

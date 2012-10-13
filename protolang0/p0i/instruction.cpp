@@ -28,6 +28,7 @@ namespace p0
 				{"equal", 2},
 				{"less", 2},
 				{"greater", 2},
+				{"call", 1},
 			}};
 
 			return infos[instruction];
