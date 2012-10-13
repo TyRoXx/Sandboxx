@@ -30,7 +30,8 @@
 				; loop
 				while true
 				{
-					
+					break
+					continue
 				}
 			}
 		}

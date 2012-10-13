@@ -120,6 +120,20 @@ namespace p0
 					));
 			}
 
+		case token_type::break_:
+			{
+				pop_token();
+				return std::unique_ptr<statement_tree>(new break_tree(
+					));
+			}
+
+		case token_type::continue_:
+			{
+				pop_token();
+				return std::unique_ptr<statement_tree>(new continue_tree(
+					));
+			}
+
 		default:
 			{
 				auto left = parse_expression();
