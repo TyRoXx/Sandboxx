@@ -1,6 +1,5 @@
 #include "statement_code_generator.hpp"
 #include "symbol_table.hpp"
-#include "expression_code_generator.hpp"
 #include "lvalue_generator.hpp"
 #include "rvalue_generator.hpp"
 #include "compiler_error.hpp"
@@ -63,12 +62,11 @@ namespace p0
 
 	void statement_code_generator::visit(expression_statement_tree const &statement)
 	{
-		generate_expression(
-			statement.expression(),
+		rvalue_generator value(
 			m_function_generator,
 			m_emitter,
-			reference(),
-			m_symbols
+			m_symbols,
+			reference() //discard result
 			);
 	}
 
