@@ -1,5 +1,5 @@
 #include "lvalue_generator.hpp"
-#include "symbol_table.hpp"
+#include "local_frame.hpp"
 #include "compiler_error.hpp"
 
 
@@ -8,11 +8,11 @@ namespace p0
 	lvalue_generator::lvalue_generator(
 		code_generator &function_generator,
 		intermediate::emitter &emitter,
-		symbol_table &symbols
+		local_frame &frame
 		)
 		: m_function_generator(function_generator)
 		, m_emitter(emitter)
-		, m_symbols(symbols)
+		, m_frame(frame)
 	{
 	}
 
@@ -24,7 +24,7 @@ namespace p0
 
 	void lvalue_generator::visit(name_expression_tree const &expression)
 	{
-		auto const address = m_symbols.require_symbol(
+		auto const address = m_frame.require_symbol(
 			expression.name()
 			);
 

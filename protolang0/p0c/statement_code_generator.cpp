@@ -1,5 +1,5 @@
 #include "statement_code_generator.hpp"
-#include "symbol_table.hpp"
+#include "local_frame.hpp"
 #include "lvalue_generator.hpp"
 #include "rvalue_generator.hpp"
 #include "code_generator.hpp"
@@ -11,22 +11,22 @@ namespace p0
 	statement_code_generator::statement_code_generator(
 		code_generator &function_generator,
 		intermediate::emitter &emitter,
-		symbol_table &symbols
+		local_frame &frame
 		)
 		: m_function_generator(function_generator)
 		, m_emitter(emitter)
-		, m_symbols(symbols)
+		, m_frame(frame)
 	{
 	}
 
 	void statement_code_generator::visit(declaration_tree const &statement)
 	{
-		auto const address = m_symbols.declare_variable(statement.name());
+		auto const address = m_frame.declare_variable(statement.name());
 
 		rvalue_generator source(
 			m_function_generator,
 			m_emitter,
-			m_symbols,
+			m_frame,
 			address
 			);
 		statement.value().accept(source);
@@ -39,7 +39,7 @@ namespace p0
 
 	void statement_code_generator::visit(block_tree const &statement)
 	{
-		symbol_table block_symbols(&m_symbols);
+		local_frame block_symbols(&m_frame);
 
 		for (auto s = begin(statement.body()); s != end(statement.body()); ++s)
 		{
@@ -64,7 +64,7 @@ namespace p0
 		rvalue_generator value(
 			m_function_generator,
 			m_emitter,
-			m_symbols,
+			m_frame,
 			reference() //discard result
 			);
 		statement.expression().accept(value);
@@ -78,7 +78,7 @@ namespace p0
 		lvalue_generator destination(
 			m_function_generator,
 			m_emitter,
-			m_symbols
+			m_frame
 			);
 		statement.destination().accept(destination);
 
@@ -90,7 +90,7 @@ namespace p0
 		rvalue_generator source(
 			m_function_generator,
 			m_emitter,
-			m_symbols,
+			m_frame,
 			destination.address()
 			);
 		statement.source().accept(source);
@@ -105,7 +105,7 @@ namespace p0
 			rvalue_generator condition(
 				m_function_generator,
 				m_emitter,
-				m_symbols,
+				m_frame,
 				condition_address
 				);
 			statement.condition().accept(condition);
@@ -115,7 +115,7 @@ namespace p0
 			statement.on_true(),
 			m_function_generator,
 			m_emitter,
-			m_symbols
+			m_frame
 			);
 
 		auto const * const on_false = statement.on_false();
@@ -125,7 +125,7 @@ namespace p0
 				*on_false,
 				m_function_generator,
 				m_emitter,
-				m_symbols
+				m_frame
 				);
 		}
 	}
@@ -138,7 +138,7 @@ namespace p0
 			statement.body(),
 			m_function_generator,
 			m_emitter,
-			m_symbols
+			m_frame
 			);
 	}
 
@@ -155,13 +155,13 @@ namespace p0
 		statement_tree const &tree,
 		code_generator &function_generator,
 		intermediate::emitter &emitter,
-		symbol_table &symbols
+		local_frame &frame
 		)
 	{
 		statement_code_generator generator(
 			function_generator,
 			emitter,
-			symbols
+			frame
 			);
 		tree.accept(generator);
 	}

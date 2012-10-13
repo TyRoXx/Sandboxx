@@ -1,6 +1,6 @@
 #pragma once
-#ifndef P0C_SYMBOL_TABLE_HPP
-#define P0C_SYMBOL_TABLE_HPP
+#ifndef P0C_LOCAL_FRAME_HPP
+#define P0C_LOCAL_FRAME_HPP
 
 
 #include "reference.hpp"
@@ -11,10 +11,10 @@
 
 namespace p0
 {
-	struct symbol_table
+	struct local_frame
 	{
-		explicit symbol_table(
-			symbol_table const *parent
+		explicit local_frame(
+			local_frame const *parent
 			);
 		reference declare_variable(
 			source_range name
@@ -30,7 +30,7 @@ namespace p0
 		typedef std::map<std::string, reference> symbols_by_name;
 
 
-		symbol_table const * const m_parent;
+		local_frame const * const m_parent;
 		symbols_by_name m_symbols_by_name;
 		size_t m_next_local_address;
 	};

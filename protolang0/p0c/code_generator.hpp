@@ -12,7 +12,7 @@ namespace p0
 	struct statement_tree;
 	struct expression_tree;
 	struct function_tree;
-	struct symbol_table;
+	struct local_frame;
 	struct compiler_error;
 
 	namespace intermediate

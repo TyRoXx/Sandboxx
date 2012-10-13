@@ -10,7 +10,7 @@
 
 namespace p0
 {
-	struct symbol_table;
+	struct local_frame;
 	struct code_generator;
 
 
@@ -19,7 +19,7 @@ namespace p0
 		explicit lvalue_generator(
 			code_generator &function_generator,
 			intermediate::emitter &emitter,
-			symbol_table &symbols
+			local_frame &frame
 			);
 		reference address() const;
 
@@ -27,7 +27,7 @@ namespace p0
 
 		code_generator &m_function_generator;
 		intermediate::emitter &m_emitter;
-		symbol_table &m_symbols;
+		local_frame &m_frame;
 		reference m_address;
 
 

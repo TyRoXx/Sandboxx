@@ -1,5 +1,5 @@
 #include "rvalue_generator.hpp"
-#include "symbol_table.hpp"
+#include "local_frame.hpp"
 #include "compiler_error.hpp"
 #include "code_generator.hpp"
 #include "temporary.hpp"
@@ -10,12 +10,12 @@ namespace p0
 	rvalue_generator::rvalue_generator(
 		code_generator &function_generator,
 		intermediate::emitter &emitter,
-		symbol_table &symbols,
+		local_frame &frame,
 		reference destination
 		)
 		: m_function_generator(function_generator)
 		, m_emitter(emitter)
-		, m_symbols(symbols)
+		, m_frame(frame)
 		, m_destination(destination)
 	{
 	}
@@ -23,7 +23,7 @@ namespace p0
 
 	void rvalue_generator::visit(name_expression_tree const &expression)
 	{
-		auto const address = m_symbols.require_symbol(
+		auto const address = m_frame.require_symbol(
 			expression.name()
 			);
 		
@@ -66,7 +66,7 @@ namespace p0
 	void rvalue_generator::visit(call_expression_tree const &expression)
 	{
 		temporary const function_variable(
-			m_symbols,
+			m_frame,
 			1
 			);
 
@@ -75,7 +75,7 @@ namespace p0
 			rvalue_generator function(
 				m_function_generator,
 				m_emitter,
-				m_symbols,
+				m_frame,
 				function_variable.address()
 				);
 			expression.function().accept(function);
@@ -86,13 +86,13 @@ namespace p0
 		}
 
 		temporary const result_variable(
-			m_symbols,
+			m_frame,
 			1
 			);
 
 		auto const argument_count = expression.arguments().size();
 		temporary const argument_variables(
-			m_symbols,
+			m_frame,
 			argument_count
 			);
 		size_t current_argument_address = argument_variables.address().local_address();
@@ -105,7 +105,7 @@ namespace p0
 				rvalue_generator argument(
 					m_function_generator,
 					m_emitter,
-					m_symbols,
+					m_frame,
 					reference(current_argument_address)
 					);
 				(*arg)->accept(argument);

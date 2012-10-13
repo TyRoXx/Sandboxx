@@ -9,7 +9,7 @@
 
 namespace p0
 {
-	struct symbol_table;
+	struct local_frame;
 	struct code_generator;
 
 
@@ -18,14 +18,14 @@ namespace p0
 		explicit statement_code_generator(
 			code_generator &function_generator,
 			intermediate::emitter &emitter,
-			symbol_table &symbols
+			local_frame &frame
 			);
 
 	private:
 
 		code_generator &m_function_generator;
 		intermediate::emitter &m_emitter;
-		symbol_table &m_symbols;
+		local_frame &m_frame;
 
 
 		virtual void visit(declaration_tree const &statement) override;
@@ -44,7 +44,7 @@ namespace p0
 		statement_tree const &tree,
 		code_generator &function_generator,
 		intermediate::emitter &emitter,
-		symbol_table &symbols
+		local_frame &frame
 		);
 }
 

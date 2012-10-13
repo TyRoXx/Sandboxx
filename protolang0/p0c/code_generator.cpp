@@ -1,7 +1,7 @@
 #include "code_generator.hpp"
 #include "expression_tree.hpp"
 #include "statement_tree.hpp"
-#include "symbol_table.hpp"
+#include "local_frame.hpp"
 #include "compiler_error.hpp"
 #include "statement_code_generator.hpp"
 #include "p0i/emitter.hpp"
@@ -40,14 +40,14 @@ namespace p0
 		intermediate::function::instruction_vector instructions;
 		intermediate::emitter emitter(instructions);
 
-		symbol_table parameter_symbols(
+		local_frame top_frame(
 			nullptr
 			);
 		for (auto p = begin(function.parameters()), e = end(function.parameters()); p != e; ++p)
 		{
 			try
 			{
-				parameter_symbols.declare_variable(*p);
+				top_frame.declare_variable(*p);
 			}
 			catch (compiler_error const &e)
 			{
@@ -59,7 +59,7 @@ namespace p0
 			function.body(),
 			*this,
 			emitter,
-			parameter_symbols
+			top_frame
 			);
 		
 		m_functions[function_index] = intermediate::function(

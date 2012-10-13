@@ -1,18 +1,18 @@
-#include "symbol_table.hpp"
+#include "local_frame.hpp"
 #include "compiler_error.hpp"
 
 
 namespace p0
 {
-	symbol_table::symbol_table(
-		symbol_table const *parent
+	local_frame::local_frame(
+		local_frame const *parent
 		)
 		: m_parent(parent)
 		, m_next_local_address(parent ? parent->m_next_local_address : 0)
 	{
 	}
 
-	reference symbol_table::declare_variable(
+	reference local_frame::declare_variable(
 		source_range name
 		)
 	{
@@ -39,7 +39,7 @@ namespace p0
 		return variable_address;
 	}
 
-	reference symbol_table::require_symbol(
+	reference local_frame::require_symbol(
 		source_range name
 		) const
 	{
@@ -63,14 +63,14 @@ namespace p0
 			);
 	}
 
-	reference symbol_table::allocate(size_t count)
+	reference local_frame::allocate(size_t count)
 	{
 		reference const result(m_next_local_address);
 		m_next_local_address += count;
 		return result;
 	}
 
-	void symbol_table::deallocate_top(size_t count)
+	void local_frame::deallocate_top(size_t count)
 	{
 		assert(m_next_local_address >= count);
 		m_next_local_address -= count;

@@ -8,13 +8,13 @@
 
 namespace p0
 {
-	struct symbol_table;
+	struct local_frame;
 
 
 	struct temporary
 	{
 		explicit temporary(
-			symbol_table &frame,
+			local_frame &frame,
 			size_t size
 			);
 		~temporary();
@@ -23,7 +23,7 @@ namespace p0
 
 	private:
 
-		symbol_table &m_frame;
+		local_frame &frame;
 		reference const m_address;
 		size_t const m_size;
 	};

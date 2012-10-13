@@ -1,14 +1,14 @@
 #include "temporary.hpp"
-#include "symbol_table.hpp"
+#include "local_frame.hpp"
 
 
 namespace p0
 {
 	temporary::temporary(
-		symbol_table &frame,
+		local_frame &frame,
 		size_t size
 		)
-		: m_frame(frame)
+		: frame(frame)
 		, m_address(frame.allocate(size))
 		, m_size(size)
 	{
@@ -16,7 +16,7 @@ namespace p0
 
 	temporary::~temporary()
 	{
-		m_frame.deallocate_top(m_size);
+		frame.deallocate_top(m_size);
 	}
 
 	reference temporary::address() const
