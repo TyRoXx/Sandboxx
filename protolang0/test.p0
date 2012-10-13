@@ -40,6 +40,17 @@
 					continue
 				}
 			}
+			
+			function () {
+				if (0)
+				{
+					var a = 2
+				}
+				else
+				{
+					var a = 4
+				}
+			}
 		}
 	}
 }

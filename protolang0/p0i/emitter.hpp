@@ -19,6 +19,7 @@ namespace p0
 			explicit emitter(
 				instruction_vector &destination
 				);
+			size_t get_current_jump_address() const;
 			void return_();
 			void set_from_constant(
 				instruction_argument destination,
@@ -39,6 +40,9 @@ namespace p0
 				instruction_argument destination,
 				instruction_argument summand
 				);
+			void not_(
+				instruction_argument destination
+				);
 			void allocate(
 				instruction_argument size
 				);
@@ -47,6 +51,17 @@ namespace p0
 				);
 			void call(
 				instruction_argument argument_count
+				);
+			void jump(
+				instruction_argument destination
+				);
+			void jump_if(
+				instruction_argument destination,
+				instruction_argument condition_address
+				);
+			void update_jump_destination(
+				size_t jump_address,
+				instruction_argument destination
 				);
 
 		private:

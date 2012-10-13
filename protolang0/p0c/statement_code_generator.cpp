@@ -4,6 +4,7 @@
 #include "rvalue_generator.hpp"
 #include "code_generator.hpp"
 #include "compiler_error.hpp"
+#include "temporary.hpp"
 
 
 namespace p0
@@ -98,18 +99,31 @@ namespace p0
 
 	void statement_code_generator::visit(if_tree const &statement)
 	{
-		//TODO
+		//TODO: only create a variable if needed
+		temporary const condition_variable(
+			m_frame,
+			1
+			);
 
 		{
-			reference const condition_address; //TODO
 			rvalue_generator condition(
 				m_function_generator,
 				m_emitter,
 				m_frame,
-				condition_address
+				condition_variable.address()
 				);
 			statement.condition().accept(condition);
 		}
+
+		m_emitter.not_(
+			condition_variable.address().local_address()
+			);
+
+		auto const jump_if_address = m_emitter.get_current_jump_address();
+		m_emitter.jump_if(
+			0,
+			condition_variable.address().local_address()
+			);
 
 		generate_statement(
 			statement.on_true(),
@@ -119,6 +133,20 @@ namespace p0
 			);
 
 		auto const * const on_false = statement.on_false();
+
+		auto const skip_else_address = m_emitter.get_current_jump_address();
+		if (on_false)
+		{
+			m_emitter.jump(
+				0
+				);
+		}
+
+		m_emitter.update_jump_destination(
+			jump_if_address,
+			m_emitter.get_current_jump_address()
+			);
+
 		if (on_false)
 		{
 			generate_statement(
@@ -126,6 +154,11 @@ namespace p0
 				m_function_generator,
 				m_emitter,
 				m_frame
+				);
+
+			m_emitter.update_jump_destination(
+				skip_else_address,
+				m_emitter.get_current_jump_address()
 				);
 		}
 	}

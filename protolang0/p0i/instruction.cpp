@@ -29,6 +29,8 @@ namespace p0
 				{"less", 2},
 				{"greater", 2},
 				{"call", 1},
+				{"jump", 1},
+				{"jump_if", 2},
 			}};
 
 			return infos[instruction];
@@ -75,6 +77,11 @@ namespace p0
 		}
 
 		instruction::argument_array const &instruction::arguments() const
+		{
+			return m_arguments;
+		}
+
+		instruction::argument_array &instruction::arguments()
 		{
 			return m_arguments;
 		}

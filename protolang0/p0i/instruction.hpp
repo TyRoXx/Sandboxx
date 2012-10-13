@@ -35,6 +35,8 @@ namespace p0
 				less,
 				greater,
 				call,
+				jump,
+				jump_if,
 
 				count_,
 			};
@@ -78,6 +80,7 @@ namespace p0
 				);
 			instruction_type::Enum type() const;
 			argument_array const &arguments() const;
+			argument_array &arguments();
 
 		private:
 

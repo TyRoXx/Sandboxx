@@ -1,4 +1,5 @@
 #include "emitter.hpp"
+#include <cassert>
 
 
 namespace p0
@@ -10,6 +11,11 @@ namespace p0
 			)
 			: m_destination(destination)
 		{
+		}
+
+		size_t emitter::get_current_jump_address() const
+		{
+			return m_destination.size();
 		}
 
 		void emitter::return_()
@@ -77,6 +83,16 @@ namespace p0
 				));
 		}
 
+		void emitter::not_(
+			instruction_argument destination
+			)
+		{
+			push_instruction(instruction(
+				instruction_type::not_,
+				destination
+				));
+		}
+
 		void emitter::allocate(
 			instruction_argument size
 			)
@@ -105,6 +121,43 @@ namespace p0
 				instruction_type::call,
 				argument_count
 				));
+		}
+
+		void emitter::jump(
+			instruction_argument destination
+			)
+		{
+			push_instruction(instruction(
+				instruction_type::jump,
+				destination
+				));
+		}
+
+		void emitter::jump_if(
+			instruction_argument destination,
+			instruction_argument condition_address
+			)
+		{
+			push_instruction(instruction(
+				instruction_type::jump_if,
+				destination,
+				condition_address
+				));
+		}
+
+		void emitter::update_jump_destination(
+			size_t jump_address,
+			instruction_argument destination
+			)
+		{
+			auto &jump = m_destination[jump_address];
+
+			assert(
+				jump.type() == instruction_type::jump ||
+				jump.type() == instruction_type::jump_if
+				);
+
+			jump.arguments()[0] = destination;
 		}
 
 
