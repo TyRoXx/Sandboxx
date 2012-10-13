@@ -73,6 +73,53 @@ namespace p0
 				return std::move(body);
 			}
 
+		case token_type::if_:
+			{
+				pop_token();
+				auto condition = parse_expression();
+
+				skip_token(
+					token_type::brace_left,
+					"The 'if' block cannot be a single statement. '{' expected"
+					);
+				auto on_true = parse_block();
+
+				std::unique_ptr<statement_tree> on_false;
+				if (try_skip_token(
+					token_type::else_
+					))
+				{
+					skip_token(
+						token_type::brace_left,
+						"The 'else' block cannot be a single statement. '{' expected"
+						);
+					on_false = parse_block();
+				}
+
+				return std::unique_ptr<statement_tree>(new if_tree(
+					std::move(condition),
+					std::move(on_true),
+					std::move(on_false)
+					));
+			}
+
+		case token_type::while_:
+			{
+				pop_token();
+				auto condition = parse_expression();
+
+				skip_token(
+					token_type::brace_left,
+					"The 'while' block cannot be a single statement. '{' expected"
+					);
+				auto body = parse_block();
+
+				return std::unique_ptr<statement_tree>(new while_tree(
+					std::move(condition),
+					std::move(body)
+					));
+			}
+
 		default:
 			{
 				auto left = parse_expression();

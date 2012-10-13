@@ -18,6 +18,21 @@
 			p = null
 			function (a, b) {a = b}
 			;var i = 0
+			if p
+			{
+			}
+			else
+			{
+				if 123
+				{
+				}
+				
+				; loop
+				while true
+				{
+					
+				}
+			}
 		}
 	}
 }

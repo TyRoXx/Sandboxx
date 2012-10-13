@@ -143,6 +143,8 @@ namespace p0
 
 		std::unique_ptr<expression_tree> m_condition;
 		std::unique_ptr<statement_tree> m_on_true;
+
+		///may be null
 		std::unique_ptr<statement_tree> m_on_false;
 	};
 
