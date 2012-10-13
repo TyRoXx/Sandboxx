@@ -17,9 +17,13 @@
 			null
 			var p = null
 			p = null
-			;var i = 0
 			if p
 			{
+				function ()
+				{
+					var i = 0
+					var j = i
+				}
 			}
 			else
 			{
