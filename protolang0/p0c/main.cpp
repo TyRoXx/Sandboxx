@@ -155,9 +155,7 @@ int main(int argc, char **argv)
 		}
 		catch (p0::compiler_error const &e)
 		{
-			handle_error(
-				e
-				);
+			handle_error(e);
 		}
 
 		if (error_counter)
