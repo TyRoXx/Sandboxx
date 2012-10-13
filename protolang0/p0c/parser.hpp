@@ -40,7 +40,7 @@ namespace p0
 		std::unique_ptr<statement_tree> parse_block();
 		std::unique_ptr<expression_tree> parse_expression();
 		std::unique_ptr<expression_tree> parse_primary_expression();
-		std::unique_ptr<function_tree> parse_function();
+		std::unique_ptr<function_tree> parse_function(source_range::iterator function_begin);
 		void expect_token_type(token const &token, token_type::Enum type, std::string const &message) const;
 		token const &peek_token();
 		token pop_token();

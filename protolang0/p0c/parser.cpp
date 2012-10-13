@@ -21,7 +21,9 @@ namespace p0
 
 	std::unique_ptr<function_tree> parser::parse_unit()
 	{
-		auto main_function = parse_function();
+		auto main_function = parse_function(
+			m_scanner.rest().begin()
+			);
 		skip_token(
 			token_type::end_of_file,
 			"End of file after main function expected"
@@ -305,7 +307,9 @@ namespace p0
 
 		case token_type::function:
 			{
-				return parse_function();
+				return parse_function(
+					first.content.begin()
+					);
 			}
 
 		case token_type::null:
@@ -323,7 +327,9 @@ namespace p0
 		}
 	}
 
-	std::unique_ptr<function_tree> parser::parse_function()
+	std::unique_ptr<function_tree> parser::parse_function(
+		source_range::iterator function_begin
+		)
 	{
 		function_tree::name_vector parameters;
 
@@ -367,7 +373,8 @@ namespace p0
 		auto body = parse_block();
 		return std::unique_ptr<function_tree>(new function_tree(
 			std::move(body),
-			std::move(parameters)
+			std::move(parameters),
+			source_range(function_begin, function_begin) //TODO: end should point after '}'
 			));
 	}
 

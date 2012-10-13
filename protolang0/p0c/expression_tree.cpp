@@ -77,10 +77,12 @@ namespace p0
 
 	function_tree::function_tree(
 		std::unique_ptr<statement_tree> body,
-		name_vector parameters
+		name_vector parameters,
+		source_range position
 		)
 		: m_body(std::move(body))
 		, m_parameters(std::move(parameters))
+		, m_position(position)
 	{
 	}
 
@@ -101,6 +103,11 @@ namespace p0
 	function_tree::name_vector const &function_tree::parameters() const
 	{
 		return m_parameters;
+	}
+
+	source_range const &function_tree::position() const
+	{
+		return m_position;
 	}
 
 

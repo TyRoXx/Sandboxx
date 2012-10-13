@@ -17,6 +17,7 @@ namespace p0
 			);
 		token next_token();
 		void skip_line();
+		source_range rest() const;
 
 	private:
 

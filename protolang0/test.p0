@@ -17,6 +17,7 @@
 			null
 			var p = null
 			p = null
+			;function (){} = 0
 			if p
 			{
 				function ()

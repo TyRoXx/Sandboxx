@@ -60,7 +60,7 @@ namespace p0
 	{
 		throw compiler_error(
 			"A function is not an LValue",
-			source_range() //TODO
+			expression.position()
 			);
 	}
 

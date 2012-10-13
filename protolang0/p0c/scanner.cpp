@@ -187,6 +187,14 @@ namespace p0
 		}
 	}
 
+	source_range scanner::rest() const
+	{
+		return source_range(
+			m_pos,
+			m_end
+			);
+	}
+
 
 	void scanner::skip_whitespace()
 	{

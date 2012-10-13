@@ -94,17 +94,20 @@ namespace p0
 
 		explicit function_tree(
 			std::unique_ptr<statement_tree> body,
-			name_vector parameters
+			name_vector parameters,
+			source_range position
 			);
 		~function_tree();
 		virtual void accept(expression_tree_visitor &visitor) const override;
 		statement_tree const &body() const;
 		name_vector const &parameters() const;
+		source_range const &position() const;
 
 	private:
 
 		std::unique_ptr<statement_tree> m_body;
-		name_vector m_parameters;
+		name_vector const m_parameters;
+		source_range const m_position;
 	};
 
 
