@@ -39,13 +39,27 @@ namespace p0
 		return variable_address;
 	}
 
-	reference const *symbol_table::find_symbol(
-		std::string const &name
+	reference symbol_table::require_symbol(
+		source_range name
 		) const
 	{
-		auto const s = m_symbols_by_name.find(name);
-		return (s == m_symbols_by_name.end()) ?
-			(m_parent ? m_parent->find_symbol(name) : 0) :
-			&(s->second);
+		auto const s = m_symbols_by_name.find(
+			source_range_to_string(name)
+			);
+
+		if (s != m_symbols_by_name.end())
+		{
+			return s->second;
+		}
+
+		if (m_parent)
+		{
+			return m_parent->require_symbol(name);
+		}
+
+		throw compiler_error(
+			"Unknown identifier",
+			name
+			);
 	}
 }

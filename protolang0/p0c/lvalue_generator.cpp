@@ -24,20 +24,11 @@ namespace p0
 
 	void lvalue_generator::visit(name_expression_tree const &expression)
 	{
-		reference const * const symbol = m_symbols.find_symbol(
-			source_range_to_string(expression.name())
+		auto const address = m_symbols.require_symbol(
+			expression.name()
 			);
 
-		if (!symbol)
-		{
-			//TODO: handle these errors in one place
-			throw compiler_error(
-				"Unknown identifier",
-				expression.position()
-				);
-		}
-
-		m_address = *symbol;
+		m_address = address;
 	}
 
 	void lvalue_generator::visit(integer_10_expression_tree const &expression)

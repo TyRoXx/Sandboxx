@@ -17,6 +17,7 @@
 			null
 			var p = null
 			p = null
+			qq = 12
 			;function (){} = 0
 			if p
 			{

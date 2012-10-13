@@ -22,24 +22,15 @@ namespace p0
 
 	void rvalue_generator::visit(name_expression_tree const &expression)
 	{
-		reference const * const symbol = m_symbols.find_symbol(
-			source_range_to_string(expression.name())
+		auto const address = m_symbols.require_symbol(
+			expression.name()
 			);
-
-		if (!symbol)
-		{
-			//TODO: handle these errors in one place
-			throw compiler_error(
-				"Unknown identifier",
-				expression.name()
-				);
-		}
-
+		
 		if (m_destination.is_valid())
 		{
 			m_emitter.copy(
 				m_destination.local_address(),
-				symbol->local_address()
+				address.local_address()
 				);
 		}
 	}

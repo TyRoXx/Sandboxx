@@ -19,8 +19,8 @@ namespace p0
 		reference declare_variable(
 			source_range name
 			);
-		reference const *find_symbol(
-			std::string const &name
+		reference require_symbol(
+			source_range name
 			) const;
 
 	private:
