@@ -33,6 +33,7 @@ namespace p0
 	{
 		virtual ~expression_tree();
 		virtual void accept(expression_tree_visitor &visitor) const = 0;
+		virtual source_range position() const = 0;
 	};
 
 
@@ -42,6 +43,7 @@ namespace p0
 			source_range name
 			);
 		virtual void accept(expression_tree_visitor &visitor) const override;
+		virtual source_range position() const override;
 		source_range const &name() const;
 
 	private:
@@ -56,6 +58,7 @@ namespace p0
 			source_range value
 			);
 		virtual void accept(expression_tree_visitor &visitor) const override;
+		virtual source_range position() const override;
 		source_range const &value() const;
 
 	private:
@@ -74,6 +77,7 @@ namespace p0
 			expression_vector arguments
 			);
 		virtual void accept(expression_tree_visitor &visitor) const override;
+		virtual source_range position() const override;
 		expression_tree const &function() const;
 		expression_vector const &arguments() const;
 
@@ -99,9 +103,9 @@ namespace p0
 			);
 		~function_tree();
 		virtual void accept(expression_tree_visitor &visitor) const override;
+		virtual source_range position() const override;
 		statement_tree const &body() const;
 		name_vector const &parameters() const;
-		source_range const &position() const;
 
 	private:
 
@@ -117,7 +121,7 @@ namespace p0
 			source_range position
 			);
 		virtual void accept(expression_tree_visitor &visitor) const override;
-		source_range const &position() const;
+		virtual source_range position() const override;
 
 	private:
 

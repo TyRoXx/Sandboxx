@@ -31,6 +31,11 @@ namespace p0
 		visitor.visit(*this);
 	}
 
+	source_range name_expression_tree::position() const
+	{
+		return m_name;
+	}
+
 
 	integer_10_expression_tree::integer_10_expression_tree(
 		source_range value
@@ -47,6 +52,11 @@ namespace p0
 	void integer_10_expression_tree::accept(expression_tree_visitor &visitor) const
 	{
 		visitor.visit(*this);
+	}
+
+	source_range integer_10_expression_tree::position() const
+	{
+		return m_value;
 	}
 
 
@@ -72,6 +82,11 @@ namespace p0
 	call_expression_tree::expression_vector const &call_expression_tree::arguments() const
 	{
 		return m_arguments;
+	}
+
+	source_range call_expression_tree::position() const
+	{
+		return m_function->position(); //TODO: the full call expression
 	}
 
 
@@ -104,8 +119,8 @@ namespace p0
 	{
 		return m_parameters;
 	}
-
-	source_range const &function_tree::position() const
+	
+	source_range function_tree::position() const
 	{
 		return m_position;
 	}
@@ -123,7 +138,7 @@ namespace p0
 		visitor.visit(*this);
 	}
 
-	source_range const &null_expression_tree::position() const
+	source_range null_expression_tree::position() const
 	{
 		return m_position;
 	}

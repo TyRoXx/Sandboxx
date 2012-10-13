@@ -33,7 +33,7 @@ namespace p0
 			//TODO: handle these errors in one place
 			throw compiler_error(
 				"Unknown identifier",
-				expression.name()
+				expression.position()
 				);
 		}
 
@@ -44,7 +44,7 @@ namespace p0
 	{
 		throw compiler_error(
 			"An integer literal is not an LValue",
-			expression.value()
+			expression.position()
 			);
 	}
 
@@ -52,7 +52,7 @@ namespace p0
 	{
 		throw compiler_error(
 			"A function result is not an LValue",
-			source_range() //TODO
+			expression.position()
 			);
 	}
 
