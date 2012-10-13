@@ -12,7 +12,7 @@
 			var h = function (s) { var a = s }
 			function (a, b) {a = b a = b a = b b = a b = 1 b = 2}
 			f()
-			g(1, 2, 3)
+			var r = g(1, 2, 3)
 			h(null)
 			null
 			var p = null

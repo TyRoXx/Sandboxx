@@ -22,6 +22,8 @@ namespace p0
 		reference require_symbol(
 			source_range name
 			) const;
+		reference allocate(size_t count);
+		void deallocate_top(size_t count);
 
 	private:
 

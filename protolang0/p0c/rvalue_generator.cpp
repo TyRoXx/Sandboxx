@@ -2,6 +2,7 @@
 #include "symbol_table.hpp"
 #include "compiler_error.hpp"
 #include "code_generator.hpp"
+#include "temporary.hpp"
 
 
 namespace p0
@@ -64,30 +65,55 @@ namespace p0
 
 	void rvalue_generator::visit(call_expression_tree const &expression)
 	{
-		auto const function_address = reference(66); //TODO
-
-		rvalue_generator function(
-			m_function_generator,
-			m_emitter,
+		temporary const function_variable(
 			m_symbols,
-			function_address
+			1
 			);
-		expression.function().accept(function);
 
-		size_t argument_address = 77; //TODO
-
-		for (auto arg = expression.arguments().begin(), end = expression.arguments().end();
-			arg != end; ++arg)
+		try
 		{
-			rvalue_generator argument(
+			rvalue_generator function(
 				m_function_generator,
 				m_emitter,
 				m_symbols,
-				reference(argument_address)
+				function_variable.address()
 				);
-			(*arg)->accept(argument);
+			expression.function().accept(function);
+		}
+		catch (compiler_error const &e)
+		{
+			m_function_generator.handle_error(e);
+		}
 
-			++argument_address;
+		temporary const result_variable(
+			m_symbols,
+			1
+			);
+
+		auto const argument_count = expression.arguments().size();
+		temporary const argument_variables(
+			m_symbols,
+			argument_count
+			);
+		size_t current_argument_address = argument_variables.address().local_address();
+
+		for (auto arg = expression.arguments().begin(), end = expression.arguments().end();
+			arg != end; ++arg, ++current_argument_address)
+		{
+			try
+			{
+				rvalue_generator argument(
+					m_function_generator,
+					m_emitter,
+					m_symbols,
+					reference(current_argument_address)
+					);
+				(*arg)->accept(argument);
+			}
+			catch (compiler_error const &e)
+			{
+				m_function_generator.handle_error(e);
+			}
 		}
 
 		m_emitter.call(
@@ -98,7 +124,7 @@ namespace p0
 		{
 			m_emitter.copy(
 				m_destination.local_address(),
-				76 //TODO
+				result_variable.address().local_address()
 				);
 		}
 	}

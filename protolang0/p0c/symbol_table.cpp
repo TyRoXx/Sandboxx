@@ -62,4 +62,17 @@ namespace p0
 			name
 			);
 	}
+
+	reference symbol_table::allocate(size_t count)
+	{
+		reference const result(m_next_local_address);
+		m_next_local_address += count;
+		return result;
+	}
+
+	void symbol_table::deallocate_top(size_t count)
+	{
+		assert(m_next_local_address >= count);
+		m_next_local_address -= count;
+	}
 }
