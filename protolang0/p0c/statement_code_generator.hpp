@@ -20,6 +20,14 @@ namespace p0
 			intermediate::emitter &emitter,
 			symbol_table &symbols
 			);
+
+	private:
+
+		code_generator &m_function_generator;
+		intermediate::emitter &m_emitter;
+		symbol_table &m_symbols;
+
+
 		virtual void visit(declaration_tree const &statement) override;
 		virtual void visit(return_tree const &statement) override;
 		virtual void visit(block_tree const &statement) override;
@@ -29,12 +37,6 @@ namespace p0
 		virtual void visit(while_tree const &expression) override;
 		virtual void visit(break_tree const &expression) override;
 		virtual void visit(continue_tree const &expression) override;
-
-	private:
-
-		code_generator &m_function_generator;
-		intermediate::emitter &m_emitter;
-		symbol_table &m_symbols;
 	};
 
 

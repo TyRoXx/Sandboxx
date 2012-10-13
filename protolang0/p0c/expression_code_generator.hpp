@@ -22,11 +22,6 @@ namespace p0
 			reference destination,
 			symbol_table &symbols
 			);
-		virtual void visit(name_expression_tree const &expression) override;
-		virtual void visit(integer_10_expression_tree const &expression) override;
-		virtual void visit(call_expression_tree const &expression) override;
-		virtual void visit(function_tree const &expression) override;
-		virtual void visit(null_expression_tree const &expression) override;
 
 	private:
 
@@ -34,6 +29,13 @@ namespace p0
 		intermediate::emitter &m_emitter;
 		reference m_destination;
 		symbol_table &m_symbols;
+
+
+		virtual void visit(name_expression_tree const &expression) override;
+		virtual void visit(integer_10_expression_tree const &expression) override;
+		virtual void visit(call_expression_tree const &expression) override;
+		virtual void visit(function_tree const &expression) override;
+		virtual void visit(null_expression_tree const &expression) override;
 	};
 
 
