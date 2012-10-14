@@ -59,6 +59,18 @@ namespace p0
 				));
 		}
 
+		void emitter::set_string(
+			instruction_argument destination,
+			instruction_argument string_id
+			)
+		{
+			push_instruction(instruction(
+				instruction_type::set_string,
+				destination,
+				string_id
+				));
+		}
+
 		void emitter::copy(
 			instruction_argument destination,
 			instruction_argument source

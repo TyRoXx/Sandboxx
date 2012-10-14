@@ -22,6 +22,7 @@ namespace p0
 				set_from_constant,
 				set_null,
 				set_function,
+				set_string,
 				copy,
 				add,
 				mul,

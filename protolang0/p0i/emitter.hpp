@@ -32,6 +32,10 @@ namespace p0
 				instruction_argument destination,
 				instruction_argument function_id
 				);
+			void set_string(
+				instruction_argument destination,
+				instruction_argument string_id
+				);
 			void copy(
 				instruction_argument destination,
 				instruction_argument source

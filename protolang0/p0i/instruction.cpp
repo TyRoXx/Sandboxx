@@ -16,6 +16,7 @@ namespace p0
 				{"set_from_constant", 2},
 				{"set_null", 1},
 				{"set_function", 2},
+				{"set_string", 2},
 				{"copy", 2},
 				{"add", 2},
 				{"mul", 2},

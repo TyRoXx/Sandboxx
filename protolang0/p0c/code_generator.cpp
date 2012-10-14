@@ -24,8 +24,21 @@ namespace p0
 			m_tree
 			);
 
+		intermediate::unit::string_vector strings(
+			m_string_ids.size()
+			);
+
+		for (auto s = m_string_ids.begin(); s != m_string_ids.end(); ++s)
+		{
+			auto const id = s->second;
+			auto value = s->first;
+
+			strings[id] = std::move(value);
+		}
+
 		return intermediate::unit(
-			std::move(m_functions)
+			std::move(m_functions),
+			std::move(strings)
 			);
 	}
 
@@ -75,5 +88,23 @@ namespace p0
 		)
 	{
 		m_error_handler(error);
+	}
+
+	size_t code_generator::get_string_id(
+		std::string value
+		)
+	{
+		auto const pos = m_string_ids.find(value);
+		if (pos == m_string_ids.end())
+		{
+			auto const id = m_string_ids.size();
+			m_string_ids.insert(std::make_pair(
+				std::move(value),
+				id
+				));
+			return id;
+		}
+
+		return pos->second;
 	}
 }

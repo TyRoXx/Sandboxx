@@ -60,6 +60,18 @@ namespace p0
 
 				file << '\n';
 			}
+
+			for (size_t s = 0; s < unit.strings().size(); ++s)
+			{
+				file
+					<< std::setw(3)
+					<< std::setfill('0')
+					<< std::right
+					<< s << ": "
+					
+					<< unit.strings()[s]
+					<< '\n';
+			}
 		}
 	}
 }

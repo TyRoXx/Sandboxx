@@ -5,6 +5,7 @@
 
 #include "p0i/unit.hpp"
 #include <functional>
+#include <unordered_map>
 
 
 namespace p0
@@ -37,12 +38,19 @@ namespace p0
 		void handle_error(
 			compiler_error const &error
 			);
+		size_t get_string_id(
+			std::string value
+			);
 
 	private:
+
+		typedef std::unordered_map<std::string, size_t> string_id_table;
+
 
 		function_tree const &m_tree;
 		compiler_error_handler const m_error_handler;
 		intermediate::unit::function_vector m_functions;
+		string_id_table m_string_ids;
 	};
 }
 

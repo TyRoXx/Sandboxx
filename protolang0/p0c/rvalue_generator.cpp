@@ -174,14 +174,23 @@ namespace p0
 			{
 				if (table_address.is_valid())
 				{
-					auto const key = element->first;
+					source_range const key = element->first;
 
 					temporary const key_variable(
 						m_frame,
 						1
 						);
 
-					//TODO: set key variable
+					{
+						auto const key_string_id = m_function_generator.get_string_id(
+							source_range_to_string(key)
+							);
+
+						m_emitter.set_string(
+							key_variable.address().local_address(),
+							key_string_id
+							);
+					}
 
 					temporary const value_variable(
 						m_frame,
@@ -269,7 +278,15 @@ namespace p0
 
 		auto const key_address = key_variable.address();
 
-		//TODO: put key on stack
+		auto key = source_range_to_string(expression.element_name());
+		auto const key_string_id = m_function_generator.get_string_id(
+			std::move(key)
+			);
+
+		m_emitter.set_string(
+			key_address.local_address(),
+			key_string_id
+			);
 
 		if (m_destination.is_valid())
 		{

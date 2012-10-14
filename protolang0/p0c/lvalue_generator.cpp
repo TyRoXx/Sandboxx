@@ -3,6 +3,7 @@
 #include "compiler_error.hpp"
 #include "temporary.hpp"
 #include "rvalue_generator.hpp"
+#include "code_generator.hpp"
 
 
 namespace p0
@@ -109,7 +110,15 @@ namespace p0
 			1
 			);
 
-		//TODO: put key on stack
+		auto key = source_range_to_string(expression.element_name());
+		auto const key_string_id = m_function_generator.get_string_id(
+			std::move(key)
+			);
+
+		m_emitter.set_string(
+			key_variable->address().local_address(),
+			key_string_id
+			);
 
 		auto const element_variable = std::make_shared<temporary>(
 			std::ref(m_frame),
