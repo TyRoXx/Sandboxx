@@ -73,9 +73,6 @@ namespace p0
 
 	void statement_code_generator::visit(assignment_tree const &statement)
 	{
-		// local variable (reference)
-		// table element
-		// temporary -> error
 		lvalue_generator destination(
 			m_function_generator,
 			m_emitter,
@@ -85,9 +82,6 @@ namespace p0
 
 		assert(destination.address().is_valid());
 		
-		// local variable (reference)
-		// table element
-		// temporary
 		rvalue_generator source(
 			m_function_generator,
 			m_emitter,
@@ -95,6 +89,8 @@ namespace p0
 			destination.address()
 			);
 		statement.source().accept(source);
+
+		destination.commit_write();
 	}
 
 	void statement_code_generator::visit(if_tree const &statement)

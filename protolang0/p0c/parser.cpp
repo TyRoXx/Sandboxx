@@ -231,45 +231,68 @@ namespace p0
 	{
 		auto left = parse_primary_expression();
 
-		//postfix call syntax like in C++
-		//f(a, b, c)
-		//left = f
-		//arguments = {a, b, c}
-
-		while (try_skip_token(
-			token_type::parenthesis_left
-			))
+		for (;;)
 		{
-			call_expression_tree::expression_vector arguments;
-
-			for (;;)
+			if (try_skip_token(token_type::parenthesis_left))
 			{
-				if (try_skip_token(token_type::parenthesis_right))
-				{
-					break;
-				}
+				//postfix call syntax like in C++
+				//f(a, b, c)
+				//left = f
+				//arguments = {a, b, c}
 
-				auto argument = parse_expression();
-				arguments.push_back(
-					std::move(argument)
-					);
+				call_expression_tree::expression_vector arguments;
 
-				if (!try_skip_token(token_type::comma))
+				for (;;)
 				{
-					skip_token(
-						token_type::parenthesis_right,
-						"Comma or closing parenthesis expected"
+					if (try_skip_token(token_type::parenthesis_right))
+					{
+						break;
+					}
+
+					auto argument = parse_expression();
+					arguments.push_back(
+						std::move(argument)
 						);
-					break;
+
+					if (!try_skip_token(token_type::comma))
+					{
+						skip_token(
+							token_type::parenthesis_right,
+							"Comma or closing parenthesis expected"
+							);
+						break;
+					}
 				}
+
+				std::unique_ptr<expression_tree> call(new call_expression_tree(
+					std::move(left),
+					std::move(arguments)
+					));
+
+				left = std::move(call);
 			}
 
-			std::unique_ptr<expression_tree> call(new call_expression_tree(
-				std::move(left),
-				std::move(arguments)
-				));
+			else if (try_skip_token(token_type::dot))
+			{
+				auto const element_name = pop_token();
+				expect_token_type(
+					element_name,
+					token_type::identifier,
+					"Element name expected"
+					);
 
-			left = std::move(call);
+				std::unique_ptr<expression_tree> access(new dot_element_expression_tree(
+					std::move(left),
+					element_name.content
+					));
+
+				left = std::move(access);
+			}
+
+			else
+			{
+				break;
+			}
 		}
 
 		return std::move(left);

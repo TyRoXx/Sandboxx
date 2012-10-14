@@ -178,6 +178,7 @@ namespace p0
 		, m_input(std::move(input))
 		, m_position(position)
 	{
+		assert(m_input);
 	}
 
 	void unary_expression_tree::accept(expression_tree_visitor &visitor) const
@@ -198,5 +199,36 @@ namespace p0
 	expression_tree const &unary_expression_tree::input() const
 	{
 		return *m_input;
+	}
+
+
+	dot_element_expression_tree::dot_element_expression_tree(
+		std::unique_ptr<expression_tree> table,
+		source_range element_name
+		)
+		: m_table(std::move(table))
+		, m_element_name(element_name)
+	{
+		assert(m_table);
+	}
+
+	void dot_element_expression_tree::accept(expression_tree_visitor &visitor) const
+	{
+		return visitor.visit(*this);
+	}
+
+	source_range dot_element_expression_tree::position() const
+	{
+		return m_table->position(); //TODO: full expression
+	}
+
+	expression_tree const &dot_element_expression_tree::table() const
+	{
+		return *m_table;
+	}
+
+	source_range const &dot_element_expression_tree::element_name() const
+	{
+		return m_element_name;
 	}
 }

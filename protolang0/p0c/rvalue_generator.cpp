@@ -248,4 +248,8 @@ namespace p0
 			}
 		}
 	}
+
+	void rvalue_generator::visit(dot_element_expression_tree const &expression)
+	{
+	}
 }

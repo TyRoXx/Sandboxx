@@ -1,6 +1,8 @@
 #include "lvalue_generator.hpp"
 #include "local_frame.hpp"
 #include "compiler_error.hpp"
+#include "temporary.hpp"
+#include "rvalue_generator.hpp"
 
 
 namespace p0
@@ -19,6 +21,14 @@ namespace p0
 	reference lvalue_generator::address() const
 	{
 		return m_address;
+	}
+
+	void lvalue_generator::commit_write()
+	{
+		if (m_commit_write)
+		{
+			m_commit_write();
+		}
 	}
 
 
@@ -77,5 +87,46 @@ namespace p0
 			"A unary operator expression is not an LValue",
 			expression.position()
 			);
+	}
+
+	void lvalue_generator::visit(dot_element_expression_tree const &expression)
+	{
+		auto const table_variable = std::make_shared<temporary>(
+			std::ref(m_frame),
+			1
+			);
+
+		rvalue_generator table_generator(
+			m_function_generator,
+			m_emitter,
+			m_frame,
+			table_variable->address()
+			);
+		expression.table().accept(table_generator);
+
+		auto const key_variable = std::make_shared<temporary>(
+			std::ref(m_frame),
+			1
+			);
+
+		//TODO: put key on stack
+
+		auto const element_variable = std::make_shared<temporary>(
+			std::ref(m_frame),
+			1
+			);
+
+		m_address = element_variable->address();
+
+		auto &emitter = m_emitter;
+
+		m_commit_write = [table_variable, key_variable, element_variable, &emitter]()
+		{
+			emitter.set_element(
+				table_variable->address().local_address(),
+				key_variable->address().local_address(),
+				element_variable->address().local_address()
+				);
+		};
 	}
 }

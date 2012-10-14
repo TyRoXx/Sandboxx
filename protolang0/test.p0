@@ -4,18 +4,18 @@
 	;;;
 
 	var t0 = []
+	t0.elem = 1
+
 	var t1 = [a = 0]
 	var t2 = [abc = t0, def = t1]
 	var t3 = [abc = t0, def = t1, ]
 	var t4 = [abc = 12345, def = 23446, ]
-	
-	;t0.elem = 1
 
 	var n = -~!1
 	{-n}
 	{~n}
 	{!n}
-	
+
 	var x = 0
 	{
 		{

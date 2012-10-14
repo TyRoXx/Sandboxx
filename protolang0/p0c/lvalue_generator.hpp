@@ -6,6 +6,7 @@
 #include "expression_tree.hpp"
 #include "reference.hpp"
 #include "p0i/emitter.hpp"
+#include <functional>
 
 
 namespace p0
@@ -22,6 +23,7 @@ namespace p0
 			local_frame &frame
 			);
 		reference address() const;
+		void commit_write();
 
 	private:
 
@@ -29,6 +31,7 @@ namespace p0
 		intermediate::emitter &m_emitter;
 		local_frame &m_frame;
 		reference m_address;
+		std::function<void ()> m_commit_write;
 
 
 		virtual void visit(name_expression_tree const &expression) override;
@@ -38,6 +41,7 @@ namespace p0
 		virtual void visit(null_expression_tree const &expression) override;
 		virtual void visit(table_expression const &expression) override;
 		virtual void visit(unary_expression_tree const &expression) override;
+		virtual void visit(dot_element_expression_tree const &expression) override;
 	};
 }
 
