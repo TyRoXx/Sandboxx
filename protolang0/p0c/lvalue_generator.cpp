@@ -62,4 +62,12 @@ namespace p0
 			expression.position()
 			);
 	}
+
+	void lvalue_generator::visit(table_expression const &expression)
+	{
+		throw compiler_error(
+			"A table literal is not an LValue",
+			expression.position()
+			);
+	}
 }

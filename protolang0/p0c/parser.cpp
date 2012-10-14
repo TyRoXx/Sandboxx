@@ -319,6 +319,59 @@ namespace p0
 					);
 			}
 
+		case token_type::bracket_left:
+			{
+				table_expression::element_vector elements;
+
+				//TODO: include full expression
+				auto const position = first.content;
+
+				for (;;)
+				{
+					if (try_skip_token(
+						token_type::bracket_right
+						))
+					{
+						break;
+					}
+
+					auto const key = pop_token();
+					expect_token_type(
+						key,
+						token_type::identifier,
+						"Key identifier expected"
+						);
+
+					skip_token(
+						token_type::assign,
+						"Assignment operator '=' expected"
+						);
+
+					auto value = parse_expression();
+
+					elements.push_back(std::make_pair(
+						key.content,
+						std::move(value)
+						));
+
+					if (!try_skip_token(
+						token_type::comma
+						))
+					{
+						skip_token(
+							token_type::bracket_right,
+							"A table literal must end with a closing bracket ']'"
+							);
+						break;
+					}
+				}
+
+				return std::unique_ptr<expression_tree>(new table_expression(
+					std::move(elements),
+					position
+					));
+			}
+
 		default:
 			throw compiler_error(
 				"Expression expected",

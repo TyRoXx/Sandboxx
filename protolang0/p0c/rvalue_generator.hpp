@@ -38,6 +38,7 @@ namespace p0
 		virtual void visit(call_expression_tree const &expression) override;
 		virtual void visit(function_tree const &expression) override;
 		virtual void visit(null_expression_tree const &expression) override;
+		virtual void visit(table_expression const &expression) override;
 	};
 }
 

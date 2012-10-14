@@ -153,4 +153,9 @@ namespace p0
 				);
 		}
 	}
+
+	void rvalue_generator::visit(table_expression const &expression)
+	{
+		//TODO
+	}
 }

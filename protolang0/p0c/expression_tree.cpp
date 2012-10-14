@@ -142,4 +142,29 @@ namespace p0
 	{
 		return m_position;
 	}
+
+
+	table_expression::table_expression(
+		element_vector elements,
+		source_range position
+		)
+		: m_elements(std::move(elements))
+		, m_position(position)
+	{
+	}
+
+	void table_expression::accept(expression_tree_visitor &visitor) const
+	{
+		visitor.visit(*this);
+	}
+
+	source_range table_expression::position() const
+	{
+		return m_position;
+	}
+
+	table_expression::element_vector const &table_expression::elements() const
+	{
+		return m_elements;
+	}
 }

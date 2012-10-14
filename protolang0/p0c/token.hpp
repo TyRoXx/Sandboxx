@@ -27,6 +27,8 @@ namespace p0
 			parenthesis_right,
 			brace_left,
 			brace_right,
+			bracket_left,
+			bracket_right,
 			assign,
 			comma,
 			plus,
