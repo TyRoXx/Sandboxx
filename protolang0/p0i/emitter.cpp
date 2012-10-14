@@ -93,6 +93,26 @@ namespace p0
 				));
 		}
 
+		void emitter::invert(
+			instruction_argument destination
+			)
+		{
+			push_instruction(instruction(
+				instruction_type::invert,
+				destination
+				));
+		}
+
+		void emitter::negate(
+			instruction_argument destination
+			)
+		{
+			push_instruction(instruction(
+				instruction_type::negate,
+				destination
+				));
+		}
+
 		void emitter::allocate(
 			instruction_argument size
 			)

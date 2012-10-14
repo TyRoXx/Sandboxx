@@ -219,4 +219,33 @@ namespace p0
 			}
 		}
 	}
+
+	void rvalue_generator::visit(unary_expression_tree const &expression)
+	{
+		rvalue_generator input_generator(
+			m_function_generator,
+			m_emitter,
+			m_frame,
+			m_destination
+			);
+		expression.input().accept(input_generator);
+
+		if (m_destination.is_valid())
+		{
+			switch (expression.type())
+			{
+			case unary_operator::not_:
+				m_emitter.not_(m_destination.local_address());
+				break;
+
+			case unary_operator::inverse:
+				m_emitter.invert(m_destination.local_address());
+				break;
+
+			case unary_operator::negative:
+				m_emitter.negate(m_destination.local_address());
+				break;
+			}
+		}
+	}
 }

@@ -372,6 +372,36 @@ namespace p0
 					));
 			}
 
+		case token_type::minus:
+			{
+				auto input = parse_expression();
+				return std::unique_ptr<expression_tree>(new unary_expression_tree(
+					unary_operator::negative,
+					std::move(input),
+					first.content
+					));
+			}
+
+		case token_type::exclamation_mark:
+			{
+				auto input = parse_expression();
+				return std::unique_ptr<expression_tree>(new unary_expression_tree(
+					unary_operator::not_,
+					std::move(input),
+					first.content
+					));
+			}
+
+		case token_type::tilde:
+			{
+				auto input = parse_expression();
+				return std::unique_ptr<expression_tree>(new unary_expression_tree(
+					unary_operator::inverse,
+					std::move(input),
+					first.content
+					));
+			}
+
 		default:
 			throw compiler_error(
 				"Expression expected",

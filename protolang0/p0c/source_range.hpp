@@ -9,7 +9,7 @@
 
 namespace p0
 {
-	typedef boost::iterator_range<const char *> source_range;
+	typedef boost::iterator_range<char const *> source_range;
 
 
 	namespace

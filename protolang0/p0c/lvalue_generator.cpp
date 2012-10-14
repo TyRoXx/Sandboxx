@@ -70,4 +70,12 @@ namespace p0
 			expression.position()
 			);
 	}
+
+	void lvalue_generator::visit(unary_expression_tree const &expression)
+	{
+		throw compiler_error(
+			"A unary operator expression is not an LValue",
+			expression.position()
+			);
+	}
 }

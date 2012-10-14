@@ -36,6 +36,8 @@ namespace p0
 			star,
 			slash,
 			dot,
+			exclamation_mark,
+			tilde,
 			end_of_file,
 		};
 	};

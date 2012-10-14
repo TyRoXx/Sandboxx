@@ -43,6 +43,12 @@ namespace p0
 			void not_(
 				instruction_argument destination
 				);
+			void invert(
+				instruction_argument destination
+				);
+			void negate(
+				instruction_argument destination
+				);
 			void allocate(
 				instruction_argument size
 				);

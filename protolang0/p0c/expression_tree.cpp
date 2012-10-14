@@ -167,4 +167,36 @@ namespace p0
 	{
 		return m_elements;
 	}
+
+
+	unary_expression_tree::unary_expression_tree(
+		unary_operator::Enum type,
+		std::unique_ptr<expression_tree> input,
+		source_range position
+		)
+		: m_type(type)
+		, m_input(std::move(input))
+		, m_position(position)
+	{
+	}
+
+	void unary_expression_tree::accept(expression_tree_visitor &visitor) const
+	{
+		visitor.visit(*this);
+	}
+
+	source_range unary_expression_tree::position() const
+	{
+		return m_position;
+	}
+
+	unary_operator::Enum unary_expression_tree::type() const
+	{
+		return m_type;
+	}
+
+	expression_tree const &unary_expression_tree::input() const
+	{
+		return *m_input;
+	}
 }

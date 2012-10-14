@@ -17,6 +17,7 @@ namespace p0
 	struct function_tree;
 	struct null_expression_tree;
 	struct table_expression;
+	struct unary_expression_tree;
 
 
 	struct expression_tree_visitor
@@ -28,6 +29,7 @@ namespace p0
 		virtual void visit(function_tree const &expression) = 0;
 		virtual void visit(null_expression_tree const &expression) = 0;
 		virtual void visit(table_expression const &expression) = 0;
+		virtual void visit(unary_expression_tree const &expression) = 0;
 	};
 
 
@@ -148,6 +150,36 @@ namespace p0
 	private:
 
 		element_vector const m_elements;
+		source_range const m_position;
+	};
+
+
+	struct unary_operator
+	{
+		enum Enum
+		{
+			not_,
+			inverse,
+			negative,
+		};
+	};
+
+	struct unary_expression_tree : expression_tree
+	{
+		explicit unary_expression_tree(
+			unary_operator::Enum type,
+			std::unique_ptr<expression_tree> input,
+			source_range position
+			);
+		virtual void accept(expression_tree_visitor &visitor) const override;
+		virtual source_range position() const override;
+		unary_operator::Enum type() const;
+		expression_tree const &input() const;
+
+	private:
+
+		unary_operator::Enum const m_type;
+		std::unique_ptr<expression_tree> m_input;
 		source_range const m_position;
 	};
 }

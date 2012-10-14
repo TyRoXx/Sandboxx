@@ -127,6 +127,8 @@ namespace p0
 		case '*': return eat_single_char_token(token_type::star);
 		case '/': return eat_single_char_token(token_type::slash);
 		case '.': return eat_single_char_token(token_type::dot);
+		case '!': return eat_single_char_token(token_type::exclamation_mark);
+		case '~': return eat_single_char_token(token_type::tilde);
 
 		default:
 			if (is_identifer_first(*m_pos))
