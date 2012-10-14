@@ -31,6 +31,9 @@ namespace p0
 				{"call", 1},
 				{"jump", 1},
 				{"jump_if", 2},
+				{"new_table", 1},
+				{"set_element", 3},
+				{"get_element", 3},
 			}};
 
 			return infos[instruction];
@@ -69,6 +72,19 @@ namespace p0
 		{
 			m_arguments[0] = argument0;
 			m_arguments[1] = argument1;
+		}
+
+		instruction::instruction(
+			instruction_type::Enum type,
+			instruction_argument argument0,
+			instruction_argument argument1,
+			instruction_argument argument2
+			)
+			: m_type(type)
+		{
+			m_arguments[0] = argument0;
+			m_arguments[1] = argument1;
+			m_arguments[2] = argument2;
 		}
 
 		instruction_type::Enum instruction::type() const

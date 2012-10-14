@@ -37,6 +37,9 @@ namespace p0
 				call,
 				jump,
 				jump_if,
+				new_table,
+				set_element,
+				get_element,
 
 				count_,
 			};
@@ -58,7 +61,7 @@ namespace p0
 		{
 			enum
 			{
-				max_arguments = 2,
+				max_arguments = 3,
 			};
 
 			typedef std::array<instruction_argument, max_arguments> argument_array;
@@ -77,6 +80,12 @@ namespace p0
 				instruction_type::Enum type,
 				instruction_argument argument0,
 				instruction_argument argument1
+				);
+			explicit instruction(
+				instruction_type::Enum type,
+				instruction_argument argument0,
+				instruction_argument argument1,
+				instruction_argument argument2
 				);
 			instruction_type::Enum type() const;
 			argument_array const &arguments() const;

@@ -63,6 +63,19 @@ namespace p0
 				size_t jump_address,
 				instruction_argument destination
 				);
+			void new_table(
+				instruction_argument destination
+				);
+			void set_element(
+				instruction_argument table_address,
+				instruction_argument key_address,
+				instruction_argument value_address
+				);
+			void get_element(
+				instruction_argument table_address,
+				instruction_argument key_address,
+				instruction_argument value_address
+				);
 
 		private:
 

@@ -160,6 +160,44 @@ namespace p0
 			jump.arguments()[0] = destination;
 		}
 
+		void emitter::new_table(
+			instruction_argument destination
+			)
+		{
+			push_instruction(instruction(
+				instruction_type::new_table,
+				destination
+				));
+		}
+
+		void emitter::set_element(
+			instruction_argument table_address,
+			instruction_argument key_address,
+			instruction_argument value_address
+			)
+		{
+			push_instruction(instruction(
+				instruction_type::set_element,
+				table_address,
+				key_address,
+				value_address
+				));
+		}
+
+		void emitter::get_element(
+			instruction_argument table_address,
+			instruction_argument key_address,
+			instruction_argument value_address
+			)
+		{
+			push_instruction(instruction(
+				instruction_type::get_element,
+				table_address,
+				key_address,
+				value_address
+				));
+		}
+
 
 		void emitter::push_instruction(
 			instruction const &instruction

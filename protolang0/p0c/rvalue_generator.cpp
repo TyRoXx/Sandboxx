@@ -156,6 +156,60 @@ namespace p0
 
 	void rvalue_generator::visit(table_expression const &expression)
 	{
-		//TODO
+		auto const table_address = m_destination;
+
+		if (table_address.is_valid())
+		{
+			m_emitter.new_table(
+				table_address.local_address()
+				);
+		}
+
+		for (auto element = expression.elements().begin(), end = expression.elements().end();
+			element != end; ++element)
+		{
+			auto const &value = *element->second;
+
+			if (table_address.is_valid())
+			{
+				auto const key = element->first;
+
+				temporary const key_variable(
+					m_frame,
+					1
+					);
+
+				//TODO: set key variable
+
+				temporary const value_variable(
+					m_frame,
+					1
+					);
+
+				rvalue_generator value_generator(
+					m_function_generator,
+					m_emitter,
+					m_frame,
+					value_variable.address()
+					);
+				value.accept(value_generator);
+
+				m_emitter.set_element(
+					table_address.local_address(),
+					key_variable.address().local_address(),
+					value_variable.address().local_address()
+					);
+			}
+			else
+			{
+				rvalue_generator value_generator(
+					m_function_generator,
+					m_emitter,
+					m_frame,
+					reference() //ignore value
+					);
+				value.accept(value_generator);
+			}
+		}
 	}
 }
