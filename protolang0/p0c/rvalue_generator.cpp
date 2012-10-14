@@ -170,45 +170,52 @@ namespace p0
 		{
 			auto const &value = *element->second;
 
-			if (table_address.is_valid())
+			try
 			{
-				auto const key = element->first;
+				if (table_address.is_valid())
+				{
+					auto const key = element->first;
 
-				temporary const key_variable(
-					m_frame,
-					1
-					);
+					temporary const key_variable(
+						m_frame,
+						1
+						);
 
-				//TODO: set key variable
+					//TODO: set key variable
 
-				temporary const value_variable(
-					m_frame,
-					1
-					);
+					temporary const value_variable(
+						m_frame,
+						1
+						);
 
-				rvalue_generator value_generator(
-					m_function_generator,
-					m_emitter,
-					m_frame,
-					value_variable.address()
-					);
-				value.accept(value_generator);
+					rvalue_generator value_generator(
+						m_function_generator,
+						m_emitter,
+						m_frame,
+						value_variable.address()
+						);
+					value.accept(value_generator);
 
-				m_emitter.set_element(
-					table_address.local_address(),
-					key_variable.address().local_address(),
-					value_variable.address().local_address()
-					);
+					m_emitter.set_element(
+						table_address.local_address(),
+						key_variable.address().local_address(),
+						value_variable.address().local_address()
+						);
+				}
+				else
+				{
+					rvalue_generator value_generator(
+						m_function_generator,
+						m_emitter,
+						m_frame,
+						reference() //ignore value
+						);
+					value.accept(value_generator);
+				}
 			}
-			else
+			catch (compiler_error const &e)
 			{
-				rvalue_generator value_generator(
-					m_function_generator,
-					m_emitter,
-					m_frame,
-					reference() //ignore value
-					);
-				value.accept(value_generator);
+				m_function_generator.handle_error(e);
 			}
 		}
 	}
