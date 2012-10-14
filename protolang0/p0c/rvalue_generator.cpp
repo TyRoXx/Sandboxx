@@ -251,5 +251,33 @@ namespace p0
 
 	void rvalue_generator::visit(dot_element_expression_tree const &expression)
 	{
+		auto const table_address = m_destination;
+		auto const value_address = m_destination;
+
+		rvalue_generator table_generator(
+			m_function_generator,
+			m_emitter,
+			m_frame,
+			table_address
+			);
+		expression.table().accept(table_generator);
+
+		temporary const key_variable(
+			m_frame,
+			1
+			);
+
+		auto const key_address = key_variable.address();
+
+		//TODO: put key on stack
+
+		if (m_destination.is_valid())
+		{
+			m_emitter.get_element(
+				table_address.local_address(),
+				key_address.local_address(),
+				value_address.local_address()
+				);
+		}
 	}
 }

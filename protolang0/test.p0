@@ -5,6 +5,7 @@
 
 	var t0 = []
 	t0.elem = 1
+	var e = t0.elem
 
 	var t1 = [a = 0]
 	var t2 = [abc = t0, def = t1]
