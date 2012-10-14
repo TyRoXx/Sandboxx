@@ -120,14 +120,19 @@ namespace p0
 		case '}': return eat_single_char_token(token_type::brace_right);
 		case '[': return eat_single_char_token(token_type::bracket_left);
 		case ']': return eat_single_char_token(token_type::bracket_right);
-		case '=': return eat_single_char_token(token_type::assign);
+		case '=': return eat_single_or_double_token(token_type::assign, '=', token_type::equal);
 		case ',': return eat_single_char_token(token_type::comma);
 		case '+': return eat_single_char_token(token_type::plus);
 		case '-': return eat_single_char_token(token_type::minus);
 		case '*': return eat_single_char_token(token_type::star);
 		case '/': return eat_single_char_token(token_type::slash);
+		case '%': return eat_single_char_token(token_type::modulo);
+		case '&': return eat_single_or_double_token(token_type::ampersand, '&', token_type::ampersands);
+		case '|': return eat_single_or_double_token(token_type::pipe, '|', token_type::pipes);
+		case '<': return eat_single_or_triple_token(token_type::smaller, '<', token_type::shift_left, '=', token_type::smaller_equal);
+		case '>': return eat_single_or_triple_token(token_type::greater, '>', token_type::shift_right, '=', token_type::greater_equal);
+		case '!': return eat_single_or_double_token(token_type::exclamation_mark, '=', token_type::not_equal);
 		case '.': return eat_single_char_token(token_type::dot);
-		case '!': return eat_single_char_token(token_type::exclamation_mark);
 		case '~': return eat_single_char_token(token_type::tilde);
 
 		default:
@@ -235,5 +240,50 @@ namespace p0
 			type,
 			source_range((m_pos - 1), m_pos)
 			);
+	}
+
+	token scanner::eat_single_or_double_token(
+		token_type::Enum single_token,
+		char second_char,
+		token_type::Enum double_token
+		)
+	{
+		++m_pos;
+
+		if ((m_pos != m_end) &&
+			(*m_pos == second_char))
+		{
+			++m_pos;
+			return token(double_token, source_range(m_pos - 2, m_pos));
+		}
+
+		return token(single_token, source_range(m_pos - 1, m_pos));
+	}
+
+	token scanner::eat_single_or_triple_token(
+		token_type::Enum single_token,
+		char second_char_0,
+		token_type::Enum double_token_0,
+		char second_char_1,
+		token_type::Enum double_token_1
+		)
+	{
+		++m_pos;
+
+		if (m_pos != m_end)
+		{
+			if (*m_pos == second_char_0)
+			{
+				++m_pos;
+				return token(double_token_0, source_range(m_pos - 2, m_pos));
+			}
+			if (*m_pos == second_char_1)
+			{
+				++m_pos;
+				return token(double_token_1, source_range(m_pos - 2, m_pos));
+			}
+		}
+
+		return token(single_token, source_range(m_pos - 1, m_pos));
 	}
 }
