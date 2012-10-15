@@ -154,6 +154,16 @@ namespace p0
 						on_unexpected_eof();
 					}
 
+					if (((*m_pos < 0x20) ||
+						(*m_pos > 0x7e)) &&
+						(*m_pos != '\t'))
+					{
+						throw compiler_error(
+							"This character has to be hex-encoded in a string literal",
+							source_range(m_pos, m_pos + 1)
+							);
+					}
+
 					if (*m_pos == '\\')
 					{
 						++m_pos;
