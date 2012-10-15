@@ -36,6 +36,7 @@ namespace p0
 
 		virtual void visit(name_expression_tree const &expression) override;
 		virtual void visit(integer_10_expression_tree const &expression) override;
+		virtual void visit(string_expression_tree const &expression) override;
 		virtual void visit(call_expression_tree const &expression) override;
 		virtual void visit(function_tree const &expression) override;
 		virtual void visit(null_expression_tree const &expression) override;

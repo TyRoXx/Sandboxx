@@ -134,6 +134,56 @@ namespace p0
 		case '!': return eat_single_or_double_token(token_type::exclamation_mark, '=', token_type::not_equal);
 		case '.': return eat_single_char_token(token_type::dot);
 		case '~': return eat_single_char_token(token_type::tilde);
+		case '"':
+			{
+				++m_pos;
+				auto const string_begin = m_pos;
+
+				for (;;)
+				{
+					auto const on_unexpected_eof = [this]()
+					{
+						throw compiler_error(
+							"Unexpected end of file in string literal",
+							source_range(m_end, m_end)
+							);
+					};
+
+					if (m_pos == m_end)
+					{
+						on_unexpected_eof();
+					}
+
+					if (*m_pos == '\\')
+					{
+						++m_pos;
+						if (m_pos == m_end)
+						{
+							on_unexpected_eof();
+						}
+
+						++m_pos;
+					}
+
+					else if (*m_pos == '"')
+					{
+						break;
+					}
+
+					else
+					{
+						++m_pos;
+					}
+				}
+
+				auto const string_end = m_pos;
+				++m_pos;
+
+				return token(
+					token_type::string,
+					source_range(string_begin, string_end)
+					);
+			}
 
 		default:
 			if (is_identifer_first(*m_pos))

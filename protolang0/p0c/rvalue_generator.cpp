@@ -63,6 +63,29 @@ namespace p0
 		}
 	}
 
+	void rvalue_generator::visit(string_expression_tree const &expression)
+	{
+		std::string value;
+
+		for (auto p = expression.parts().begin(), end = expression.parts().end();
+			p != end; ++p)
+		{
+			value.append(p->begin(), p->end()); //TODO: decode literal
+		}
+
+		if (m_destination.is_valid())
+		{
+			auto const string_id = m_function_generator.get_string_id(
+				std::move(value)
+				);
+
+			m_emitter.set_string(
+				m_destination.local_address(),
+				string_id
+				);
+		}
+	}
+
 	void rvalue_generator::visit(call_expression_tree const &expression)
 	{
 		temporary const function_variable(

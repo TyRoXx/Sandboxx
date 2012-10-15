@@ -13,6 +13,7 @@ namespace p0
 {
 	struct name_expression_tree;
 	struct integer_10_expression_tree;
+	struct string_expression_tree;
 	struct call_expression_tree;
 	struct function_tree;
 	struct null_expression_tree;
@@ -26,6 +27,7 @@ namespace p0
 		virtual ~expression_tree_visitor();
 		virtual void visit(name_expression_tree const &expression) = 0;
 		virtual void visit(integer_10_expression_tree const &expression) = 0;
+		virtual void visit(string_expression_tree const &expression) = 0;
 		virtual void visit(call_expression_tree const &expression) = 0;
 		virtual void visit(function_tree const &expression) = 0;
 		virtual void visit(null_expression_tree const &expression) = 0;
@@ -70,6 +72,24 @@ namespace p0
 	private:
 
 		source_range m_value;
+	};
+
+
+	struct string_expression_tree : expression_tree
+	{
+		typedef std::vector<source_range> part_vector;
+
+
+		explicit string_expression_tree(
+			part_vector parts
+			);
+		virtual void accept(expression_tree_visitor &visitor) const override;
+		virtual source_range position() const override;
+		part_vector const &parts() const;
+
+	private:
+
+		part_vector m_parts;
 	};
 
 

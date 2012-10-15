@@ -23,6 +23,7 @@ namespace p0
 			break_,
 			continue_,
 			integer_10,
+			string,
 			parenthesis_left,
 			parenthesis_right,
 			brace_left,

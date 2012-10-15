@@ -60,6 +60,32 @@ namespace p0
 	}
 
 
+	string_expression_tree::string_expression_tree(
+		part_vector parts
+		)
+		: m_parts(std::move(parts))
+	{
+	}
+
+	void string_expression_tree::accept(expression_tree_visitor &visitor) const
+	{
+		visitor.visit(*this);
+	}
+
+	source_range string_expression_tree::position() const
+	{
+		return source_range(
+			m_parts.front().begin(),
+			m_parts.back().end()
+			);
+	}
+
+	string_expression_tree::part_vector const &string_expression_tree::parts() const
+	{
+		return m_parts;
+	}
+
+
 	call_expression_tree::call_expression_tree(
 		std::unique_ptr<expression_tree> function,
 		expression_vector arguments

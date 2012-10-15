@@ -425,6 +425,28 @@ namespace p0
 					));
 			}
 
+		case token_type::string:
+			{
+				string_expression_tree::part_vector parts;
+				parts.push_back(first.content);
+
+				for (;;)
+				{
+					auto const next_part = peek_token();
+					if (next_part.type != token_type::string)
+					{
+						break;
+					}
+
+					pop_token();
+					parts.push_back(next_part.content);
+				}
+
+				return std::unique_ptr<expression_tree>(new string_expression_tree(
+					std::move(parts)
+					));
+			}
+
 		default:
 			throw compiler_error(
 				"Expression expected",

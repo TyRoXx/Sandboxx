@@ -27,6 +27,15 @@
 		{!n}
 	}
 	unary_tests()
+	
+	var string_tests = function ()
+	{
+		var s0 = ""
+		var s1 = "abc"
+		var s2 = "\\ \' \" \n \r \t"
+		var s3 = "abc" "def"
+	}
+	string_tests()
 
 	var x = 0
 	{

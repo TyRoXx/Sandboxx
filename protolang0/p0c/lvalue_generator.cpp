@@ -50,6 +50,14 @@ namespace p0
 			);
 	}
 
+	void lvalue_generator::visit(string_expression_tree const &expression)
+	{
+		throw compiler_error(
+			"A string literal is not an LValue",
+			expression.position()
+			);
+	}
+
 	void lvalue_generator::visit(call_expression_tree const &expression)
 	{
 		throw compiler_error(
