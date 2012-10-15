@@ -63,6 +63,58 @@ namespace p0
 		}
 	}
 
+	namespace
+	{
+		void decode_string_literal(
+			std::string &decoded,
+			source_range literal
+			)
+		{
+			for (auto i = literal.begin(); i != literal.end(); ++i)
+			{
+				auto c = *i;
+
+				assert(c != '"'); //scanner guarantees this
+
+				switch (c)
+				{
+				case '\\':
+					{
+						++i;
+						assert(i != literal.end());
+
+						auto const second = *i;
+
+						switch (second)
+						{
+						case 't': c = '\t'; break;
+						case 'n': c = '\n'; break;
+						case 'r': c = '\r'; break;
+
+						case '\\':
+						case '\'':
+						case '\"':
+							c = second;
+							break;
+
+						default:
+							throw compiler_error(
+								"Invalid escape sequence",
+								source_range(i - 1, i + 1)
+								);
+						}
+						break;
+					}
+
+				default:
+					break;
+				}
+
+				decoded += c;
+			}
+		}
+	}
+
 	void rvalue_generator::visit(string_expression_tree const &expression)
 	{
 		std::string value;
@@ -70,7 +122,10 @@ namespace p0
 		for (auto p = expression.parts().begin(), end = expression.parts().end();
 			p != end; ++p)
 		{
-			value.append(p->begin(), p->end()); //TODO: decode literal
+			decode_string_literal(
+				value,
+				*p
+				);
 		}
 
 		if (m_destination.is_valid())

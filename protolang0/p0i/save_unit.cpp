@@ -46,6 +46,36 @@ namespace p0
 				}
 				file << "end\n";
 			}
+
+			void encode_string(
+				std::ostream &file,
+				std::string const &str
+				)
+			{
+				for (auto i = str.begin(); i != str.end(); ++i)
+				{
+					if ((*i < 0x20) || (*i > 0x7e))
+					{
+						file << "\\x" << std::setw(2) << std::setfill('0') << std::hex
+							<< static_cast<unsigned>(*i);
+					}
+					else
+					{
+						switch (*i)
+						{
+						case '\\':
+						case '\'':
+						case '\"':
+							file << '\\' << *i;
+							break;
+
+						default:
+							file << *i;
+							break;
+						}
+					}
+				}
+			}
 		}
 
 
@@ -68,8 +98,11 @@ namespace p0
 					<< std::setfill('0')
 					<< std::right
 					<< s << ": "
-					
-					<< unit.strings()[s]
+				;
+
+				encode_string(file, unit.strings()[s]);
+
+				file
 					<< '\n';
 			}
 		}
