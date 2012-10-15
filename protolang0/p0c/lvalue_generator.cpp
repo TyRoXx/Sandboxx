@@ -92,34 +92,6 @@ namespace p0
 
 	void lvalue_generator::visit(dot_element_expression_tree const &expression)
 	{
-		auto const table_variable = std::make_shared<temporary>(
-			std::ref(m_frame),
-			1
-			);
-
-		rvalue_generator table_generator(
-			m_function_generator,
-			m_emitter,
-			m_frame,
-			table_variable->address()
-			);
-		expression.table().accept(table_generator);
-
-		auto const key_variable = std::make_shared<temporary>(
-			std::ref(m_frame),
-			1
-			);
-
-		auto key = source_range_to_string(expression.element_name());
-		auto const key_string_id = m_function_generator.get_string_id(
-			std::move(key)
-			);
-
-		m_emitter.set_string(
-			key_variable->address().local_address(),
-			key_string_id
-			);
-
 		auto const element_variable = std::make_shared<temporary>(
 			std::ref(m_frame),
 			1
@@ -127,13 +99,42 @@ namespace p0
 
 		m_address = element_variable->address();
 
-		auto &emitter = m_emitter;
+		auto &table_expression = expression.table();
+		auto const element_name = expression.element_name();
 
-		m_commit_write = [table_variable, key_variable, element_variable, &emitter]()
+		m_commit_write = [this, element_variable, &table_expression, element_name]()
 		{
-			emitter.set_element(
-				table_variable->address().local_address(),
-				key_variable->address().local_address(),
+			temporary const table_variable(
+				std::ref(m_frame),
+				1
+				);
+
+			rvalue_generator table_generator(
+				m_function_generator,
+				m_emitter,
+				m_frame,
+				table_variable.address()
+				);
+			table_expression.accept(table_generator);
+
+			temporary const key_variable(
+				std::ref(m_frame),
+				1
+				);
+
+			auto key = source_range_to_string(element_name);
+			auto const key_string_id = m_function_generator.get_string_id(
+				std::move(key)
+				);
+
+			m_emitter.set_string(
+				key_variable.address().local_address(),
+				key_string_id
+				);
+
+			m_emitter.set_element(
+				table_variable.address().local_address(),
+				key_variable.address().local_address(),
 				element_variable->address().local_address()
 				);
 		};
