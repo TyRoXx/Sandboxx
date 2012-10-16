@@ -57,7 +57,7 @@ namespace p0
 					if ((*i < 0x20) || (*i > 0x7e))
 					{
 						file << "\\x" << std::setw(2) << std::setfill('0') << std::hex
-							<< static_cast<unsigned>(*i);
+							<< (static_cast<unsigned>(*i) & 0xff);
 					}
 					else
 					{

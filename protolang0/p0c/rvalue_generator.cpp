@@ -3,6 +3,7 @@
 #include "compiler_error.hpp"
 #include "code_generator.hpp"
 #include "temporary.hpp"
+#include <cctype>
 
 
 namespace p0
@@ -65,12 +66,32 @@ namespace p0
 
 	namespace
 	{
+		unsigned hex_digit_value(source_range::iterator position)
+		{
+			auto const c = std::tolower(*position);
+
+			if (c >= '0' && c <= '9')
+			{
+				return (c - '0');
+			}
+
+			if (c >= 'a' && c <= 'f')
+			{
+				return 10 + (c - 'a');
+			}
+
+			throw compiler_error(
+				"Hexadecimal digit expected",
+				source_range(position, position + 1)
+				);
+		}
+
 		void decode_string_literal(
 			std::string &decoded,
 			source_range literal
 			)
 		{
-			for (auto i = literal.begin(); i != literal.end(); ++i)
+			for (auto i = literal.begin(), end = literal.end(); i != end; ++i)
 			{
 				auto c = *i;
 
@@ -90,12 +111,34 @@ namespace p0
 						case 't': c = '\t'; break;
 						case 'n': c = '\n'; break;
 						case 'r': c = '\r'; break;
+						case '0': c = '\0'; break;
 
 						case '\\':
 						case '\'':
 						case '\"':
 							c = second;
 							break;
+
+						case 'x':
+							{
+								++i;
+								if (i != end)
+								{
+									c = (hex_digit_value(i) * 16u);
+
+									++i;
+									if (i != end)
+									{
+										c += hex_digit_value(i);
+										break;
+									}
+								}
+
+								throw compiler_error(
+									"Hexidecimal digit expected in '\\xhh' escape sequence",
+									source_range(i, i)
+									);
+							}
 
 						default:
 							throw compiler_error(
