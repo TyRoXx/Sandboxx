@@ -10,9 +10,11 @@ using namespace std;
 
 namespace
 {
+	std::string const default_output_filename = "out.p0i";
+
 	void print_help()
 	{
-		cout << "p0c [source file] [target file]\n";
+		cout << "p0c [source file] [target file, default " << default_output_filename << "]\n";
 	}
 
 	std::vector<char> read_file(std::string const &path)
@@ -123,7 +125,7 @@ int main(int argc, char **argv)
 		std::string const source_file_name = argv[1];
 		auto const source_file_content = read_file(source_file_name);
 		std::string const target_file_name = (argc >= 3) ?
-			argv[2] : "out.p0i";
+			argv[2] : default_output_filename;
 
 		p0::source_range const source(
 			source_file_content.data(),
