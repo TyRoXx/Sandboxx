@@ -27,7 +27,7 @@
 		{!n}
 	}
 	unary_tests()
-	
+
 	var string_tests = function ()
 	{
 		var s0 = ""
@@ -35,6 +35,7 @@
 		var s2 = "\\ \' \" \n \r \t"
 		var s3 = "abc" "def"
 		var s4 = "\x00\x01\x02\x10\x11\x12\x49\x4A\x4b\x4C\xFf\x20abc"
+		var s5 = "\x0a\x0b"
 	}
 	string_tests()
 
