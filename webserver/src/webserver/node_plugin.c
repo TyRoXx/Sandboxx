@@ -34,7 +34,7 @@ static bool load_memory_functions(node_plugin_t *plugin)
 	return false;
 }
 
-typedef bool (*np_request_handler_fn)(
+typedef int (*np_request_handler_fn)(
 	char const *method,
 	char const *url,
 	char const *host,
