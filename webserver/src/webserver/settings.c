@@ -97,6 +97,7 @@ static bool parse_settings(
 				host_entry_t host;
 				char * const name = parse_line(&pos, end);
 				char * const location = parse_line(&pos, end);
+				bool success;
 
 				if (!name ||
 					!location)
@@ -108,19 +109,30 @@ static bool parse_settings(
 				}
 
 				host_entry_create(&host, name, location);
-				WS_GEN_VECTOR_PUSH_BACK(s->hosts, host);
+				WS_GEN_VECTOR_PUSH_BACK(s->hosts, host, success);
+				if (!success)
+				{
+					host_entry_destroy(&host);
+					return false;
+				}
 			}
 			else if ((version >= version_2) &&
 				!strcmp("plugin", command))
 			{
 				char * const file_name = parse_line(&pos, end);
+				bool success;
 
 				if (!file_name)
 				{
 					return false;
 				}
 
-				WS_GEN_VECTOR_PUSH_BACK(s->plugin_file_names, file_name);
+				WS_GEN_VECTOR_PUSH_BACK(s->plugin_file_names, file_name, success);
+				if (!success)
+				{
+					free(file_name);
+					return false;
+				}
 			}
 			else
 			{

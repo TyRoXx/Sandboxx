@@ -23,32 +23,36 @@
 		free( reference ## _begin ); \
 	} while (0)
 
-#define WS_GEN_VECTOR_RESERVE(reference, capacity) do { \
+#define WS_GEN_VECTOR_RESERVE(reference, capacity, success) do { \
 		void *new_begin; \
 		const size_t new_capacity = (capacity); \
 		const size_t old_size = WS_GEN_VECTOR_SIZE(reference); \
-		if (WS_GEN_VECTOR_CAPACITY(reference) >= new_capacity) break; \
+		if (WS_GEN_VECTOR_CAPACITY(reference) >= new_capacity) { (success) = true; break; } \
 		new_begin = realloc( WS_GEN_VECTOR_DATA(reference), (new_capacity * sizeof(*WS_GEN_VECTOR_DATA(reference)))); \
-		if (!new_begin) break; \
+		if (!new_begin) { (success) = false; break; } \
 		WS_GEN_VECTOR_BEGIN(reference) = new_begin; \
 		WS_GEN_VECTOR_END(reference) = WS_GEN_VECTOR_BEGIN(reference) + old_size; \
 		(reference ## _allocated) = (WS_GEN_VECTOR_BEGIN(reference) + new_capacity); \
+		(success) = true; \
 	} while (0)
 
-#define WS_GEN_VECTOR_RESIZE(reference, size) do { \
+#define WS_GEN_VECTOR_RESIZE(reference, size, success) do { \
 	const size_t local_size = (size); \
-	WS_GEN_VECTOR_RESERVE(reference, local_size); \
+	WS_GEN_VECTOR_RESERVE(reference, local_size, (success)); \
+	if ((success)) { \
 	WS_GEN_VECTOR_END(reference) = (WS_GEN_VECTOR_BEGIN(reference) + local_size); \
+	} \
 	} while (0)
 
-#define WS_GEN_VECTOR_GROW(reference, min_capacity) do { \
+#define WS_GEN_VECTOR_GROW(reference, min_capacity, success) do { \
 		const size_t min_cap_copy = (min_capacity); \
 		WS_GEN_VECTOR_RESERVE(reference, \
-			(min_cap_copy > WS_GEN_VECTOR_CAPACITY(reference)) ? (min_cap_copy * 2) : min_cap_copy); \
+			(min_cap_copy > WS_GEN_VECTOR_CAPACITY(reference)) ? (min_cap_copy * 2) : min_cap_copy, (success)); \
 	} while (0)
 
-#define WS_GEN_VECTOR_PUSH_BACK(reference, element) do { \
-		WS_GEN_VECTOR_GROW(reference, (WS_GEN_VECTOR_SIZE(reference) + 1)); \
+#define WS_GEN_VECTOR_PUSH_BACK(reference, element, success) do { \
+		WS_GEN_VECTOR_GROW(reference, (WS_GEN_VECTOR_SIZE(reference) + 1), success); \
+		if (!(success)) break; \
 		*WS_GEN_VECTOR_END(reference) = element; \
 		++(WS_GEN_VECTOR_END(reference)); \
 	} while (0)
@@ -70,22 +74,25 @@
 
 #define WS_GEN_VECTOR_END(reference) (reference ## _end)
 
-#define WS_GEN_VECTOR_ASSIGN(reference, begin, end) do { \
+#define WS_GEN_VECTOR_ASSIGN(reference, begin, end, success) do { \
 	size_t const new_size = ((end) - (begin)); \
-	WS_GEN_VECTOR_RESIZE(reference, new_size); \
+	WS_GEN_VECTOR_RESIZE(reference, new_size, success); \
+	if ((success)) { \
 	memmove(WS_GEN_VECTOR_DATA(reference), begin, (new_size * sizeof(*WS_GEN_VECTOR_DATA(reference)))); \
+	} \
 	} while (0)
 
 #define WS_GEN_VECTOR_CLEAR(reference) do { \
 	WS_GEN_VECTOR_END(reference) = WS_GEN_VECTOR_BEGIN(reference); \
 	} while (0)
 
-#define WS_GEN_VECTOR_APPEND_RANGE(reference, begin, end) do { \
+#define WS_GEN_VECTOR_APPEND_RANGE(reference, begin, end, success) do { \
 	size_t const appended_size = ((end) - (begin)); \
 	size_t i = WS_GEN_VECTOR_SIZE(reference); \
 	size_t size = (i + appended_size); \
 	size_t j = 0; \
-	WS_GEN_VECTOR_RESIZE(reference, size); \
+	WS_GEN_VECTOR_RESIZE(reference, size, success); \
+	if (!(success)) break; \
 	for (; i < size; ++i, ++j) { \
 		WS_GEN_VECTOR_DATA(reference)[i] = begin[j]; \
 	} \

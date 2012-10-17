@@ -336,13 +336,20 @@ static node_plugin_t *load_node_plugin(
 	)
 {
 	node_plugin_t plugin;
+	bool success;
+
 	if (!node_plugin_load(&plugin, file_name))
 	{
 		return 0;
 	}
 
-	WS_GEN_VECTOR_PUSH_BACK(plugins->plugins, plugin);
-	return &WS_GEN_VECTOR_BACK(plugins->plugins);
+	WS_GEN_VECTOR_PUSH_BACK(plugins->plugins, plugin, success);
+	if (success)
+	{
+		return &WS_GEN_VECTOR_BACK(plugins->plugins);
+	}
+
+	return 0;
 }
 
 static bool plugin_entry_handle_request(
@@ -411,6 +418,7 @@ static bool load_request_handler_plugins(
 			plugins
 			);
 		loadable_handler_t handler;
+		bool success;
 
 		if (!plugin)
 		{
@@ -418,7 +426,11 @@ static bool load_request_handler_plugins(
 		}
 
 		handler = create_plugin_handler(plugin);
-		WS_GEN_VECTOR_PUSH_BACK(handlers->handlers, handler);
+		WS_GEN_VECTOR_PUSH_BACK(handlers->handlers, handler, success);
+		if (!success)
+		{
+			return false;
+		}
 	}
 
 	return true;
@@ -443,6 +455,7 @@ int main(int argc, char **argv)
 	int result;
 	request_handler_manager_t request_handlers;
 	node_plugin_manager_t plugins;
+	bool success;
 
 	buffer_create(&settings_content);
 
@@ -467,8 +480,14 @@ int main(int argc, char **argv)
 	WS_GEN_VECTOR_APPEND_RANGE(
 		request_handlers.handlers,
 		builtin_handlers,
-		builtin_handlers + (sizeof(builtin_handlers) / sizeof(builtin_handlers[0]))
+		builtin_handlers + (sizeof(builtin_handlers) / sizeof(builtin_handlers[0])),
+		success
 		);
+	if (!success)
+	{
+		result = 1;
+		goto cleanup_0;
+	}
 
 	if (!load_request_handler_plugins(&settings, &plugins, &request_handlers))
 	{
