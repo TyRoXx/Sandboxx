@@ -3,7 +3,7 @@
 
 
 #include "common/config.h"
-#include "dynamic_library.h"
+#include "common/dynamic_library.h"
 #include <stddef.h>
 
 
