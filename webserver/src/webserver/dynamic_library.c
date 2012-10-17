@@ -19,19 +19,21 @@ void *dyn_lib_find(dyn_lib_t lib, char const *symbol)
 }
 
 #else
+#include <dlfcn.h>
 
 dyn_lib_t dyn_lib_open(char const *file_name)
 {
-	return 0;
+	return dlopen(file_name, RTLD_LAZY);
 }
 
 void dyn_lib_close(dyn_lib_t lib)
 {
+	dlclose(lib);
 }
 
 void *dyn_lib_find(dyn_lib_t lib, char const *symbol)
 {
-	return 0;
+	return dlsym(lib, symbol);
 }
 
 #endif

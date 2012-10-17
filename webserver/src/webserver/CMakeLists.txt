@@ -9,7 +9,7 @@ target_link_libraries(webserver file_system lua_script sub_directory http common
 if(WIN32)
 	target_link_libraries(webserver ws2_32)
 else(WIN32)
-	target_link_libraries(webserver pthread m)
+	target_link_libraries(webserver pthread m dl)
 endif(WIN32)
 
 if(WEBSERVER_WITH_VLD)
