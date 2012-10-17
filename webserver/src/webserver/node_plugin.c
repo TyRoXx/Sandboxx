@@ -157,7 +157,7 @@ bool node_plugin_handle_request(
 	size_t response_body_size = 0;
 
 	if (plugin->request_handler.function(
-		"GET", //TODO
+		request->method,
 		request->url,
 		request->host,
 		request_headers,

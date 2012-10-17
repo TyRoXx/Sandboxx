@@ -6,17 +6,9 @@
 #include <stddef.h>
 
 
-typedef enum http_method_t
-{
-	method_get,
-	method_post,
-}
-http_method_t;
-
-
 typedef struct http_request_t
 {
-	http_method_t method;
+	char *method;
 	char *url;
 	char *host;
 }

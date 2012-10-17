@@ -351,7 +351,7 @@ static bool plugin_entry_handle_request(
 	http_response_t *response)
 {
 	node_plugin_t const * const plugin = entry->data;
-	http_request_t request = {method_get, (char *)url, "host"};
+	http_request_t const request = {"GET", (char *)url, "host"};
 
 	return node_plugin_handle_request(
 		plugin,

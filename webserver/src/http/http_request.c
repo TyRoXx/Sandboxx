@@ -94,18 +94,7 @@ bool http_request_parse(
 		skip_char(read, data) &&
 		scan_until('\r', 1024, read, data, &host))
 	{
-		if (!strcmp(method.data, "GET"))
-		{
-			request->method = method_get;
-		}
-		else if (!strcmp(method.data, "POST"))
-		{
-			request->method = method_post;
-		}
-		else
-		{
-			goto on_error;
-		}
+		request->method = method.data;
 
 		if (strcmp(host_key.data, "Host"))
 		{
@@ -116,7 +105,6 @@ bool http_request_parse(
 		request->host = host.data;
 
 		buffer_destroy(&host_key);
-		buffer_destroy(&method);
 		return true;
 	}
 on_error:
@@ -130,6 +118,7 @@ on_error:
 void http_request_destroy(
 	http_request_t *request)
 {
+	free(request->method);
 	free(request->url);
 	free(request->host);
 }
