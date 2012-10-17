@@ -11,6 +11,7 @@
 #include "file_system/fs_directory.h"
 #include "sub_directory/sub_directory.h"
 #include "settings.h"
+#include "request_handler_manager.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -250,15 +251,12 @@ static void handle_client(
 	}
 }
 
-static bool load_location(location_t *loc, char const *host, char const *path)
+static bool load_location(
+	location_t *loc,
+	request_handler_manager_t const *handlers,
+	char const *host,
+	char const *path)
 {
-	static const loadable_handler_t handlers[] =
-	{
-		{"lua", initialize_lua_script},
-		{"fs", initialize_file_system},
-		{"dir", initialize_sub_directory},
-	};
-
 	char * const directory_file_name = path_join(path, "directory.txt");
 	buffer_t dir_file;
 
@@ -284,8 +282,8 @@ static bool load_location(location_t *loc, char const *host, char const *path)
 		&loc->directory,
 		dir_file.data,
 		dir_file.data + dir_file.size,
-		handlers,
-		handlers + sizeof(handlers) / sizeof(handlers[0]),
+		WS_GEN_VECTOR_BEGIN(handlers->handlers),
+		WS_GEN_VECTOR_END(handlers->handlers),
 		path))
 	{
 		fprintf(stderr, "Could not parse directory file\n");
@@ -307,22 +305,31 @@ static void destroy_locations(location_t *locations_begin, location_t *locations
 	}
 }
 
+static const loadable_handler_t builtin_handlers[] =
+{
+	{"lua", initialize_lua_script},
+	{"fs", initialize_file_system},
+	{"dir", initialize_sub_directory},
+};
+
 int main(int argc, char **argv)
 {
 	const unsigned short acceptor_port = ((argc >= 2) ? (unsigned short)atoi(argv[1]) : 8080);
 	char const * const settings_file_name = ((argc >= 3) ? argv[2] : "settings.txt");
 	socket_t acceptor, client;
-	location_t *locations_begin, *locations_end, *loc;
+	location_t *locations_begin = 0, *locations_end, *loc;
 	settings_t settings;
 	buffer_t settings_content;
 	host_entry_t *host;
 	int result;
+	request_handler_manager_t request_handlers;
 
 	buffer_create(&settings_content);
 
 	if (!load_buffer_from_file_name(&settings_content, settings_file_name))
 	{
 		fprintf(stderr, "Could not load settings file '%s'\n", settings_file_name);
+		buffer_destroy(&settings_content);
 		return 1;
 	}
 
@@ -334,6 +341,14 @@ int main(int argc, char **argv)
 
 	buffer_destroy(&settings_content);
 
+	request_handler_manager_create(&request_handlers);
+
+	WS_GEN_VECTOR_APPEND_RANGE(
+		request_handlers.handlers,
+		builtin_handlers,
+		builtin_handlers + (sizeof(builtin_handlers) / sizeof(builtin_handlers[0]))
+		);
+
 	locations_begin = loc = malloc(sizeof(*locations_begin) * WS_GEN_VECTOR_SIZE(settings.hosts));
 	locations_end = locations_begin;
 
@@ -341,12 +356,13 @@ int main(int argc, char **argv)
 		host != WS_GEN_VECTOR_END(settings.hosts);
 		++host, ++loc, ++locations_end)
 	{
-		if (!load_location(loc, host->name, host->destination))
+		if (!load_location(loc, &request_handlers, host->name, host->destination))
 		{
 			destroy_locations(locations_begin, locations_end);
 			free(locations_begin);
 			settings_destroy(&settings);
-			return 1;
+			result = 1;
+			goto cleanup;
 		}
 	}
 
@@ -381,5 +397,6 @@ cleanup:
 
 	destroy_locations(locations_begin, locations_end);
 	free(locations_begin);
+	request_handler_manager_destroy(&request_handlers);
 	return result;
 }

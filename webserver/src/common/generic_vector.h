@@ -5,6 +5,7 @@
 #include "config.h"
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 
 #define WS_GEN_VECTOR(name, element_type) \
@@ -77,6 +78,17 @@
 
 #define WS_GEN_VECTOR_CLEAR(reference) do { \
 	WS_GEN_VECTOR_END(reference) = WS_GEN_VECTOR_BEGIN(reference); \
+	} while (0)
+
+#define WS_GEN_VECTOR_APPEND_RANGE(reference, begin, end) do { \
+	size_t const appended_size = ((end) - (begin)); \
+	size_t i = WS_GEN_VECTOR_SIZE(reference); \
+	size_t size = (i + appended_size); \
+	size_t j = 0; \
+	WS_GEN_VECTOR_RESIZE(reference, size); \
+	for (; i < size; ++i, ++j) { \
+		WS_GEN_VECTOR_DATA(reference)[i] = begin[j]; \
+	} \
 	} while (0)
 
 
