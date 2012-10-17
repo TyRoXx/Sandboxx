@@ -19,6 +19,7 @@ void host_entry_destroy(host_entry_t *d);
 typedef struct settings_t
 {
 	WS_GEN_VECTOR(hosts, host_entry_t);
+	WS_GEN_VECTOR(plugin_file_names, char *);
 }
 settings_t;
 

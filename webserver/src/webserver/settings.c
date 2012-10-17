@@ -4,6 +4,13 @@
 #include <stdio.h>
 
 
+typedef enum settings_version_t
+{
+	version_1,
+	version_2,
+}
+settings_version_t;
+
 void host_entry_create(host_entry_t *d, char *name, char *destination)
 {
 	d->name = name;
@@ -69,7 +76,11 @@ static char *parse_line(char const **pos, char const *end)
 	return line;
 }
 
-static bool parse_settings_v1(settings_t *s, char const *pos, char const *end)
+static bool parse_settings(
+	settings_t *s,
+	settings_version_t version,
+	char const *pos,
+	char const *end)
 {
 	while (pos != end)
 	{
@@ -99,6 +110,18 @@ static bool parse_settings_v1(settings_t *s, char const *pos, char const *end)
 				host_entry_create(&host, name, location);
 				WS_GEN_VECTOR_PUSH_BACK(s->hosts, host);
 			}
+			else if ((version >= version_2) &&
+				!strcmp("plugin", command))
+			{
+				char * const file_name = parse_line(&pos, end);
+
+				if (!file_name)
+				{
+					return false;
+				}
+
+				WS_GEN_VECTOR_PUSH_BACK(s->plugin_file_names, file_name);
+			}
 			else
 			{
 				fprintf(stderr, "Unknown command '%s'\n", command);
@@ -122,16 +145,23 @@ bool settings_create(settings_t *s, char const *begin, char const *end)
 	}
 
 	WS_GEN_VECTOR_CREATE(s->hosts);
+	WS_GEN_VECTOR_CREATE(s->plugin_file_names);
 
 	if (!strcmp("version 1", version))
 	{
 		free(version);
-		return parse_settings_v1(s, begin, end);
+		return parse_settings(s, version_1, begin, end);
+	}
+
+	if (!strcmp("version 2", version))
+	{
+		free(version);
+		return parse_settings(s, version_2, begin, end);
 	}
 
 	fprintf(stderr, "Unsupported settings version '%s'\n", version);
 	fprintf(stderr, "The first line should be:\n");
-	fprintf(stderr, "version 1\n");
+	fprintf(stderr, "version 2\n");
 
 	free(version);
 	return false;
@@ -139,13 +169,27 @@ bool settings_create(settings_t *s, char const *begin, char const *end)
 
 void settings_destroy(settings_t *s)
 {
-	host_entry_t * begin = WS_GEN_VECTOR_BEGIN(s->hosts);
-	host_entry_t * const end = WS_GEN_VECTOR_END(s->hosts);
-
-	for (; begin != end; ++begin)
 	{
-		host_entry_destroy(begin);
+		host_entry_t * begin = WS_GEN_VECTOR_BEGIN(s->hosts);
+		host_entry_t * const end = WS_GEN_VECTOR_END(s->hosts);
+
+		for (; begin != end; ++begin)
+		{
+			host_entry_destroy(begin);
+		}
+
+		WS_GEN_VECTOR_DESTROY(s->hosts);
 	}
 
-	WS_GEN_VECTOR_DESTROY(s->hosts);
+	{
+		char **begin = WS_GEN_VECTOR_BEGIN(s->plugin_file_names);
+		char **end = WS_GEN_VECTOR_END(s->plugin_file_names);
+
+		for (; begin != end; ++begin)
+		{
+			free(*begin);
+		}
+
+		WS_GEN_VECTOR_DESTROY(s->plugin_file_names);
+	}
 }
