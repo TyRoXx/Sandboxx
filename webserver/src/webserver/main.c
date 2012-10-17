@@ -12,6 +12,7 @@
 #include "sub_directory/sub_directory.h"
 #include "settings.h"
 #include "request_handler_manager.h"
+#include "node_plugin.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -305,11 +306,129 @@ static void destroy_locations(location_t *locations_begin, location_t *locations
 	}
 }
 
+typedef struct node_plugin_manager_t
+{
+	WS_GEN_VECTOR(plugins, node_plugin_t);
+}
+node_plugin_manager_t;
+
+static void node_plugin_manager_create(node_plugin_manager_t *m)
+{
+	WS_GEN_VECTOR_CREATE(m->plugins);
+}
+
+static void node_plugin_manager_destroy(node_plugin_manager_t *m)
+{
+	node_plugin_t *begin = WS_GEN_VECTOR_BEGIN(m->plugins);
+	node_plugin_t *end = WS_GEN_VECTOR_END(m->plugins);
+
+	for (; begin != end; ++begin)
+	{
+		node_plugin_destroy(begin);
+	}
+
+	WS_GEN_VECTOR_DESTROY(m->plugins);
+}
+
+static node_plugin_t *load_node_plugin(
+	char const *file_name,
+	node_plugin_manager_t *plugins
+	)
+{
+	node_plugin_t plugin;
+	if (!node_plugin_load(&plugin, file_name))
+	{
+		return 0;
+	}
+
+	WS_GEN_VECTOR_PUSH_BACK(plugins->plugins, plugin);
+	return &WS_GEN_VECTOR_BACK(plugins->plugins);
+}
+
+static bool plugin_entry_handle_request(
+	char const *url,
+	directory_entry_t *entry,
+	http_response_t *response)
+{
+	node_plugin_t const * const plugin = entry->data;
+	http_request_t request = {method_get, (char *)url, "host"};
+
+	return node_plugin_handle_request(
+		plugin,
+		&request,
+		response
+		);
+}
+
+static void plugin_entry_destroy(
+	directory_entry_t *entry)
+{
+}
+
+static bool initialize_plugin_directory_entry(
+	struct directory_entry_t *entry,
+	char const *args, 
+	const struct loadable_handler_t *handlers_begin,
+	const struct loadable_handler_t *handlers_end,
+	char const *current_fs_dir,
+	void const *data
+	)
+{
+	node_plugin_t const * const plugin = data;
+
+	entry->handle_request = plugin_entry_handle_request;
+	entry->destroy = plugin_entry_destroy;
+	entry->data = (void *)plugin;
+
+	return true;
+}
+
+static loadable_handler_t create_plugin_handler(
+	node_plugin_t const *plugin)
+{
+	loadable_handler_t const result =
+	{
+		plugin->name,
+		initialize_plugin_directory_entry,
+		plugin
+	};
+	return result;
+}
+
+static bool load_request_handler_plugins(
+	settings_t const *settings,
+	node_plugin_manager_t *plugins,
+	request_handler_manager_t *handlers
+	)
+{
+	char **begin = WS_GEN_VECTOR_BEGIN(settings->plugin_file_names);
+	char ** const end = WS_GEN_VECTOR_END(settings->plugin_file_names);
+
+	for (; begin != end; ++begin)
+	{
+		node_plugin_t * const plugin = load_node_plugin(
+			*begin,
+			plugins
+			);
+		loadable_handler_t handler;
+
+		if (!plugin)
+		{
+			return false;
+		}
+
+		handler = create_plugin_handler(plugin);
+		WS_GEN_VECTOR_PUSH_BACK(handlers->handlers, handler);
+	}
+
+	return true;
+}
+
 static const loadable_handler_t builtin_handlers[] =
 {
-	{"lua", initialize_lua_script},
-	{"fs", initialize_file_system},
-	{"dir", initialize_sub_directory},
+	{"lua", initialize_lua_script, 0},
+	{"fs", initialize_file_system, 0},
+	{"dir", initialize_sub_directory, 0},
 };
 
 int main(int argc, char **argv)
@@ -323,6 +442,7 @@ int main(int argc, char **argv)
 	host_entry_t *host;
 	int result;
 	request_handler_manager_t request_handlers;
+	node_plugin_manager_t plugins;
 
 	buffer_create(&settings_content);
 
@@ -342,12 +462,19 @@ int main(int argc, char **argv)
 	buffer_destroy(&settings_content);
 
 	request_handler_manager_create(&request_handlers);
+	node_plugin_manager_create(&plugins);
 
 	WS_GEN_VECTOR_APPEND_RANGE(
 		request_handlers.handlers,
 		builtin_handlers,
 		builtin_handlers + (sizeof(builtin_handlers) / sizeof(builtin_handlers[0]))
 		);
+
+	if (!load_request_handler_plugins(&settings, &plugins, &request_handlers))
+	{
+		result = 1;
+		goto cleanup_0;
+	}
 
 	locations_begin = loc = malloc(sizeof(*locations_begin) * WS_GEN_VECTOR_SIZE(settings.hosts));
 	locations_end = locations_begin;
@@ -359,10 +486,9 @@ int main(int argc, char **argv)
 		if (!load_location(loc, &request_handlers, host->name, host->destination))
 		{
 			destroy_locations(locations_begin, locations_end);
-			free(locations_begin);
 			settings_destroy(&settings);
 			result = 1;
-			goto cleanup;
+			goto cleanup_0;
 		}
 	}
 
@@ -372,14 +498,14 @@ int main(int argc, char **argv)
 	{
 		fprintf(stderr, "Could not create acceptor\n");
 		result = 1;
-		goto cleanup;
+		goto cleanup_1;
 	}
 
 	if (!socket_bind(acceptor, acceptor_port))
 	{
 		fprintf(stderr, "Could not bind acceptor to port %u\n", (unsigned)acceptor_port);
 		result = 1;
-		goto cleanup;
+		goto cleanup_2;
 	}
 
 	while (socket_accept(acceptor, &client))
@@ -392,11 +518,16 @@ int main(int argc, char **argv)
 
 	result = 0;
 
-cleanup:
+cleanup_2:
 	socket_destroy(acceptor);
 
+cleanup_1:
 	destroy_locations(locations_begin, locations_end);
 	free(locations_begin);
+
+cleanup_0:
+
 	request_handler_manager_destroy(&request_handlers);
+	node_plugin_manager_destroy(&plugins);
 	return result;
 }

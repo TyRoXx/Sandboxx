@@ -25,7 +25,8 @@ bool initialize_sub_directory(
 	char const *args,
 	const loadable_handler_t *handlers_begin,
 	const loadable_handler_t *handlers_end,
-	char const *current_fs_dir
+	char const *current_fs_dir,
+	void const *data
 	)
 {
 	buffer_t description;

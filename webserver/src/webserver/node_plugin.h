@@ -22,10 +22,11 @@ typedef struct node_plugin_request_handler_t
 		size_t request_body_size,
 		char **response_headers,
 		char **response_body,
-		void *data
+		size_t *response_body_size,
+		void const *data
 		);
 	void (*cleanup)(struct node_plugin_request_handler_t *);
-	void *data;
+	void const *data;
 }
 node_plugin_request_handler_t;
 
@@ -47,7 +48,7 @@ node_plugin_t;
 
 bool node_plugin_load(node_plugin_t *plugin, char const *library_file);
 bool node_plugin_handle_request(
-	node_plugin_t *plugin,
+	node_plugin_t const *plugin,
 	const struct http_request_t *request,
 	struct http_response_t *response);
 void node_plugin_destroy(node_plugin_t *plugin);

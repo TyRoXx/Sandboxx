@@ -14,7 +14,8 @@ bool initialize_file_system(
 	char const *args, 
 	const struct loadable_handler_t *handlers_begin,
 	const struct loadable_handler_t *handlers_end,
-	char const *current_fs_dir
+	char const *current_fs_dir,
+	void const *data
 	);
 
 

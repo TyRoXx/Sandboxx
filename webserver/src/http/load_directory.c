@@ -166,7 +166,14 @@ bool load_directory(
 			goto on_error;
 		}
 
-		success = handler->initialize(&entry, args, handlers_begin, handlers_end, current_fs_dir);
+		success = handler->initialize(
+			&entry,
+			args,
+			handlers_begin,
+			handlers_end,
+			current_fs_dir,
+			handler->data
+			);
 
 		free(args);
 

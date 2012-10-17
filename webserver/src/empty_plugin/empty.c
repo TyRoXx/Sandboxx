@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <stdio.h>
 
 
 #ifdef _WIN32
@@ -47,7 +49,16 @@ int np_handle_request(
 	char const *request_body,
 	size_t request_body_size,
 	char **response_headers,
-	char **response_body)
+	char **response_body,
+	size_t *response_body_size)
 {
-	return 0;
+	*response_body = np_realloc(0, 100);
+	if (!*response_body)
+	{
+		return 0;
+	}
+
+	sprintf(*response_body, "hello, world!\n%u", (unsigned)time(0));
+	*response_body_size = strlen(*response_body);
+	return 1;
 }

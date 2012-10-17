@@ -13,11 +13,13 @@ typedef struct loadable_handler_t
 {
 	char *name;
 	bool (*initialize)(
-		struct directory_entry_t *,
-		char const *, 
+		struct directory_entry_t *entry,
+		char const *args, 
 		const struct loadable_handler_t *,
 		const struct loadable_handler_t *,
-		char const *);
+		char const *current_fs_dir,
+		void const *data);
+	void const *data;
 }
 loadable_handler_t;
 

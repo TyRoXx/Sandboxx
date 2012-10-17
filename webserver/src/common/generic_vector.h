@@ -91,5 +91,8 @@
 	} \
 	} while (0)
 
+#define WS_GEN_VECTOR_FRONT(reference) (WS_GEN_VECTOR_BEGIN(reference)[0])
+#define WS_GEN_VECTOR_BACK(reference) (WS_GEN_VECTOR_END(reference)[-1])
+
 
 #endif
