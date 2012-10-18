@@ -192,7 +192,7 @@ static void receive_request(client_t *client)
 		return;
 	}
 
-	fprintf(stderr, "%d %s %s\n", request.method, request.host, request.url);
+	fprintf(stderr, "%s %s %s\n", request.method, request.host, request.url);
 	handle_request(client, &request);
 
 	http_request_destroy(&request);
