@@ -3,6 +3,7 @@
 #include "http/http_response.h"
 #include "common/string_util.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 
 static const directory_t *find_directory_by_host(const client_t *client, char const *host)
