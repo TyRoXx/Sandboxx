@@ -178,8 +178,15 @@ bool node_plugin_handle_request(
 		function_create(&response->destroy_body, plugin->free, response_body);
 
 		response->status = HttpStatus_Ok;
-		response->header_count = 0;
-		response->headers = 0;
+
+		if (response_headers &&
+			!string_assign_c_str(&response->headers, response_headers))
+		{
+			plugin->free(response_headers);
+			return false;
+		}
+
+		plugin->free(response_headers);
 		return true;
 	}
 

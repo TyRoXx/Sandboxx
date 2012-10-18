@@ -19,7 +19,6 @@ typedef struct execution_context_t
 {
 	char const *url;
 	http_response_t *response;
-	buffer_t headers;
 	buffer_t body;
 }
 execution_context_t;
@@ -126,35 +125,18 @@ static int script_add_header(lua_State *L)
 		lua_touserdata(L, lua_upvalueindex(1));
 	char const * const key = lua_tostring(L, -2);
 	char const * const value = lua_tostring(L, -1);
-	http_header_t header;
+	string_t * const headers = &execution->response->headers;
+	
+	int const result =
+		key &&
+		value &&
+		string_append_c_str(headers, key) &&
+		string_append_c_str(headers, ": ") &&
+		string_append_c_str(headers, value) &&
+		string_append_c_str(headers, "\r\n");
 
-	if (!key ||
-		!value)
-	{
-		return 0;
-	}
-
-	header.key = string_duplicate(key);
-	header.value = string_duplicate(value);
-
-	if (!header.key ||
-		!header.value ||
-		!buffer_append(&execution->headers, &header, sizeof(header)))
-	{
-		http_header_destroy(&header);
-		return 0;
-	}
-
-	return 0;
-}
-
-static void move_headers(buffer_t *from, http_response_t *to)
-{
-	to->header_count = (from->size / sizeof(*to->headers));
-	to->headers = (http_header_t *)from->data;
-	from->data = 0;
-	from->size = 0;
-	from->capacity = 0;
+	lua_pushboolean(L, result);
+	return 1;
 }
 
 static bool handle_lua_request(
@@ -187,7 +169,6 @@ static bool handle_lua_request(
 	luaopen_base(L);
 	luaopen_math(L);
 
-	buffer_create(&execution.headers);
 	buffer_create(&execution.body);
 
 	lua_pushlightuserdata(L, &execution);
@@ -249,13 +230,10 @@ static bool handle_lua_request(
 		result = true;
 		goto return_;
 	}
-
-	move_headers(&execution.headers, response);
-
+	
 return_:
 	lua_close(L);
 	buffer_destroy(&script);
-	buffer_destroy(&execution.headers);
 	return result;
 }
 

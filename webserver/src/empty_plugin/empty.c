@@ -52,13 +52,24 @@ int np_handle_request(
 	char **response_body,
 	size_t *response_body_size)
 {
-	*response_body = np_realloc(0, 100);
-	if (!*response_body)
+	*response_body = np_realloc(0, 200);
+	*response_headers = np_realloc(0, 200);
+
+	if (!*response_body ||
+		!*response_headers)
 	{
+		np_free(*response_body);
+		np_free(*response_headers);
 		return 0;
 	}
 
-	sprintf(*response_body, "hello, world!\n%u", (unsigned)time(0));
+	sprintf(*response_body,
+		"<p>hello, world!</p>"
+		"<p>%u</p>",
+		(unsigned)time(0));
+
 	*response_body_size = strlen(*response_body);
+
+	strcpy(*response_headers, "Content-Type: text/html\r\n");
 	return 1;
 }

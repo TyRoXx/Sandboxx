@@ -46,6 +46,30 @@ bool string_assign(string_t *s, char const *begin, char const *end)
 	return true;
 }
 
+bool string_append_c_str(string_t *s, char const *source)
+{
+	size_t const source_length = strlen(source);
+	size_t const old_size = string_size(s);
+	bool success;
+
+	WS_GEN_VECTOR_RESIZE(
+		s->data,
+		WS_GEN_VECTOR_SIZE(s->data) + source_length,
+		success);
+
+	if (!success)
+	{
+		return false;
+	}
+
+	memmove(
+		WS_GEN_VECTOR_DATA(s->data) + old_size,
+		source,
+		source_length + 1
+		);
+	return true;
+}
+
 void string_clear(string_t *s)
 {
 	bool success;

@@ -111,10 +111,14 @@ static void handle_request(client_t *client, const http_request_t *request)
 
 	response.status = HttpStatus_Ok;
 
+	if (!string_create(&response.headers))
+	{
+		return;
+	}
+
 	if (directory_handle_request(directory, url, &response))
 	{
 		char buffer[8192];
-		size_t i;
 		char const * const status_message = http_status_message(response.status);
 		bool send_failed = false;
 
@@ -134,18 +138,12 @@ static void handle_request(client_t *client, const http_request_t *request)
 			goto send_ended;
 		}
 
-		for (i = 0; i < response.header_count; ++i)
+		if ((send_failed = !socket_send(
+			client->socket,
+			string_data(&response.headers),
+			string_size(&response.headers))))
 		{
-			const http_header_t * const header = response.headers + i;
-			sprintf(buffer,
-				"%s: %s\r\n",
-				header->key,
-				header->value);
-
-			if ((send_failed = !socket_send(client->socket, buffer, strlen(buffer))))
-			{
-				goto send_ended;
-			}
+			goto send_ended;
 		}
 
 		if (!socket_send(client->socket, "\r\n", 2) ||
