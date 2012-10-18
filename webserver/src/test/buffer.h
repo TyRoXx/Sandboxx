@@ -2,7 +2,7 @@
 #define TEST_BUFFER_H
 
 
-void test_buffer();
+void test_buffer(void);
 
 
 #endif

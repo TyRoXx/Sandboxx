@@ -2,6 +2,7 @@
 #include "buffer.h"
 #include "generic_vector.h"
 #include "string.h"
+#include "config.h"
 
 
 int main(void)
@@ -10,5 +11,6 @@ int main(void)
 	test_buffer();
 	test_generic_vector();
 	test_string();
+	test_config();
 	return 0;
 }

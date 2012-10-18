@@ -2,7 +2,7 @@
 #define TEST_STRING_H
 
 
-void test_string();
+void test_string(void);
 
 
 #endif
