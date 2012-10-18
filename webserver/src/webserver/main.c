@@ -181,7 +181,7 @@ static void plugin_entry_destroy(
 
 static bool initialize_plugin_directory_entry(
 	struct directory_entry_t *entry,
-	char const *args, 
+	char const *args,
 	const struct loadable_handler_t *handlers_begin,
 	const struct loadable_handler_t *handlers_end,
 	char const *current_fs_dir,

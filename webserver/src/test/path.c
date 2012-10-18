@@ -2,6 +2,7 @@
 #include "check.h"
 #include "common/path.h"
 #include <string.h>
+#include <stdlib.h>
 
 
 static void check_join_equal(
@@ -15,6 +16,7 @@ static void check_join_equal(
 	{
 		TEST_EXPECT(!strcmp(result, joined));
 	}
+	free(result);
 }
 
 void test_path()
