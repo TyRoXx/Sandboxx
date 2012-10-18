@@ -10,7 +10,7 @@
 #ifdef WS_WIN32
 #  ifndef _WIN32
 #    error WS_WIN32 is only expected to be defined when _WIN32 is defined, too
-#   endif
+#  endif
 #endif
 
 
