@@ -48,6 +48,7 @@ int np_handle_request(
 	char const * const *request_headers,
 	char const *request_body,
 	size_t request_body_size,
+	unsigned *response_status,
 	char **response_headers,
 	char **response_body,
 	size_t *response_body_size)
@@ -60,6 +61,8 @@ int np_handle_request(
 	{
 		np_free(*response_body);
 		np_free(*response_headers);
+
+		*response_status = 500;
 		return 0;
 	}
 
@@ -71,5 +74,7 @@ int np_handle_request(
 	*response_body_size = strlen(*response_body);
 
 	strcpy(*response_headers, "Content-Type: text/html\r\n");
+
+	*response_status = 200;
 	return 1;
 }

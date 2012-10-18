@@ -30,7 +30,9 @@ static bool load_memory_functions(node_plugin_t *plugin)
 		return true;
 	}
 
-	fprintf(stderr, "Plugin %s: np_realloc or np_free missing\n",
+	fprintf(
+		stderr,
+		"Plugin %s: np_realloc or np_free missing\n",
 		plugin->name);
 	return false;
 }
@@ -42,6 +44,7 @@ typedef int (*np_request_handler_fn)(
 	char const * const *request_headers,
 	char const *request_body,
 	size_t request_body_size,
+	unsigned *response_status,
 	char **response_headers,
 	char **response_body,
 	size_t *response_body_size);
@@ -53,6 +56,7 @@ static bool request_handle_v0_call(
 	char const * const *request_headers,
 	char const *request_body,
 	size_t request_body_size,
+	unsigned *response_status,
 	char **response_headers,
 	char **response_body,
 	size_t *response_body_size,
@@ -60,8 +64,16 @@ static bool request_handle_v0_call(
 {
 	np_request_handler_fn const function = (void *)data;
 	return function(
-		method, url, host, request_headers, request_body, request_body_size,
-		response_headers, response_body, response_body_size);
+		method,
+		url,
+		host,
+		request_headers,
+		request_body,
+		request_body_size,
+		response_status,
+		response_headers,
+		response_body,
+		response_body_size);
 }
 
 static bool load_request_handler_v0(node_plugin_t *plugin)
@@ -72,7 +84,8 @@ static bool load_request_handler_v0(node_plugin_t *plugin)
 	np_request_handler_fn const function = dyn_lib_find(plugin->library, function_name);
 	if (!function)
 	{
-		fprintf(stderr, "Plugin %s: Could not find function %s\n",
+		fprintf(stderr,
+			"Plugin %s: Could not find function %s\n",
 			plugin->name,
 			function_name);
 		return false;
@@ -97,7 +110,8 @@ static bool load_request_handler(node_plugin_t *plugin)
 		return load_request_handler_v0(plugin);
 
 	default:
-		fprintf(stderr, "Plugin %s: Unknown API version %u\n",
+		fprintf(stderr,
+			"Plugin %s: Unknown API version %u\n",
 			plugin->name,
 			(unsigned)plugin->api_version);
 		return false;
@@ -113,7 +127,9 @@ bool node_plugin_load(node_plugin_t *plugin, char const *library_file)
 	plugin->library = dyn_lib_open(library_file);
 	if (!plugin->library)
 	{
-		fprintf(stderr, "Could not open shared library %s\n", library_file);
+		fprintf(stderr,
+			"Could not open shared library %s\n",
+			library_file);
 		return false;
 	}
 
@@ -152,6 +168,7 @@ bool node_plugin_handle_request(
 	char const * const * const request_headers = &null_ptr;
 
 	//API expects these to be null
+	unsigned response_status = 200;
 	char *response_headers = 0;
 	char *response_body = 0;
 	size_t response_body_size = 0;
@@ -163,6 +180,7 @@ bool node_plugin_handle_request(
 		request_headers,
 		0,
 		0,
+		&response_status,
 		&response_headers,
 		&response_body,
 		&response_body_size,
@@ -177,7 +195,7 @@ bool node_plugin_handle_request(
 		response->body_size = response_body_size;
 		function_create(&response->destroy_body, plugin->free, response_body);
 
-		response->status = HttpStatus_Ok;
+		response->status = (http_status_t)response_status;
 
 		if (response_headers &&
 			!string_assign_c_str(&response->headers, response_headers))

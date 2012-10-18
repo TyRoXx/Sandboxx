@@ -20,6 +20,7 @@ typedef struct node_plugin_request_handler_t
 		char const * const *request_headers,
 		char const *request_body,
 		size_t request_body_size,
+		unsigned *response_status,
 		char **response_headers,
 		char **response_body,
 		size_t *response_body_size,
