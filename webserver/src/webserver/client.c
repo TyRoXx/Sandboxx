@@ -6,6 +6,13 @@
 #include <stdlib.h>
 
 
+void location_destroy(location_t *loc)
+{
+	free(loc->host);
+	directory_destroy(&loc->directory);
+}
+
+
 static const directory_t *find_directory_by_host(const client_t *client, char const *host)
 {
 	const location_t *loc, *result = 0;

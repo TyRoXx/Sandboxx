@@ -13,11 +13,7 @@ typedef struct location_t
 }
 location_t;
 
-static void location_destroy(location_t *loc)
-{
-	free(loc->host);
-	directory_destroy(&loc->directory);
-}
+void location_destroy(location_t *loc);
 
 
 typedef struct client_t
