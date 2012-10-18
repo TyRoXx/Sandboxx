@@ -121,12 +121,12 @@ static void handle_request(client_t *client, const http_request_t *request)
 		fprintf(stderr, "Sending response\n");
 
 		sprintf(buffer,
-			"HTTP/1.1 %s %d\r\n"
+			"HTTP/1.1 %s %u\r\n"
 			"Content-Length: %u\r\n"
 			"Connection: close\r\n"
 			,
 			status_message,
-			(int)response.status,
+			(unsigned)response.status,
 			(unsigned)response.body_size);
 
 		if ((send_failed = !socket_send(client->socket, buffer, strlen(buffer))))
