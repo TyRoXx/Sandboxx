@@ -352,7 +352,6 @@ cleanup_1:
 	free(locations_begin);
 
 cleanup_0:
-
 	request_handler_manager_destroy(&request_handlers);
 	node_plugin_manager_destroy(&plugins);
 	return result;
