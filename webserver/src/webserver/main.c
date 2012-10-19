@@ -38,8 +38,8 @@ static void client_thread_proc(void *client_ptr)
 
 static void handle_client(
 	socket_t s,
-	const location_t *locations_begin,
-	const location_t *locations_end)
+	const host_entry_t *locations_begin,
+	const host_entry_t *locations_end)
 {
 	thread_t client_thread;
 	client_t * const client = malloc(sizeof(*client));
@@ -60,7 +60,7 @@ static void handle_client(
 }
 
 static bool load_location(
-	location_t *loc,
+	host_entry_t *loc,
 	request_handler_manager_t const *handlers,
 	char const *host,
 	char const *path)
@@ -105,11 +105,11 @@ static bool load_location(
 	return (loc->host != 0);
 }
 
-static void destroy_locations(location_t *locations_begin, location_t *locations_end)
+static void destroy_locations(host_entry_t *locations_begin, host_entry_t *locations_end)
 {
 	for (; locations_begin != locations_end; ++locations_begin)
 	{
-		location_destroy(locations_begin);
+		host_entry_destroy(locations_begin);
 	}
 }
 
@@ -255,10 +255,10 @@ int main(int argc, char **argv)
 	const unsigned short acceptor_port = ((argc >= 2) ? (unsigned short)atoi(argv[1]) : 8080);
 	char const * const settings_file_name = ((argc >= 3) ? argv[2] : "settings.txt");
 	socket_t acceptor, client;
-	location_t *locations_begin = 0, *locations_end, *loc;
+	host_entry_t *locations_begin = 0, *locations_end, *loc;
 	settings_t settings;
 	buffer_t settings_content;
-	host_entry_t *host;
+	settings_host_entry_t *host;
 	int result;
 	request_handler_manager_t request_handlers;
 	node_plugin_manager_t plugins;

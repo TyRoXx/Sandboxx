@@ -5,20 +5,20 @@
 #include "common/generic_vector.h"
 
 
-typedef struct host_entry_t
+typedef struct settings_host_entry_t
 {
 	char *name;
 	char *destination;
 }
-host_entry_t;
+settings_host_entry_t;
 
 
-void host_entry_create(host_entry_t *d, char *name, char *destination);
-void host_entry_destroy(host_entry_t *d);
+void settings_host_entry_create(settings_host_entry_t *d, char *name, char *destination);
+void settings_host_entry_destroy(settings_host_entry_t *d);
 
 typedef struct settings_t
 {
-	WS_GEN_VECTOR(hosts, host_entry_t);
+	WS_GEN_VECTOR(hosts, settings_host_entry_t);
 	WS_GEN_VECTOR(plugin_file_names, char *);
 }
 settings_t;

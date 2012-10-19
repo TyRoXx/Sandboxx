@@ -11,13 +11,13 @@ typedef enum settings_version_t
 }
 settings_version_t;
 
-void host_entry_create(host_entry_t *d, char *name, char *destination)
+void settings_host_entry_create(settings_host_entry_t *d, char *name, char *destination)
 {
 	d->name = name;
 	d->destination = destination;
 }
 
-void host_entry_destroy(host_entry_t *d)
+void settings_host_entry_destroy(settings_host_entry_t *d)
 {
 	free(d->name);
 	free(d->destination);
@@ -94,7 +94,7 @@ static bool parse_settings(
 		{
 			if (!strcmp("host", command))
 			{
-				host_entry_t host;
+				settings_host_entry_t host;
 				char * const name = parse_line(&pos, end);
 				char * const location = parse_line(&pos, end);
 				bool success;
@@ -108,11 +108,11 @@ static bool parse_settings(
 					return false;
 				}
 
-				host_entry_create(&host, name, location);
+				settings_host_entry_create(&host, name, location);
 				WS_GEN_VECTOR_PUSH_BACK(s->hosts, host, success);
 				if (!success)
 				{
-					host_entry_destroy(&host);
+					settings_host_entry_destroy(&host);
 					return false;
 				}
 			}
@@ -182,12 +182,12 @@ bool settings_create(settings_t *s, char const *begin, char const *end)
 void settings_destroy(settings_t *s)
 {
 	{
-		host_entry_t * begin = WS_GEN_VECTOR_BEGIN(s->hosts);
-		host_entry_t * const end = WS_GEN_VECTOR_END(s->hosts);
+		settings_host_entry_t * begin = WS_GEN_VECTOR_BEGIN(s->hosts);
+		settings_host_entry_t * const end = WS_GEN_VECTOR_END(s->hosts);
 
 		for (; begin != end; ++begin)
 		{
-			host_entry_destroy(begin);
+			settings_host_entry_destroy(begin);
 		}
 
 		WS_GEN_VECTOR_DESTROY(s->hosts);

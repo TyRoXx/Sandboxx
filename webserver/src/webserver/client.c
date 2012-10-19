@@ -6,16 +6,9 @@
 #include <stdlib.h>
 
 
-void location_destroy(location_t *loc)
-{
-	free(loc->host);
-	directory_destroy(&loc->directory);
-}
-
-
 static const directory_t *find_directory_by_host(const client_t *client, char const *host)
 {
-	const location_t *loc, *result = 0;
+	const host_entry_t *loc, *result = 0;
 	const size_t significant_host_length = string_index_of(host, ':');
 
 	for (loc = client->locations_begin; loc != client->locations_end; ++loc)
@@ -174,7 +167,7 @@ static void wait_for_disconnect(socket_t s)
 }
 
 
-void client_create(client_t *client, socket_t socket, location_t const *locations_begin, location_t const *locations_end)
+void client_create(client_t *client, socket_t socket, host_entry_t const *locations_begin, host_entry_t const *locations_end)
 {
 	client->socket = socket;
 	client->locations_begin = locations_begin;
