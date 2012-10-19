@@ -17,7 +17,7 @@ http_request_t;
 
 bool http_request_parse(
 	http_request_t *request,
-	int (*read)(void *),
+	int (*read_byte)(void *),
 	void *data);
 void http_request_destroy(
 	http_request_t *request);

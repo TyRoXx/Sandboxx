@@ -9,17 +9,22 @@ static bool zero_terminate(buffer_t *b)
 	return buffer_push_back(b, '\0');
 }
 
-static bool scan_until(
+static bool is_eof(int c)
+{
+	return (c < 0);
+}
+
+static bool scan_c_string_until(
 	char terminator,
 	size_t max_length,
-	int (*read)(void *),
+	int (*read_byte)(void *),
 	void *data,
 	buffer_t *destination)
 {
 	for (;;)
 	{
-		const int c = read(data);
-		if (c < 0)
+		int const c = read_byte(data);
+		if (is_eof(c))
 		{
 			return false;
 		}
@@ -44,19 +49,19 @@ static bool scan_until(
 }
 
 static bool skip_line(
-	int (*read)(void *),
+	int (*read_byte)(void *),
 	void *data)
 {
-	int c = read(data);
+	int c = read_byte(data);
 	for (;;)
 	{
-		if (c < 0)
+		if (is_eof(c))
 		{
 			return false;
 		}
 		else if (c == '\r')
 		{
-			c = read(data);
+			c = read_byte(data);
 			if (c == '\n')
 			{
 				return true;
@@ -64,21 +69,23 @@ static bool skip_line(
 		}
 		else
 		{
-			c = read(data);
+			c = read_byte(data);
 		}
 	}
 }
 
 static bool skip_char(
-	int (*read)(void *),
+	int (*read_byte)(void *),
 	void *data)
 {
-	return (read(data) >= 0);
+	return !is_eof(
+		read_byte(data)
+		);
 }
 
 bool http_request_parse(
 	http_request_t *request,
-	int (*read)(void *),
+	int (*read_byte)(void *),
 	void *data)
 {
 	buffer_t method, url, host_key, host;
@@ -87,12 +94,12 @@ bool http_request_parse(
 	buffer_create(&host_key);
 	buffer_create(&host);
 
-	if (scan_until(' ', 4 /*POST*/, read, data, &method) &&
-		scan_until(' ', 1024, read, data, &url) &&
-		skip_line(read, data) &&
-		scan_until(':', 4 /*Host*/, read, data, &host_key) &&
-		skip_char(read, data) &&
-		scan_until('\r', 1024, read, data, &host))
+	if (scan_c_string_until(' ', 4 /*POST*/, read_byte, data, &method) &&
+		scan_c_string_until(' ', 1024, read_byte, data, &url) &&
+		skip_line(read_byte, data) &&
+		scan_c_string_until(':', 4 /*Host*/, read_byte, data, &host_key) &&
+		skip_char(read_byte, data) &&
+		scan_c_string_until('\r', 1024, read_byte, data, &host))
 	{
 		request->method = method.data;
 
