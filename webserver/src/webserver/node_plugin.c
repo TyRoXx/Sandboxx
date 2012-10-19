@@ -84,9 +84,10 @@ static bool load_request_handler_v0(node_plugin_t *plugin)
 	np_request_handler_fn const function = dyn_lib_find(plugin->library, function_name);
 	if (!function)
 	{
+		char const * const name = plugin->name;
 		fprintf(stderr,
 			"Plugin %s: Could not find function %s\n",
-			plugin->name,
+			name,
 			function_name);
 		return false;
 	}
@@ -110,11 +111,14 @@ static bool load_request_handler(node_plugin_t *plugin)
 		return load_request_handler_v0(plugin);
 
 	default:
-		fprintf(stderr,
-			"Plugin %s: Unknown API version %u\n",
-			plugin->name,
-			(unsigned)plugin->api_version);
-		return false;
+		{
+			char const * const name = plugin->name;
+			fprintf(stderr,
+				"Plugin %s: Unknown API version %u\n",
+				name,
+				(unsigned)plugin->api_version);
+			return false;
+		}
 	}
 }
 
