@@ -195,16 +195,21 @@ static bool load_hosts(
 	settings_host_entry_t *settings_begin, *settings_end;
 	host_entry_t *host;
 
+	node_plugin_manager_create(&s->plugins);
+	request_handler_manager_create(&s->request_handlers);
+	WS_GEN_VECTOR_CREATE(s->hosts);
+
 	if (!load_request_handler_plugins(settings, &s->plugins, &s->request_handlers))
 	{
-		return false;
+		success = false;
+		goto leave_0;
 	}
 
-	WS_GEN_VECTOR_CREATE(s->hosts);
 	WS_GEN_VECTOR_RESIZE(s->hosts, WS_GEN_VECTOR_SIZE(settings->hosts), success);
 	if (!success)
 	{
-		return false;
+		success = false;
+		goto leave_0;
 	}
 
 	settings_begin = WS_GEN_VECTOR_BEGIN(settings->hosts);
@@ -215,11 +220,26 @@ static bool load_hosts(
 	{
 		if (!load_location(host, &s->request_handlers, settings_begin->name, settings_begin->destination))
 		{
-			return false;
+			do
+			{
+				host_entry_destroy(host);
+				--host;
+			}
+			while (settings_begin != WS_GEN_VECTOR_BEGIN(settings->hosts));
+
+			success = false;
+			goto leave_0;
 		}
 	}
 
-	return true;
+leave_0:
+	if (!success)
+	{
+		WS_GEN_VECTOR_DESTROY(s->hosts);
+		request_handler_manager_destroy(&s->request_handlers);
+		node_plugin_manager_destroy(&s->plugins);
+	}
+	return success;
 }
 
 bool server_create(
@@ -228,9 +248,6 @@ bool server_create(
 	unsigned port
 	)
 {
-	node_plugin_manager_create(&s->plugins);
-	request_handler_manager_create(&s->request_handlers);
-
 	if (!load_hosts(s, settings))
 	{
 		return false;

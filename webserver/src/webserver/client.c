@@ -184,4 +184,6 @@ void client_serve(client_t *client)
 	receive_request(client);
 	socket_shutdown(client->socket);
 	wait_for_disconnect(client->socket);
+
+	fprintf(stderr, "Client disconnected\n");
 }
