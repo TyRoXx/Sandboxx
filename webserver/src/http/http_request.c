@@ -175,7 +175,15 @@ bool http_request_parse(
 void http_request_destroy(
 	http_request_t *request)
 {
+	char **begin = WS_GEN_VECTOR_BEGIN(request->headers);
+	char ** const end = WS_GEN_VECTOR_END(request->headers);
+
+	for (; begin != end; ++begin)
+	{
+		free(*begin);
+	}
+
+	WS_GEN_VECTOR_DESTROY(request->headers);
 	free(request->method);
 	free(request->url);
-	WS_GEN_VECTOR_DESTROY(request->headers);
 }
