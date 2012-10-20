@@ -1,4 +1,6 @@
 #include "socket.h"
+#include <stdio.h>
+
 
 #ifdef WS_UNIX
 #include <sys/socket.h>
@@ -71,9 +73,12 @@ bool socket_bind(socket_t socket, uint16_t port)
 		(listen(socket, 10) == 0);
 }
 
-bool socket_accept(socket_t socket, socket_t *accepted)
+bool socket_accept(socket_t socket, socket_t *accepted, socket_address_t *address)
 {
-	*accepted = accept(socket, 0, 0);
+	struct sockaddr_in temp_address = {0};
+	int temp_address_size = sizeof(temp_address);
+
+	*accepted = accept(socket, (struct sockaddr *)&temp_address, &temp_address_size);
 	if (*accepted == InvalidSocket)
 	{
 		return false;
@@ -86,6 +91,13 @@ bool socket_accept(socket_t socket, socket_t *accepted)
 	}
 #endif
 
+	if (address)
+	{
+		uint32_t const ip = temp_address.sin_addr.s_addr;
+		memcpy(address->ip.digits, &ip, sizeof(address->ip.digits));
+
+		address->port = ntohs(temp_address.sin_port);
+	}
 	return true;
 }
 
@@ -130,4 +142,20 @@ void socket_shutdown(socket_t socket)
 		;
 
 	shutdown(socket, how);
+}
+
+
+bool ip_address_to_string(string_t *dest, ip_address_t source)
+{
+	char buffer[16];
+	sprintf(
+		buffer,
+		"%u.%u.%u.%u",
+		source.digits[0],
+		source.digits[1],
+		source.digits[2],
+		source.digits[3]
+		);
+	
+	return string_assign_c_str(dest, buffer);
 }

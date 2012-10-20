@@ -6,6 +6,7 @@ if(MSVC)
 	set(WEBSERVER_WITH_VLD false CACHE BOOL "Visual Leak Detector, finds memory leaks with Visual C++ (vld.codeplex.com)")
 	add_definitions("/wd4996") #'Funktion': wurde als veraltet deklariert
 	add_definitions("/we4013") #behandelt Warnung "'..' undefined; assuming extern returning int" als Fehler
+	add_definitions("/WX")
 endif(MSVC)
 
 if(UNIX)

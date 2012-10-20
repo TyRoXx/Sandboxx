@@ -282,18 +282,42 @@ static void client_thread_proc(void *client_ptr)
 	thread_quit();
 }
 
+static bool make_client_name(
+	string_t *name,
+	socket_address_t address)
+{
+	char port_buffer[10];
+
+	sprintf(port_buffer, ":%u", (unsigned)(address.port & 0xffff));
+
+	return
+		ip_address_to_string(name, address.ip) &&
+		string_append_c_str(name, port_buffer);
+}
+
 static void handle_client(
 	socket_t s,
+	socket_address_t address,
 	const host_entry_t *locations_begin,
 	const host_entry_t *locations_end)
 {
 	thread_t client_thread;
 	client_t * const client = malloc(sizeof(*client));
+	string_t name;
 
 	if (!client)
 	{
-		socket_destroy(s);
-		return;
+		goto leave_0;
+	}
+
+	if (!string_create(&name))
+	{
+		goto leave_0;
+	}
+
+	if (!make_client_name(&name, address))
+	{
+		goto leave_1;
 	}
 
 	client_create(
@@ -301,24 +325,36 @@ static void handle_client(
 		s,
 		locations_begin,
 		locations_end,
-		string_duplicate("client") /*TODO*/
+		string_data(&name)
 		);
 
-	if (!thread_create(&client_thread, client_thread_proc, client))
+	if (thread_create(&client_thread, client_thread_proc, client))
 	{
-		client_destroy(client);
-		free(client);
+		return;
 	}
+	else
+	{
+		goto leave_1;
+	}
+
+leave_1:
+	string_destroy(&name);
+
+leave_0:
+	socket_destroy(s);
+	free(client);
 }
 
 void server_run(server_t *s)
 {
 	socket_t client;
+	socket_address_t address;
 
-	while (socket_accept(s->acceptor, &client))
+	while (socket_accept(s->acceptor, &client, &address))
 	{
 		handle_client(
 			client,
+			address,
 			WS_GEN_VECTOR_BEGIN(s->hosts),
 			WS_GEN_VECTOR_END(s->hosts)
 			);
