@@ -187,12 +187,54 @@ static bool load_request_handler_plugins(
 	return success;
 }
 
+static bool load_hosts(
+	server_t *s,
+	settings_t const *settings)
+{
+	bool success;
+	settings_host_entry_t *settings_begin, *settings_end;
+	host_entry_t *host;
+
+	if (!load_request_handler_plugins(settings, &s->plugins, &s->request_handlers))
+	{
+		return false;
+	}
+
+	WS_GEN_VECTOR_RESIZE(s->hosts, WS_GEN_VECTOR_SIZE(settings->hosts), success);
+	if (!success)
+	{
+		return false;
+	}
+
+	settings_begin = WS_GEN_VECTOR_BEGIN(settings->hosts);
+	settings_end = WS_GEN_VECTOR_END(settings->hosts);
+	host = WS_GEN_VECTOR_BEGIN(s->hosts);
+
+	for (; settings_begin != settings_end; ++settings_begin, ++host)
+	{
+		if (!load_location(host, &s->request_handlers, settings_begin->name, settings_begin->destination))
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
 bool server_create(
 	server_t *s,
 	settings_t const *settings,
 	unsigned port
 	)
 {
+	node_plugin_manager_create(&s->plugins);
+	request_handler_manager_create(&s->request_handlers);
+
+	if (!load_hosts(s, settings))
+	{
+		return false;
+	}
+
 	if (!socket_create(&s->acceptor))
 	{
 		fprintf(stderr, "Could not create acceptor\n");
@@ -205,9 +247,6 @@ bool server_create(
 		socket_destroy(s->acceptor);
 		return false;
 	}
-
-	node_plugin_manager_create(&s->plugins);
-	request_handler_manager_create(&s->request_handlers);
 
 	return true;
 }
