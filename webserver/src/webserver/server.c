@@ -200,6 +200,7 @@ static bool load_hosts(
 		return false;
 	}
 
+	WS_GEN_VECTOR_CREATE(s->hosts);
 	WS_GEN_VECTOR_RESIZE(s->hosts, WS_GEN_VECTOR_SIZE(settings->hosts), success);
 	if (!success)
 	{
