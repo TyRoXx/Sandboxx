@@ -11,7 +11,9 @@
 
 static bool load_settings(
 	settings_t *settings,
-	char const *file_name)
+	char const *file_name,
+	log_t *log
+	)
 {
 	buffer_t settings_content;
 
@@ -19,7 +21,7 @@ static bool load_settings(
 
 	if (!load_buffer_from_file_name(&settings_content, file_name))
 	{
-		fprintf(stderr, "Could not load settings file '%s'\n", file_name);
+		log_write(log, "Could not load settings file '%s'", file_name);
 		buffer_destroy(&settings_content);
 		return false;
 	}
@@ -44,7 +46,7 @@ int main(int argc, char **argv)
 
 	log_create(&log, stderr);
 
-	if (!load_settings(&settings, settings_file_name))
+	if (!load_settings(&settings, settings_file_name, &log))
 	{
 		return 1;
 	}

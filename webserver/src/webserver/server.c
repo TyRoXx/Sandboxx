@@ -17,7 +17,9 @@ static bool load_location(
 	host_entry_t *loc,
 	request_handler_manager_t const *handlers,
 	char const *host,
-	char const *path)
+	char const *path,
+	log_t *log
+	)
 {
 	char * const directory_file_name = path_join(path, "directory.txt");
 	buffer_t dir_file;
@@ -30,7 +32,7 @@ static bool load_location(
 
 	if (!load_buffer_from_file_name(&dir_file, directory_file_name))
 	{
-		fprintf(stderr, "Could not load directory file '%s'\n", directory_file_name);
+		log_write(log, "Could not load directory file '%s'", directory_file_name);
 		buffer_destroy(&dir_file);
 		free(directory_file_name);
 		return false;
@@ -48,7 +50,7 @@ static bool load_location(
 		WS_GEN_VECTOR_END(handlers->handlers),
 		path))
 	{
-		fprintf(stderr, "Could not parse directory file\n");
+		log_write(log, "Could not parse directory file");
 		buffer_destroy(&dir_file);
 		return false;
 	}
@@ -189,7 +191,9 @@ static bool load_request_handler_plugins(
 
 static bool load_hosts(
 	server_t *s,
-	settings_t const *settings)
+	settings_t const *settings,
+	log_t *log
+	)
 {
 	bool success;
 	settings_host_entry_t *settings_begin, *settings_end;
@@ -218,7 +222,7 @@ static bool load_hosts(
 
 	for (; settings_begin != settings_end; ++settings_begin, ++host)
 	{
-		if (!load_location(host, &s->request_handlers, settings_begin->name, settings_begin->destination))
+		if (!load_location(host, &s->request_handlers, settings_begin->name, settings_begin->destination, log))
 		{
 			do
 			{
@@ -251,20 +255,20 @@ bool server_create(
 {
 	s->log = log;
 
-	if (!load_hosts(s, settings))
+	if (!load_hosts(s, settings, log))
 	{
 		return false;
 	}
 
 	if (!socket_create(&s->acceptor))
 	{
-		fprintf(stderr, "Could not create acceptor\n");
+		log_write(log, "Could not create acceptor");
 		return false;
 	}
 
 	if (!socket_bind(s->acceptor, port))
 	{
-		fprintf(stderr, "Could not bind acceptor to port %u\n", (unsigned)port);
+		log_write(log, "Could not bind acceptor to port %u", (unsigned)port);
 		socket_destroy(s->acceptor);
 		return false;
 	}
@@ -302,7 +306,9 @@ static void handle_client(
 	socket_t s,
 	socket_address_t address,
 	const host_entry_t *locations_begin,
-	const host_entry_t *locations_end)
+	const host_entry_t *locations_end,
+	log_t *log
+	)
 {
 	thread_t client_thread;
 	client_t * const client = malloc(sizeof(*client));
@@ -328,7 +334,8 @@ static void handle_client(
 		s,
 		locations_begin,
 		locations_end,
-		string_data(&name)
+		string_data(&name),
+		log
 		);
 
 	if (thread_create(&client_thread, client_thread_proc, client))
@@ -359,7 +366,8 @@ void server_run(server_t *s)
 			client,
 			address,
 			WS_GEN_VECTOR_BEGIN(s->hosts),
-			WS_GEN_VECTOR_END(s->hosts)
+			WS_GEN_VECTOR_END(s->hosts),
+			s->log
 			);
 	}
 }

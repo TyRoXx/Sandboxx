@@ -6,6 +6,21 @@
 #include <stdlib.h>
 
 
+static void client_log(client_t *client, char const *format, ...)
+{
+	log_t *log = client->log;
+	va_list args;
+	va_start(args, format);
+	mutex_lock(&log->out_mutex);
+
+	fprintf(log->out, "%s: ", client->name);
+	vfprintf(log->out, format, args);
+	fputs("\n", log->out);
+
+	mutex_unlock(&log->out_mutex);
+	va_end(args);
+}
+
 static const directory_t *find_directory_by_host(const client_t *client, char const *host)
 {
 	const host_entry_t *loc, *result = 0;
@@ -51,11 +66,6 @@ static bool send_istream(socket_t receiver, istream_t *source)
 	}
 }
 
-static void print_name(client_t const *client)
-{
-	fprintf(stderr, "%s: ", client->name);
-}
-
 static void handle_request(client_t *client, const http_request_t *request)
 {
 	http_response_t response = {0};
@@ -65,8 +75,7 @@ static void handle_request(client_t *client, const http_request_t *request)
 	if (!directory)
 	{
 		/* TODO error handling */
-		print_name(client);
-		fprintf(stderr, "No directory for host '%s'\n", request->host);
+		client_log(client, "No directory for host '%s'", request->host);
 		return;
 	}
 
@@ -88,8 +97,7 @@ static void handle_request(client_t *client, const http_request_t *request)
 		char const * const status_message = http_status_message(response.status);
 		bool send_failed = false;
 
-		print_name(client);
-		fprintf(stderr, "Sending response\n");
+		client_log(client, "Sending response");
 
 		sprintf(buffer,
 			"HTTP/1.1 %s %u\r\n"
@@ -122,8 +130,7 @@ static void handle_request(client_t *client, const http_request_t *request)
 send_ended:
 		if (send_failed)
 		{
-			print_name(client);
-			fprintf(stderr, "Send failed\n");
+			client_log(client, "Send failed");
 		}
 	}
 
@@ -150,18 +157,15 @@ static void receive_request(client_t *client)
 {
 	http_request_t request;
 
-	print_name(client);
-	fprintf(stderr, "Serving client\n");
+	client_log(client, "Serving client");
 
 	if (!http_request_parse(&request, receive_char, &client->socket))
 	{
-		print_name(client);
-		fprintf(stderr, "Invalid request\n");
+		client_log(client, "Invalid request");
 		return;
 	}
 
-	print_name(client);
-	fprintf(stderr, "%s %s %s\n", request.method, request.host, request.url);
+	client_log(client, "%s %s %s", request.method, request.host, request.url);
 
 	handle_request(client, &request);
 
@@ -184,12 +188,15 @@ void client_create(
 	socket_t socket,
 	host_entry_t const *locations_begin,
 	host_entry_t const *locations_end,
-	char *name)
+	char *name,
+	log_t *log
+	)
 {
 	client->socket = socket;
 	client->locations_begin = locations_begin;
 	client->locations_end = locations_end;
 	client->name = name;
+	client->log = log;
 }
 
 void client_destroy(client_t *client)
@@ -204,6 +211,5 @@ void client_serve(client_t *client)
 	socket_shutdown(client->socket);
 	wait_for_disconnect(client->socket);
 
-	print_name(client);
-	fprintf(stderr, "Disconnected\n");
+	client_log(client, "Disconnected");
 }
