@@ -13,6 +13,7 @@
 #include "settings.h"
 #include "request_handler_manager.h"
 #include "node_plugin.h"
+#include "node_plugin_manager.h"
 #include "client.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -111,30 +112,6 @@ static void destroy_locations(host_entry_t *locations_begin, host_entry_t *locat
 	{
 		host_entry_destroy(locations_begin);
 	}
-}
-
-typedef struct node_plugin_manager_t
-{
-	WS_GEN_VECTOR(plugins, node_plugin_t);
-}
-node_plugin_manager_t;
-
-static void node_plugin_manager_create(node_plugin_manager_t *m)
-{
-	WS_GEN_VECTOR_CREATE(m->plugins);
-}
-
-static void node_plugin_manager_destroy(node_plugin_manager_t *m)
-{
-	node_plugin_t *begin = WS_GEN_VECTOR_BEGIN(m->plugins);
-	node_plugin_t *end = WS_GEN_VECTOR_END(m->plugins);
-
-	for (; begin != end; ++begin)
-	{
-		node_plugin_destroy(begin);
-	}
-
-	WS_GEN_VECTOR_DESTROY(m->plugins);
 }
 
 static node_plugin_t *load_node_plugin(

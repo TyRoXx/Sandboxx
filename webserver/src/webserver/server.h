@@ -6,11 +6,15 @@
 #include "common/generic_vector.h"
 #include "host_entry.h"
 #include "settings.h"
+#include "node_plugin_manager.h"
+#include "request_handler_manager.h"
 
 
 typedef struct server_t
 {
 	socket_t acceptor;
+	node_plugin_manager_t plugins;
+	request_handler_manager_t request_handlers;
 	WS_GEN_VECTOR(hosts, host_entry_t);
 }
 server_t;

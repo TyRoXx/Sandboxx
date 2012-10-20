@@ -59,6 +59,8 @@ bool server_create(
 		return false;
 	}
 
+	node_plugin_manager_create(&s->plugins);
+	request_handler_manager_create(&s->request_handlers);
 	return true;
 }
 
@@ -91,4 +93,6 @@ void server_destroy(server_t *s)
 	WS_GEN_VECTOR_DESTROY(s->hosts);
 
 	socket_destroy(s->acceptor);
+	request_handler_manager_destroy(&s->request_handlers);
+	node_plugin_manager_destroy(&s->plugins);
 }
