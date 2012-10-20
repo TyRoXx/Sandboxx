@@ -244,10 +244,13 @@ leave_0:
 
 bool server_create(
 	server_t *s,
+	log_t *log,
 	settings_t const *settings,
 	unsigned port
 	)
 {
+	s->log = log;
+
 	if (!load_hosts(s, settings))
 	{
 		return false;
