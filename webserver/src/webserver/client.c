@@ -51,6 +51,11 @@ static bool send_istream(socket_t receiver, istream_t *source)
 	}
 }
 
+static void print_name(client_t const *client)
+{
+	fprintf(stderr, "%s: ", client->name);
+}
+
 static void handle_request(client_t *client, const http_request_t *request)
 {
 	http_response_t response = {0};
@@ -60,6 +65,7 @@ static void handle_request(client_t *client, const http_request_t *request)
 	if (!directory)
 	{
 		/* TODO error handling */
+		print_name(client);
 		fprintf(stderr, "No directory for host '%s'\n", request->host);
 		return;
 	}
@@ -82,6 +88,7 @@ static void handle_request(client_t *client, const http_request_t *request)
 		char const * const status_message = http_status_message(response.status);
 		bool send_failed = false;
 
+		print_name(client);
 		fprintf(stderr, "Sending response\n");
 
 		sprintf(buffer,
@@ -115,6 +122,7 @@ static void handle_request(client_t *client, const http_request_t *request)
 send_ended:
 		if (send_failed)
 		{
+			print_name(client);
 			fprintf(stderr, "Send failed\n");
 		}
 	}
@@ -142,15 +150,19 @@ static void receive_request(client_t *client)
 {
 	http_request_t request;
 
+	print_name(client);
 	fprintf(stderr, "Serving client\n");
 
 	if (!http_request_parse(&request, receive_char, &client->socket))
 	{
+		print_name(client);
 		fprintf(stderr, "Invalid request\n");
 		return;
 	}
 
+	print_name(client);
 	fprintf(stderr, "%s %s %s\n", request.method, request.host, request.url);
+
 	handle_request(client, &request);
 
 	http_request_destroy(&request);
@@ -167,16 +179,23 @@ static void wait_for_disconnect(socket_t s)
 }
 
 
-void client_create(client_t *client, socket_t socket, host_entry_t const *locations_begin, host_entry_t const *locations_end)
+void client_create(
+	client_t *client,
+	socket_t socket,
+	host_entry_t const *locations_begin,
+	host_entry_t const *locations_end,
+	char *name)
 {
 	client->socket = socket;
 	client->locations_begin = locations_begin;
 	client->locations_end = locations_end;
+	client->name = name;
 }
 
 void client_destroy(client_t *client)
 {
 	socket_destroy(client->socket);
+	free(client->name);
 }
 
 void client_serve(client_t *client)
@@ -185,5 +204,6 @@ void client_serve(client_t *client)
 	socket_shutdown(client->socket);
 	wait_for_disconnect(client->socket);
 
-	fprintf(stderr, "Client disconnected\n");
+	print_name(client);
+	fprintf(stderr, "Disconnected\n");
 }

@@ -296,7 +296,13 @@ static void handle_client(
 		return;
 	}
 
-	client_create(client, s, locations_begin, locations_end);
+	client_create(
+		client,
+		s,
+		locations_begin,
+		locations_end,
+		string_duplicate("client") /*TODO*/
+		);
 
 	if (!thread_create(&client_thread, client_thread_proc, client))
 	{
