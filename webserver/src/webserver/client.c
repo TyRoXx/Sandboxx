@@ -8,16 +8,19 @@
 
 static void client_log(client_t *client, char const *format, ...)
 {
-	log_t *log = client->log;
+	log_t * const log = client->log;
+	FILE * const out = log_get_out(log);
+	mutex_t * const out_mutex = log_get_out_mutex(log);
+
 	va_list args;
 	va_start(args, format);
-	mutex_lock(&log->out_mutex);
+	mutex_lock(out_mutex);
 
-	fprintf(log->out, "%s: ", client->name);
-	vfprintf(log->out, format, args);
-	fputs("\n", log->out);
+	fprintf(out, "%s: ", client->name);
+	vfprintf(out, format, args);
+	fputs("\n", out);
 
-	mutex_unlock(&log->out_mutex);
+	mutex_unlock(out_mutex);
 	va_end(args);
 }
 

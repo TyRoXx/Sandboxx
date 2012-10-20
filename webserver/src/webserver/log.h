@@ -20,6 +20,8 @@ void log_create(log_t *log, FILE *out);
 void log_destroy(log_t *log);
 void log_write(log_t *log, char const *format, ...);
 void log_writev(log_t *log, char const *format, va_list args);
+FILE *log_get_out(log_t *log);
+mutex_t *log_get_out_mutex(log_t *log);
 
 
 #endif

@@ -31,3 +31,13 @@ void log_writev(log_t *log, char const *format, va_list args)
 
 	mutex_unlock(&log->out_mutex);
 }
+
+FILE *log_get_out(log_t *log)
+{
+	return log->out;
+}
+
+mutex_t *log_get_out_mutex(log_t *log)
+{
+	return &log->out_mutex;
+}
