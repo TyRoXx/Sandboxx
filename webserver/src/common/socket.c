@@ -5,6 +5,7 @@
 #ifdef WS_UNIX
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <unistd.h>
 #endif
 
@@ -75,8 +76,16 @@ bool socket_bind(socket_t socket, uint16_t port)
 
 bool socket_accept(socket_t socket, socket_t *accepted, socket_address_t *address)
 {
+	typedef
+#ifdef WS_WIN32
+		int
+#else
+		socklen_t
+#endif
+		address_size_t;
+
 	struct sockaddr_in temp_address = {0};
-	int temp_address_size = sizeof(temp_address);
+	address_size_t temp_address_size = sizeof(temp_address);
 
 	*accepted = accept(socket, (struct sockaddr *)&temp_address, &temp_address_size);
 	if (*accepted == InvalidSocket)

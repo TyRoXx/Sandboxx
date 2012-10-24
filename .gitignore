@@ -13,3 +13,6 @@
 Debug/
 Release/
 *.suo
+
+*.DS_Store
+

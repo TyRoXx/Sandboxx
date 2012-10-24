@@ -61,14 +61,6 @@ static bool load_location(
 	return (loc->host != 0);
 }
 
-static void destroy_locations(host_entry_t *locations_begin, host_entry_t *locations_end)
-{
-	for (; locations_begin != locations_end; ++locations_begin)
-	{
-		host_entry_destroy(locations_begin);
-	}
-}
-
 static node_plugin_t *load_node_plugin(
 	char const *file_name,
 	node_plugin_manager_t *plugins
