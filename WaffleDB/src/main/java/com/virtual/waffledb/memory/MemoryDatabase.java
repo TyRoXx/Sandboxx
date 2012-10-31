@@ -197,54 +197,7 @@ public class MemoryDatabase implements Database {
     }
 
     public Expression createComparison(final ComparisonType comparison, final Expression left, final Expression right) {
-        return new MemoryExpression() {
-            public Value evaluate(Table source, int currentElement) throws DatabaseRuntimeException {
-                final Value leftValue = ((MemoryExpression) left).evaluate(source, currentElement);
-                final Value rightValue = ((MemoryExpression) right).evaluate(source, currentElement);
-                if (leftValue instanceof IntegerValue
-                        && rightValue instanceof IntegerValue) {
-                    final long leftInteger = ((IntegerValue) leftValue).value;
-                    final long rightInteger = ((IntegerValue) rightValue).value;
-                    boolean result;
-                    switch (comparison) {
-                    case Equal:
-                        result = (leftInteger == rightInteger);
-                        break;
-                    case NotEqual:
-                        result = (leftInteger != rightInteger);
-                        break;
-                    case Less:
-                        result = (leftInteger < rightInteger);
-                        break;
-                    case LessEqual:
-                        result = (leftInteger <= rightInteger);
-                        break;
-                    case Greater:
-                        result = (leftInteger > rightInteger);
-                        break;
-                    case GreaterEqual:
-                        result = (leftInteger >= rightInteger);
-                        break;
-                    default:
-                        throw new NotImplementedException();
-                    }
-                    return (result ? IntegerValue.True : IntegerValue.False);
-                } else {
-                    throw new DatabaseRuntimeException("Only values of the same type can be compared");
-                }
-            }
-
-            public Iterator<Integer> preselectRows(Table source) throws DatabaseRuntimeException {
-                ColumnExpression columnExpression = null;
-                if (left instanceof ColumnExpression) {
-                    columnExpression = (ColumnExpression) left;
-                }
-                if (right instanceof ColumnExpression) {
-                    columnExpression = (ColumnExpression) right;
-                }
-                return null; //TODO
-            }
-        };
+        return new Comparison(comparison, (MemoryExpression) left, (MemoryExpression) right);
     }
 
     public Expression createColumnExpression(final String name, TableDefinition table) {
