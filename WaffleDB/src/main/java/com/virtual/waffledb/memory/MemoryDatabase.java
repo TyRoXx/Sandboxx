@@ -177,6 +177,10 @@ public class MemoryDatabase implements Database {
             public Value evaluate(Table source, int currentElement) throws DatabaseRuntimeException {
                 return new IntegerValue(value);
             }
+
+            public Iterator<Integer> preselectRows(Table source) throws DatabaseRuntimeException {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
         };
     }
 
@@ -184,6 +188,10 @@ public class MemoryDatabase implements Database {
         return new MemoryExpression() {
             public Value evaluate(Table source, int currentElement) throws DatabaseRuntimeException {
                 return new StringValue(value);
+            }
+
+            public Iterator<Integer> preselectRows(Table source) throws DatabaseRuntimeException {
+                throw new UnsupportedOperationException("Not supported yet.");
             }
         };
     }
@@ -225,17 +233,23 @@ public class MemoryDatabase implements Database {
                     throw new DatabaseRuntimeException("Only values of the same type can be compared");
                 }
             }
+
+            public Iterator<Integer> preselectRows(Table source) throws DatabaseRuntimeException {
+                ColumnExpression columnExpression = null;
+                if (left instanceof ColumnExpression) {
+                    columnExpression = (ColumnExpression) left;
+                }
+                if (right instanceof ColumnExpression) {
+                    columnExpression = (ColumnExpression) right;
+                }
+                return null; //TODO
+            }
         };
     }
 
     public Expression createColumnExpression(final String name, TableDefinition table) {
         final Column column = table.columns.get(name);
         final int elementOffset = column.index;
-
-        return new MemoryExpression() {
-            public Value evaluate(Table source, int currentElement) throws DatabaseRuntimeException {
-                return source.getElement(currentElement + elementOffset);
-            }
-        };
+        return new ColumnExpression(elementOffset);
     }
 }
