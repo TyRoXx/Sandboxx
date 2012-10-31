@@ -12,8 +12,12 @@ class Table {
 
     public final TableDefinition definition;
     public final ArrayList<Value> elements = new ArrayList<Value>();
+    public final FastSearch[] fastSearchByColumn;
 
-    public Table(TableDefinition definition) {
+    public Table(TableDefinition definition, FastSearch[] fastSearchByColumn) {
         this.definition = definition;
+        this.fastSearchByColumn = fastSearchByColumn;
+        
+        assert(definition.columns.size() == fastSearchByColumn.length);
     }
 }

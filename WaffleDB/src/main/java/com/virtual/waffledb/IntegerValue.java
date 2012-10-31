@@ -22,4 +22,21 @@ public class IntegerValue implements Value {
     public String toString() {
         return "" + value;
     }
+
+    @Override
+    public int hashCode() {
+        return (int) (value | (value >> 32));
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final IntegerValue other = (IntegerValue) obj;
+        return this.value == other.value;
+    }
 }

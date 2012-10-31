@@ -1,6 +1,8 @@
 package com.virtual.waffledb.memory;
 
+import com.virtual.waffledb.Column;
 import com.virtual.waffledb.ColumnType;
+import com.virtual.waffledb.ComparisonType;
 import com.virtual.waffledb.Database;
 import com.virtual.waffledb.DatabaseException;
 import com.virtual.waffledb.IntegerValue;
@@ -10,6 +12,7 @@ import com.virtual.waffledb.TableDefinition;
 import com.virtual.waffledb.Value;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -33,7 +36,18 @@ public class MemoryDatabase implements Database {
             throw new DatabaseException("Table '" + name
                     + "' already exists");
         }
-        tables.put(name, new Table(definition));
+
+        final FastSearch[] fastSearchByColumn = new FastSearch[definition.columns.size()];
+        for (final Map.Entry<String, Column> columnEntry : definition.columns.entrySet()) {
+            final Column column = columnEntry.getValue();
+            if (column.hasFastSearch) {
+                if (column.isUnique) {
+                    fastSearchByColumn[column.index] = new UniqueHashSearch();
+                }
+            }
+        }
+
+        tables.put(name, new Table(definition, fastSearchByColumn));
     }
 
     public void destroyTable(String name) throws DatabaseException {
@@ -64,7 +78,7 @@ public class MemoryDatabase implements Database {
                     continue;
                 }
             }
-            
+
             for (final Expression resultColumn : memoryQuery.resultColumns) {
                 resultElements.add(resultColumn.evaluate(sourceTable, i));
             }
