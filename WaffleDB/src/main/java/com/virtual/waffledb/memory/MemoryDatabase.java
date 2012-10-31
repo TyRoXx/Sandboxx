@@ -41,17 +41,17 @@ public class MemoryDatabase implements Database {
                     + "' already exists");
         }
 
-        final Index[] fastSearchByColumn = new Index[definition.columns.size()];
+        final Index[] indicesByColumn = new Index[definition.columns.size()];
         for (final Map.Entry<String, Column> columnEntry : definition.columns.entrySet()) {
             final Column column = columnEntry.getValue();
             if (column.hasFastSearch) {
                 if (column.isUnique) {
-                    fastSearchByColumn[column.index] = new UniqueHashIndex();
+                    indicesByColumn[column.index] = new UniqueHashIndex();
                 }
             }
         }
 
-        tables.put(name, new Table(definition, fastSearchByColumn));
+        tables.put(name, new Table(definition, indicesByColumn));
     }
 
     public void destroyTable(String name) throws DatabaseException {

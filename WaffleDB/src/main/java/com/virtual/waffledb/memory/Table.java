@@ -14,13 +14,13 @@ class Table {
     public final TableDefinition definition;
     private final ArrayList<Value> elements = new ArrayList<Value>();
     private final BitSet rowsInUse = new BitSet();
-    private final Index[] fastSearchByColumn;
+    private final Index[] indicesByColumn;
 
-    public Table(TableDefinition definition, Index[] fastSearchByColumn) {
+    public Table(TableDefinition definition, Index[] indicesByColumn) {
         this.definition = definition;
-        this.fastSearchByColumn = fastSearchByColumn;
+        this.indicesByColumn = indicesByColumn;
 
-        assert (definition.columns.size() == fastSearchByColumn.length);
+        assert (definition.columns.size() == indicesByColumn.length);
     }
 
     public int getElementCount() {
@@ -73,7 +73,7 @@ class Table {
         return nextIndex;
     }
 
-    public Index getFastSearchByColumn(int column) {
-        return fastSearchByColumn[column];
+    public Index getIndexByColumn(int column) {
+        return indicesByColumn[column];
     }
 }
