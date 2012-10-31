@@ -14,9 +14,9 @@ public interface Database {
 
     void destroyTable(String name) throws DatabaseException;
 
-    QueryBuilder createQueryBuilder();
+    SelectQueryBuilder createQueryBuilder();
 
-    ResultSet executeQuery(String tableName, QueryBuilder query) throws DatabaseException;
+    ResultSet executeQuery(String tableName, SelectQueryBuilder query) throws DatabaseException;
 
     ColumnType getIntegerType();
 

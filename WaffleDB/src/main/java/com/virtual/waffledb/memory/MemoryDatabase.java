@@ -4,7 +4,7 @@ import com.virtual.waffledb.ColumnType;
 import com.virtual.waffledb.Database;
 import com.virtual.waffledb.DatabaseException;
 import com.virtual.waffledb.IntegerValue;
-import com.virtual.waffledb.QueryBuilder;
+import com.virtual.waffledb.SelectQueryBuilder;
 import com.virtual.waffledb.ResultSet;
 import com.virtual.waffledb.TableDefinition;
 import com.virtual.waffledb.Value;
@@ -42,16 +42,16 @@ public class MemoryDatabase implements Database {
         }
     }
 
-    public QueryBuilder createQueryBuilder() {
-        return new MemoryQueryBuilder();
+    public SelectQueryBuilder createQueryBuilder() {
+        return new MemorySelectQueryBuilder();
     }
 
-    public ResultSet executeQuery(String tableName, QueryBuilder query) throws DatabaseException {
-        if (!(query instanceof MemoryQueryBuilder)) {
+    public ResultSet executeQuery(String tableName, SelectQueryBuilder query) throws DatabaseException {
+        if (!(query instanceof MemorySelectQueryBuilder)) {
             throw new DatabaseException("Memory query expected");
         }
 
-        final MemoryQueryBuilder memoryQuery = (MemoryQueryBuilder) query;
+        final MemorySelectQueryBuilder memoryQuery = (MemorySelectQueryBuilder) query;
         final Table sourceTable = tables.get(tableName);
         final TableDefinition sourceTableDefinition = sourceTable.definition;
         final ArrayList<Value> resultElements = new ArrayList<Value>();

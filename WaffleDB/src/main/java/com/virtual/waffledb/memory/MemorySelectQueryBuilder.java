@@ -4,7 +4,7 @@ import com.virtual.waffledb.Column;
 import com.virtual.waffledb.ComparisonType;
 import com.virtual.waffledb.DatabaseException;
 import com.virtual.waffledb.IntegerValue;
-import com.virtual.waffledb.QueryBuilder;
+import com.virtual.waffledb.SelectQueryBuilder;
 import com.virtual.waffledb.StringValue;
 import com.virtual.waffledb.TableDefinition;
 import com.virtual.waffledb.Value;
@@ -17,7 +17,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  *
  * @author virtual
  */
-class MemoryQueryBuilder implements QueryBuilder {
+class MemorySelectQueryBuilder implements SelectQueryBuilder {
 
     public TableDefinition sourceTable;
     public List<Expression> resultColumns = new ArrayList<Expression>();

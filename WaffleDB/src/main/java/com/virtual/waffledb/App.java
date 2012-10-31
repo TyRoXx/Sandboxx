@@ -19,7 +19,7 @@ public class App {
             db.createTable("lang", new TableDefinition(columns));
             System.out.println("Table created");
 
-            final QueryBuilder query = db.createQueryBuilder();
+            final SelectQueryBuilder query = db.createQueryBuilder();
             query.setSourceTable(db.getTables().get("lang"));
             query.pushColumn("name");
             query.popResultColumn();

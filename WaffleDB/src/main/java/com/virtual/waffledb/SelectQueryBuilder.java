@@ -4,7 +4,7 @@ package com.virtual.waffledb;
  *
  * @author virtual
  */
-public interface QueryBuilder {
+public interface SelectQueryBuilder {
     void setSourceTable(TableDefinition table);
     void popResultColumn();
     void popCondition();
