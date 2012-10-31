@@ -6,11 +6,9 @@ package com.virtual.waffledb;
  */
 public class Column {
 
-    public final String name;
     public final ColumnType type;
 
-    public Column(String name, ColumnType type) {
-        this.name = name;
+    public Column(ColumnType type) {
         this.type = type;
     }
 }
