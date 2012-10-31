@@ -2,7 +2,6 @@ package com.virtual.waffledb.memory;
 
 import com.virtual.waffledb.ComparisonType;
 import com.virtual.waffledb.DatabaseRuntimeException;
-import com.virtual.waffledb.Expression;
 import com.virtual.waffledb.IntegerValue;
 import com.virtual.waffledb.Value;
 import java.util.Iterator;
