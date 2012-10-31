@@ -18,32 +18,33 @@ public class App {
             columns.put("comment", new Column(db.getStringType(), false, false, 1));
             columns.put("number", new Column(db.getIntegerType(), false, true, 2));
             columns.put("id", new Column(db.getIntegerType(), true, true, 3));
-            db.createTable("lang", new TableDefinition(columns));
+            final TableDefinition langTable = new TableDefinition(columns);
+            db.createTable("lang", langTable);
             System.out.println("Table created");
 
             db.insert("lang", new Value[]{
                         new StringValue("Java"), new StringValue(""), new IntegerValue(123), new IntegerValue(0),
                         new StringValue("C++"), new StringValue(""), new IntegerValue(456), new IntegerValue(1),
                         new StringValue("C"), new StringValue(""), new IntegerValue(789), new IntegerValue(2),
-                        new StringValue("JavaScript"), new StringValue(""), new IntegerValue(-123), new IntegerValue(3),
-                    });
+                        new StringValue("JavaScript"), new StringValue(""), new IntegerValue(-123), new IntegerValue(3),});
             db.insert("lang", new Value[]{});
             System.out.println("Values inserted");
 
             final SelectQueryBuilder select = db.createQueryBuilder();
             select.setSourceTable(db.getTables().get("lang"));
-            select.pushColumn("id");
+            select.push(db.createColumnExpression("id", langTable));
             select.popResultColumn();
-            select.pushColumn("name");
+            select.push(db.createColumnExpression("name", langTable));
             select.popResultColumn();
-            select.pushColumn("number");
+            select.push(db.createColumnExpression("number", langTable));
             select.popResultColumn();
-            select.pushColumn("comment");
+            select.push(db.createColumnExpression("comment", langTable));
             select.popResultColumn();
 
-            select.pushColumn("id");
-            select.pushInteger(1);
-            select.pushComparison(ComparisonType.NotEqual);
+            select.push(db.createComparison(
+                    ComparisonType.NotEqual,
+                    db.createLiteral(1),
+                    db.createColumnExpression("id", langTable)));
             select.popCondition();
 
             System.out.println("Select query created");

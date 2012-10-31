@@ -10,12 +10,14 @@ import com.virtual.waffledb.Expression;
 import com.virtual.waffledb.IntegerValue;
 import com.virtual.waffledb.SelectQueryBuilder;
 import com.virtual.waffledb.ResultSet;
+import com.virtual.waffledb.StringValue;
 import com.virtual.waffledb.TableDefinition;
 import com.virtual.waffledb.Value;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  *
@@ -166,6 +168,73 @@ public class MemoryDatabase implements Database {
 
             public void remove() {
                 throw new UnsupportedOperationException("Not supported yet.");
+            }
+        };
+    }
+
+    public Expression createLiteral(final long value) {
+        return new MemoryExpression() {
+            public Value evaluate(Table source, int currentElement) throws DatabaseRuntimeException {
+                return new IntegerValue(value);
+            }
+        };
+    }
+
+    public Expression createLiteral(final String value) {
+        return new MemoryExpression() {
+            public Value evaluate(Table source, int currentElement) throws DatabaseRuntimeException {
+                return new StringValue(value);
+            }
+        };
+    }
+
+    public Expression createComparison(final ComparisonType comparison, final Expression left, final Expression right) {
+        return new MemoryExpression() {
+            public Value evaluate(Table source, int currentElement) throws DatabaseRuntimeException {
+                final Value leftValue = ((MemoryExpression) left).evaluate(source, currentElement);
+                final Value rightValue = ((MemoryExpression) right).evaluate(source, currentElement);
+                if (leftValue instanceof IntegerValue
+                        && rightValue instanceof IntegerValue) {
+                    final long leftInteger = ((IntegerValue) leftValue).value;
+                    final long rightInteger = ((IntegerValue) rightValue).value;
+                    boolean result;
+                    switch (comparison) {
+                        case Equal:
+                            result = (leftInteger == rightInteger);
+                            break;
+                        case NotEqual:
+                            result = (leftInteger != rightInteger);
+                            break;
+                        case Less:
+                            result = (leftInteger < rightInteger);
+                            break;
+                        case LessEqual:
+                            result = (leftInteger <= rightInteger);
+                            break;
+                        case Greater:
+                            result = (leftInteger > rightInteger);
+                            break;
+                        case GreaterEqual:
+                            result = (leftInteger >= rightInteger);
+                            break;
+                        default:
+                            throw new NotImplementedException();
+                    }
+                    return (result ? IntegerValue.True : IntegerValue.False);
+                } else {
+                    throw new DatabaseRuntimeException("Only values of the same type can be compared");
+                }
+            }
+        };
+    }
+
+    public Expression createColumnExpression(final String name, TableDefinition table) {
+        final Column column = table.columns.get(name);
+        final int elementOffset = column.index;
+
+        return new MemoryExpression() {
+            public Value evaluate(Table source, int currentElement) throws DatabaseRuntimeException {
+                return source.getElement(currentElement + elementOffset);
             }
         };
     }

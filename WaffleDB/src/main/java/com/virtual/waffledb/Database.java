@@ -17,12 +17,20 @@ public interface Database {
     SelectQueryBuilder createQueryBuilder();
 
     ResultSet select(String tableName, SelectQueryBuilder query) throws DatabaseException;
-    
+
     void insert(String tableName, Value[] rows) throws DatabaseException;
-    
+
     int delete(String tableName, Expression condition) throws DatabaseException;
 
     ColumnType getIntegerType();
 
     ColumnType getStringType();
+
+    Expression createLiteral(long value);
+
+    Expression createLiteral(String value);
+
+    Expression createComparison(ComparisonType comparison, Expression left, Expression right);
+
+    Expression createColumnExpression(String name, TableDefinition table);
 }
