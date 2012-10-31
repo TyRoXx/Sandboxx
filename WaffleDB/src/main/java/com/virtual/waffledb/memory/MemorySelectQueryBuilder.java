@@ -43,7 +43,7 @@ class MemorySelectQueryBuilder implements SelectQueryBuilder {
 
         expressionStack.push(new MemoryExpression() {
             public Value evaluate(Table source, int currentElement) throws DatabaseRuntimeException {
-                return source.elements.get(currentElement + elementOffset);
+                return source.getElement(currentElement + elementOffset);
             }
         });
     }

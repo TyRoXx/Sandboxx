@@ -24,7 +24,8 @@ public class App {
             db.insert("lang", new Value[]{
                         new StringValue("Java"), new StringValue(""), new IntegerValue(123), new IntegerValue(0),
                         new StringValue("C++"), new StringValue(""), new IntegerValue(456), new IntegerValue(1),
-                        new StringValue("C"), new StringValue(""), new IntegerValue(789), new IntegerValue(2)
+                        new StringValue("C"), new StringValue(""), new IntegerValue(789), new IntegerValue(2),
+                        new StringValue("JavaScript"), new StringValue(""), new IntegerValue(-123), new IntegerValue(3),
                     });
             db.insert("lang", new Value[]{});
             System.out.println("Values inserted");

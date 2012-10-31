@@ -63,7 +63,6 @@ public class MemoryDatabase implements Database {
     }
 
     public ResultSet select(String tableName, SelectQueryBuilder query) throws DatabaseException {
-
         if (!(query instanceof MemorySelectQueryBuilder)) {
             throw new DatabaseException("Memory query expected");
         }
@@ -97,16 +96,28 @@ public class MemoryDatabase implements Database {
             if (rows.length % tableDefinition.columns.size() != 0) {
                 throw new DatabaseException("Cannot insert incomplete row");
             }
-            for (final Value element : rows) {
-                table.elements.add(element);
-            }
+            table.insertRows(rows);
         } catch (DatabaseRuntimeException ex) {
             ex.rethrow();
         }
     }
 
     public int delete(String tableName, Expression condition) throws DatabaseException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        final Table sourceTable = tables.get(tableName);
+        int deletedRowCount = 0;
+
+        try {
+            final Iterator<Integer> affectedRows = getRowIndicesByCondition(sourceTable, (MemoryExpression) condition);
+
+            while (affectedRows.hasNext()) {
+                final int index = affectedRows.next();
+                sourceTable.deleteRow(index);
+            }
+        } catch (DatabaseRuntimeException ex) {
+            ex.rethrow();
+        }
+
+        return deletedRowCount;
     }
 
     public ColumnType getIntegerType() {
@@ -119,19 +130,19 @@ public class MemoryDatabase implements Database {
 
     private static Iterator<Integer> getRowIndicesByCondition(
             final Table table, final MemoryExpression condition) throws DatabaseException {
-        final int size = table.elements.size();
+        final int size = table.getElementCount();
 
         return new Iterator<Integer>() {
             int current = 0;
 
             public boolean hasNext() {
                 for (;;) {
-                    assert(current % size == 0);
-                    
+                    assert (current % table.definition.columns.size() == 0);
+
                     if (current == size) {
                         return false;
                     }
-                    
+
                     if (condition != null) {
                         final Value conditionValue = condition.evaluate(table, current);
                         if ((conditionValue instanceof IntegerValue)
@@ -149,7 +160,7 @@ public class MemoryDatabase implements Database {
 
             public Integer next() {
                 final int result = current;
-                current += table.definition.columns.size();
+                current = table.getNextUsedRowIndex(1 + current / table.definition.columns.size()) * table.definition.columns.size();
                 return result;
             }
 
