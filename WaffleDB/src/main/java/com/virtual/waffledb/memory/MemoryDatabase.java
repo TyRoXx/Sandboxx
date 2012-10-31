@@ -3,9 +3,12 @@ package com.virtual.waffledb.memory;
 import com.virtual.waffledb.ColumnType;
 import com.virtual.waffledb.Database;
 import com.virtual.waffledb.DatabaseException;
+import com.virtual.waffledb.IntegerValue;
 import com.virtual.waffledb.QueryBuilder;
 import com.virtual.waffledb.ResultSet;
 import com.virtual.waffledb.TableDefinition;
+import com.virtual.waffledb.Value;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,8 +46,27 @@ public class MemoryDatabase implements Database {
         return new MemoryQueryBuilder();
     }
 
-    public ResultSet executeQuery(QueryBuilder query) throws DatabaseException {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public ResultSet executeQuery(String tableName, QueryBuilder query) throws DatabaseException {
+        if (!(query instanceof MemoryQueryBuilder)) {
+            throw new DatabaseException("Memory query expected");
+        }
+
+        final MemoryQueryBuilder memoryQuery = (MemoryQueryBuilder) query;
+        final Table sourceTable = tables.get(tableName);
+        final TableDefinition sourceTableDefinition = sourceTable.definition;
+        final ArrayList<Value> resultElements = new ArrayList<Value>();
+
+        for (int i = 0; i < sourceTable.elements.size(); i += sourceTableDefinition.columns.size()) {
+            final Value condition = memoryQuery.condition.evaluate(sourceTable, i);
+            if ((condition instanceof IntegerValue)
+                    && ((IntegerValue) condition).value != 0) {
+                for (final Expression resultColumn : memoryQuery.resultColumns) {
+                    resultElements.add(resultColumn.evaluate(sourceTable, i));
+                }
+            }
+        }
+
+        return new ResultSet(resultElements.toArray(new Value[resultElements.size()]), memoryQuery.resultColumns.size());
     }
 
     public ColumnType getIntegerType() {

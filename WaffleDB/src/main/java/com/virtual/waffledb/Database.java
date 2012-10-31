@@ -16,7 +16,7 @@ public interface Database {
 
     QueryBuilder createQueryBuilder();
 
-    ResultSet executeQuery(QueryBuilder query) throws DatabaseException;
+    ResultSet executeQuery(String tableName, QueryBuilder query) throws DatabaseException;
 
     ColumnType getIntegerType();
 

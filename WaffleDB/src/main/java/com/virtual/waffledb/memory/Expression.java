@@ -1,12 +1,13 @@
 package com.virtual.waffledb.memory;
 
 import com.virtual.waffledb.DatabaseException;
+import com.virtual.waffledb.Value;
 
 /**
  *
  * @author virtual
  */
-public interface Expression {
+interface Expression {
 
-    void evaluate(Table source) throws DatabaseException;
+    Value evaluate(Table source, int currentElement) throws DatabaseException;
 }

@@ -7,8 +7,10 @@ package com.virtual.waffledb;
 public class Column {
 
     public final ColumnType type;
+    public final int index;
 
-    public Column(ColumnType type) {
+    public Column(ColumnType type, int index) {
         this.type = type;
+        this.index = index;
     }
 }

@@ -6,7 +6,7 @@ import com.virtual.waffledb.ColumnType;
  *
  * @author virtual
  */
-public class StringType implements ColumnType {
+class StringType implements ColumnType {
 
     public String getName() {
         return "string";
