@@ -16,3 +16,4 @@ Release/
 
 *.DS_Store
 
+/WaffleDB/target/
