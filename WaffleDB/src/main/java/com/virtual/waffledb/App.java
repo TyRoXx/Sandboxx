@@ -19,20 +19,26 @@ public class App {
             db.createTable("lang", new TableDefinition(columns));
             System.out.println("Table created");
 
-            final SelectQueryBuilder query = db.createQueryBuilder();
-            query.setSourceTable(db.getTables().get("lang"));
-            query.pushColumn("name");
-            query.popResultColumn();
-            query.pushColumn("number");
-            query.popResultColumn();
-            System.out.println("Query created");
-            
-            final ResultSet results = db.executeQuery("lang", query);
-            System.out.println("Query executed");
+            db.insert("lang", new Value[]{
+                        new StringValue("Java"), new IntegerValue(123),
+                        new StringValue("C++"), new IntegerValue(456)
+                    });
+            db.insert("lang", new Value[]{});
+            System.out.println("Values inserted");
+
+            final SelectQueryBuilder select = db.createQueryBuilder();
+            select.setSourceTable(db.getTables().get("lang"));
+            select.pushColumn("name");
+            select.popResultColumn();
+            select.pushColumn("number");
+            select.popResultColumn();
+            System.out.println("Select query created");
+
+            final ResultSet results = db.select("lang", select);
+            System.out.println("Select query executed");
             System.out.println(results.getRowCount() + " rows");
-            
-            for (int i = 0; i < results.elements.length; i += results.rowLength)
-            {
+
+            for (int i = 0; i < results.elements.length; i += results.rowLength) {
                 System.out.print(results.elements[i]);
                 System.out.print(", ");
                 System.out.print(results.elements[i + 1]);

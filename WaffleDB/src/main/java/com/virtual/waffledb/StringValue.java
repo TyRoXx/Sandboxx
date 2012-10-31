@@ -14,4 +14,9 @@ public class StringValue implements Value {
     public void accept(ValueVisitor visitor) {
         visitor.visit(this);
     }
+
+    @Override
+    public String toString() {
+        return value;
+    }
 }

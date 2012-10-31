@@ -46,7 +46,7 @@ public class MemoryDatabase implements Database {
         return new MemorySelectQueryBuilder();
     }
 
-    public ResultSet executeQuery(String tableName, SelectQueryBuilder query) throws DatabaseException {
+    public ResultSet select(String tableName, SelectQueryBuilder query) throws DatabaseException {
         if (!(query instanceof MemorySelectQueryBuilder)) {
             throw new DatabaseException("Memory query expected");
         }
@@ -57,16 +57,31 @@ public class MemoryDatabase implements Database {
         final ArrayList<Value> resultElements = new ArrayList<Value>();
 
         for (int i = 0; i < sourceTable.elements.size(); i += sourceTableDefinition.columns.size()) {
-            final Value condition = memoryQuery.condition.evaluate(sourceTable, i);
-            if ((condition instanceof IntegerValue)
-                    && ((IntegerValue) condition).value != 0) {
-                for (final Expression resultColumn : memoryQuery.resultColumns) {
-                    resultElements.add(resultColumn.evaluate(sourceTable, i));
+            if (memoryQuery.condition != null) {
+                final Value condition = memoryQuery.condition.evaluate(sourceTable, i);
+                if ((condition instanceof IntegerValue)
+                        && ((IntegerValue) condition).value == 0) {
+                    continue;
                 }
+            }
+            
+            for (final Expression resultColumn : memoryQuery.resultColumns) {
+                resultElements.add(resultColumn.evaluate(sourceTable, i));
             }
         }
 
         return new ResultSet(resultElements.toArray(new Value[resultElements.size()]), memoryQuery.resultColumns.size());
+    }
+
+    public void insert(String tableName, Value[] rows) throws DatabaseException {
+        final Table table = tables.get(tableName);
+        final TableDefinition tableDefinition = table.definition;
+        if (rows.length % tableDefinition.columns.size() != 0) {
+            throw new DatabaseException("Cannot insert incomplete row");
+        }
+        for (final Value element : rows) {
+            table.elements.add(element);
+        }
     }
 
     public ColumnType getIntegerType() {

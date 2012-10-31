@@ -16,7 +16,9 @@ public interface Database {
 
     SelectQueryBuilder createQueryBuilder();
 
-    ResultSet executeQuery(String tableName, SelectQueryBuilder query) throws DatabaseException;
+    ResultSet select(String tableName, SelectQueryBuilder query) throws DatabaseException;
+    
+    void insert(String tableName, Value[] rows) throws DatabaseException;
 
     ColumnType getIntegerType();
 
