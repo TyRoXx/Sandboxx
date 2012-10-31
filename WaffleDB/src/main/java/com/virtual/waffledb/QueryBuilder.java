@@ -6,9 +6,9 @@ package com.virtual.waffledb;
  */
 public interface QueryBuilder {
     void setSourceTable(String name);
-    void addResultColumn(String columnName);
+    void popResultColumn();
     void popCondition();
-    void pushColumn(Column column);
+    void pushColumn(String columnName);
     void pushInteger(long value);
     void pushString(String value);
     void pushComparison(ComparisonType type);

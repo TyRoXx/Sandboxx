@@ -4,6 +4,7 @@ import com.virtual.waffledb.ColumnType;
 import com.virtual.waffledb.Database;
 import com.virtual.waffledb.DatabaseException;
 import com.virtual.waffledb.QueryBuilder;
+import com.virtual.waffledb.ResultSet;
 import com.virtual.waffledb.TableDefinition;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +41,10 @@ public class MemoryDatabase implements Database {
 
     public QueryBuilder createQueryBuilder() {
         return new MemoryQueryBuilder();
+    }
+
+    public ResultSet executeQuery(QueryBuilder query) throws DatabaseException {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public ColumnType getIntegerType() {

@@ -13,10 +13,12 @@ public interface Database {
     void createTable(String name, TableDefinition definition) throws DatabaseException;
 
     void destroyTable(String name) throws DatabaseException;
-    
+
     QueryBuilder createQueryBuilder();
-    
+
+    ResultSet executeQuery(QueryBuilder query) throws DatabaseException;
+
     ColumnType getIntegerType();
-    
+
     ColumnType getStringType();
 }
