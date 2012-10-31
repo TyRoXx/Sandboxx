@@ -8,13 +8,13 @@ public class Column {
 
     public final ColumnType type;
     public final boolean isUnique;
-    public final boolean hasFastSearch;
+    public final boolean isIndexed;
     public final int index;
 
-    public Column(ColumnType type, boolean isUnique, boolean hasFastSearch, int index) {
+    public Column(ColumnType type, boolean isUnique, boolean isIndexed, int index) {
         this.type = type;
         this.isUnique = isUnique;
-        this.hasFastSearch = hasFastSearch;
+        this.isIndexed = isIndexed;
         this.index = index;
     }
 }

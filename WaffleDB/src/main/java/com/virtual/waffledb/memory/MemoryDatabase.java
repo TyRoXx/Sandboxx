@@ -44,10 +44,10 @@ public class MemoryDatabase implements Database {
         final Index[] indicesByColumn = new Index[definition.columns.size()];
         for (final Map.Entry<String, Column> columnEntry : definition.columns.entrySet()) {
             final Column column = columnEntry.getValue();
-            if (column.hasFastSearch) {
-                if (column.isUnique) {
-                    indicesByColumn[column.index] = new UniqueHashIndex();
-                }
+            if (column.isIndexed) {
+                indicesByColumn[column.index] = (column.isUnique
+                        ? new UniqueHashIndex()
+                        : new SortedIndex());
             }
         }
 
@@ -207,26 +207,26 @@ public class MemoryDatabase implements Database {
                     final long rightInteger = ((IntegerValue) rightValue).value;
                     boolean result;
                     switch (comparison) {
-                        case Equal:
-                            result = (leftInteger == rightInteger);
-                            break;
-                        case NotEqual:
-                            result = (leftInteger != rightInteger);
-                            break;
-                        case Less:
-                            result = (leftInteger < rightInteger);
-                            break;
-                        case LessEqual:
-                            result = (leftInteger <= rightInteger);
-                            break;
-                        case Greater:
-                            result = (leftInteger > rightInteger);
-                            break;
-                        case GreaterEqual:
-                            result = (leftInteger >= rightInteger);
-                            break;
-                        default:
-                            throw new NotImplementedException();
+                    case Equal:
+                        result = (leftInteger == rightInteger);
+                        break;
+                    case NotEqual:
+                        result = (leftInteger != rightInteger);
+                        break;
+                    case Less:
+                        result = (leftInteger < rightInteger);
+                        break;
+                    case LessEqual:
+                        result = (leftInteger <= rightInteger);
+                        break;
+                    case Greater:
+                        result = (leftInteger > rightInteger);
+                        break;
+                    case GreaterEqual:
+                        result = (leftInteger >= rightInteger);
+                        break;
+                    default:
+                        throw new NotImplementedException();
                     }
                     return (result ? IntegerValue.True : IntegerValue.False);
                 } else {
