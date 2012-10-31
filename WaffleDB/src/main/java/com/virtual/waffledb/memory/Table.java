@@ -14,9 +14,9 @@ class Table {
     public final TableDefinition definition;
     private final ArrayList<Value> elements = new ArrayList<Value>();
     private final BitSet rowsInUse = new BitSet();
-    private final FastSearch[] fastSearchByColumn;
+    private final Index[] fastSearchByColumn;
 
-    public Table(TableDefinition definition, FastSearch[] fastSearchByColumn) {
+    public Table(TableDefinition definition, Index[] fastSearchByColumn) {
         this.definition = definition;
         this.fastSearchByColumn = fastSearchByColumn;
 
@@ -73,7 +73,7 @@ class Table {
         return nextIndex;
     }
 
-    public FastSearch getFastSearchByColumn(int column) {
+    public Index getFastSearchByColumn(int column) {
         return fastSearchByColumn[column];
     }
 }

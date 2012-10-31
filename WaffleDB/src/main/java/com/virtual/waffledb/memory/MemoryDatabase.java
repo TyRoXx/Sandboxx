@@ -41,12 +41,12 @@ public class MemoryDatabase implements Database {
                     + "' already exists");
         }
 
-        final FastSearch[] fastSearchByColumn = new FastSearch[definition.columns.size()];
+        final Index[] fastSearchByColumn = new Index[definition.columns.size()];
         for (final Map.Entry<String, Column> columnEntry : definition.columns.entrySet()) {
             final Column column = columnEntry.getValue();
             if (column.hasFastSearch) {
                 if (column.isUnique) {
-                    fastSearchByColumn[column.index] = new UniqueHashSearch();
+                    fastSearchByColumn[column.index] = new UniqueHashIndex();
                 }
             }
         }

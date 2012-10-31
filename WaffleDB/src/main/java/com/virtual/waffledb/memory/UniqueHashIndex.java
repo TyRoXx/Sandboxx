@@ -9,7 +9,7 @@ import java.util.Iterator;
  *
  * @author virtual
  */
-public class UniqueHashSearch implements FastSearch {
+public class UniqueHashIndex implements Index {
 
     private final HashMap<Value, Integer> entries = new HashMap<Value, Integer>();
 
