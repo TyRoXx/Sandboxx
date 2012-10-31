@@ -20,4 +20,8 @@ class Table {
         
         assert(definition.columns.size() == fastSearchByColumn.length);
     }
+    
+    public int getRowCount() {
+        return (elements.size() / definition.columns.size());
+    }
 }

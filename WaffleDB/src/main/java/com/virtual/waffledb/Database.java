@@ -19,6 +19,8 @@ public interface Database {
     ResultSet select(String tableName, SelectQueryBuilder query) throws DatabaseException;
     
     void insert(String tableName, Value[] rows) throws DatabaseException;
+    
+    int delete(String tableName, Expression condition) throws DatabaseException;
 
     ColumnType getIntegerType();
 

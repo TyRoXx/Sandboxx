@@ -5,6 +5,8 @@ import com.virtual.waffledb.ColumnType;
 import com.virtual.waffledb.ComparisonType;
 import com.virtual.waffledb.Database;
 import com.virtual.waffledb.DatabaseException;
+import com.virtual.waffledb.DatabaseRuntimeException;
+import com.virtual.waffledb.Expression;
 import com.virtual.waffledb.IntegerValue;
 import com.virtual.waffledb.SelectQueryBuilder;
 import com.virtual.waffledb.ResultSet;
@@ -61,6 +63,7 @@ public class MemoryDatabase implements Database {
     }
 
     public ResultSet select(String tableName, SelectQueryBuilder query) throws DatabaseException {
+
         if (!(query instanceof MemorySelectQueryBuilder)) {
             throw new DatabaseException("Memory query expected");
         }
@@ -70,32 +73,40 @@ public class MemoryDatabase implements Database {
         final TableDefinition sourceTableDefinition = sourceTable.definition;
         final ArrayList<Value> resultElements = new ArrayList<Value>();
 
-        for (int i = 0; i < sourceTable.elements.size(); i += sourceTableDefinition.columns.size()) {
-            if (memoryQuery.condition != null) {
-                final Value condition = memoryQuery.condition.evaluate(sourceTable, i);
-                if ((condition instanceof IntegerValue)
-                        && ((IntegerValue) condition).value == 0) {
-                    continue;
+        try {
+            final Iterator<Integer> affectedRows = getRowIndicesByCondition(sourceTable, memoryQuery.condition);
+
+            while (affectedRows.hasNext()) {
+                final int index = affectedRows.next();
+
+                for (final MemoryExpression resultColumn : memoryQuery.resultColumns) {
+                    resultElements.add(resultColumn.evaluate(sourceTable, index));
                 }
             }
-
-            for (final Expression resultColumn : memoryQuery.resultColumns) {
-                resultElements.add(resultColumn.evaluate(sourceTable, i));
-            }
+        } catch (DatabaseRuntimeException ex) {
+            ex.rethrow();
         }
 
         return new ResultSet(resultElements.toArray(new Value[resultElements.size()]), memoryQuery.resultColumns.size());
     }
 
     public void insert(String tableName, Value[] rows) throws DatabaseException {
-        final Table table = tables.get(tableName);
-        final TableDefinition tableDefinition = table.definition;
-        if (rows.length % tableDefinition.columns.size() != 0) {
-            throw new DatabaseException("Cannot insert incomplete row");
+        try {
+            final Table table = tables.get(tableName);
+            final TableDefinition tableDefinition = table.definition;
+            if (rows.length % tableDefinition.columns.size() != 0) {
+                throw new DatabaseException("Cannot insert incomplete row");
+            }
+            for (final Value element : rows) {
+                table.elements.add(element);
+            }
+        } catch (DatabaseRuntimeException ex) {
+            ex.rethrow();
         }
-        for (final Value element : rows) {
-            table.elements.add(element);
-        }
+    }
+
+    public int delete(String tableName, Expression condition) throws DatabaseException {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public ColumnType getIntegerType() {
@@ -104,5 +115,47 @@ public class MemoryDatabase implements Database {
 
     public ColumnType getStringType() {
         return new StringType();
+    }
+
+    private static Iterator<Integer> getRowIndicesByCondition(
+            final Table table, final MemoryExpression condition) throws DatabaseException {
+        final int size = table.elements.size();
+
+        return new Iterator<Integer>() {
+            int current = 0;
+
+            public boolean hasNext() {
+                for (;;) {
+                    assert(current % size == 0);
+                    
+                    if (current == size) {
+                        return false;
+                    }
+                    
+                    if (condition != null) {
+                        final Value conditionValue = condition.evaluate(table, current);
+                        if ((conditionValue instanceof IntegerValue)
+                                && ((IntegerValue) conditionValue).value != 0) {
+                            return true;
+                        } else {
+                            next();
+                            continue;
+                        }
+                    }
+
+                    return true;
+                }
+            }
+
+            public Integer next() {
+                final int result = current;
+                current += table.definition.columns.size();
+                return result;
+            }
+
+            public void remove() {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+        };
     }
 }

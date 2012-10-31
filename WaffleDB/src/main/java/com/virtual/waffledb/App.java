@@ -23,7 +23,8 @@ public class App {
 
             db.insert("lang", new Value[]{
                         new StringValue("Java"), new StringValue(""), new IntegerValue(123), new IntegerValue(0),
-                        new StringValue("C++"), new StringValue(""), new IntegerValue(456), new IntegerValue(1)
+                        new StringValue("C++"), new StringValue(""), new IntegerValue(456), new IntegerValue(1),
+                        new StringValue("C"), new StringValue(""), new IntegerValue(789), new IntegerValue(2)
                     });
             db.insert("lang", new Value[]{});
             System.out.println("Values inserted");
@@ -41,7 +42,7 @@ public class App {
 
             select.pushColumn("id");
             select.pushInteger(1);
-            select.pushComparison(ComparisonType.Equal);
+            select.pushComparison(ComparisonType.NotEqual);
             select.popCondition();
 
             System.out.println("Select query created");

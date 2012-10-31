@@ -3,6 +3,7 @@ package com.virtual.waffledb.memory;
 import com.virtual.waffledb.Column;
 import com.virtual.waffledb.ComparisonType;
 import com.virtual.waffledb.DatabaseException;
+import com.virtual.waffledb.DatabaseRuntimeException;
 import com.virtual.waffledb.IntegerValue;
 import com.virtual.waffledb.SelectQueryBuilder;
 import com.virtual.waffledb.StringValue;
@@ -20,9 +21,9 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 class MemorySelectQueryBuilder implements SelectQueryBuilder {
 
     public TableDefinition sourceTable;
-    public List<Expression> resultColumns = new ArrayList<Expression>();
-    public Expression condition;
-    private Stack<Expression> expressionStack = new Stack<Expression>();
+    public List<MemoryExpression> resultColumns = new ArrayList<MemoryExpression>();
+    public MemoryExpression condition;
+    private Stack<MemoryExpression> expressionStack = new Stack<MemoryExpression>();
 
     public void setSourceTable(TableDefinition table) {
         this.sourceTable = table;
@@ -40,34 +41,34 @@ class MemorySelectQueryBuilder implements SelectQueryBuilder {
         final Column column = sourceTable.columns.get(columnName);
         final int elementOffset = column.index;
 
-        expressionStack.push(new Expression() {
-            public Value evaluate(Table source, int currentElement) throws DatabaseException {
+        expressionStack.push(new MemoryExpression() {
+            public Value evaluate(Table source, int currentElement) throws DatabaseRuntimeException {
                 return source.elements.get(currentElement + elementOffset);
             }
         });
     }
 
     public void pushInteger(final long value) {
-        expressionStack.push(new Expression() {
-            public Value evaluate(Table source, int currentElement) throws DatabaseException {
+        expressionStack.push(new MemoryExpression() {
+            public Value evaluate(Table source, int currentElement) throws DatabaseRuntimeException {
                 return new IntegerValue(value);
             }
         });
     }
 
     public void pushString(final String value) {
-        expressionStack.push(new Expression() {
-            public Value evaluate(Table source, int currentElement) throws DatabaseException {
+        expressionStack.push(new MemoryExpression() {
+            public Value evaluate(Table source, int currentElement) throws DatabaseRuntimeException {
                 return new StringValue(value);
             }
         });
     }
 
     public void pushComparison(final ComparisonType type) {
-        final Expression right = expressionStack.pop();
-        final Expression left = expressionStack.pop();
-        final Expression comparison = new Expression() {
-            public Value evaluate(Table source, int currentElement) throws DatabaseException {
+        final MemoryExpression right = expressionStack.pop();
+        final MemoryExpression left = expressionStack.pop();
+        final MemoryExpression comparison = new MemoryExpression() {
+            public Value evaluate(Table source, int currentElement) throws DatabaseRuntimeException {
                 final Value leftValue = left.evaluate(source, currentElement);
                 final Value rightValue = right.evaluate(source, currentElement);
                 if (leftValue instanceof IntegerValue
@@ -99,7 +100,7 @@ class MemorySelectQueryBuilder implements SelectQueryBuilder {
                     }
                     return (result ? IntegerValue.True : IntegerValue.False);
                 } else {
-                    throw new DatabaseException("Only values of the same type can be compared");
+                    throw new DatabaseRuntimeException("Only values of the same type can be compared");
                 }
             }
         };
