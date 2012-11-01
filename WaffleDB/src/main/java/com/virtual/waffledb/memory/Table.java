@@ -1,5 +1,7 @@
 package com.virtual.waffledb.memory;
 
+import com.virtual.waffledb.ColumnType;
+import com.virtual.waffledb.DatabaseException;
 import com.virtual.waffledb.TableDefinition;
 import com.virtual.waffledb.Value;
 import java.util.ArrayList;
@@ -35,7 +37,9 @@ class Table {
         return (elements.size() / definition.columns.size());
     }
 
-    public void insertRows(Value[] inserted) {
+    public void insertRows(Value[] inserted) throws DatabaseException {
+        //TODO: make exception safe
+        
         final int rowWidth = definition.columns.size();
         assert (inserted.length % rowWidth == 0);
 
@@ -46,16 +50,28 @@ class Table {
             if (endOfUsedRange < 0
                     || (endOfUsedRange >= getRowCount())) {
                 for (; e != inserted.length; ++e) {
-                    elements.add(inserted[e]);
+                    final Value value = inserted[e];
+                    checkColumnType(e, value);
+                    elements.add(value);
                     rowsInUse.set(e % rowWidth, true);
                 }
             } else {
                 for (int i = 0; i < rowWidth; ++i, ++e) {
-                    elements.set(endOfUsedRange * rowWidth + i, inserted[e]);
+                    final Value value = inserted[e];
+                    checkColumnType(e, value);
+                    elements.set(endOfUsedRange * rowWidth + i, value);
                 }
                 rowsInUse.set(endOfUsedRange, true);
                 ++endOfUsedRange;
             }
+        }
+    }
+
+    private void checkColumnType(int columnOffset, Value value) throws DatabaseException {
+        final int columnIndex = columnOffset % definition.columnsByIndex.length;
+        final ColumnType requiredType = definition.columnsByIndex[columnIndex].type;
+        if (!requiredType.isPossibleValue(value)) {
+            throw new DatabaseException("Invalid value for column " + columnIndex);
         }
     }
 

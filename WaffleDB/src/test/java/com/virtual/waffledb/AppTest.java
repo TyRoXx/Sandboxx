@@ -118,6 +118,30 @@ public class AppTest
                 assertEquals(0, results.getRowCount());
                 assertEquals(1, results.rowLength);
             }
+
+            final int deleted = db.delete(table, null);
+            assertEquals(3, deleted);
+        }
+
+        {
+            final Value[] invalidValues = new Value[]
+            {
+                new IntegerValue(11),
+                new IntegerValue(123), //String expected
+                new StringValue("hallo"), //Integer expected
+                new IntegerValue(0),
+            };
+
+            boolean caught = false;
+            try
+            {
+                db.insert(table, invalidValues);
+            }
+            catch (DatabaseException ex) {
+                caught = true;
+            }
+
+            assertTrue(caught);
         }
     }
 }

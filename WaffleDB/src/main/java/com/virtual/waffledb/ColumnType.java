@@ -6,5 +6,5 @@ package com.virtual.waffledb;
  */
 public interface ColumnType {
     String getName();
-    
+    boolean isPossibleValue(Value value);
 }
