@@ -32,14 +32,10 @@ public class App {
 
             final SelectQueryBuilder select = db.createQueryBuilder();
             select.setSourceTable(db.getTables().get("lang"));
-            select.push(db.createColumnExpression("id", langTable));
-            select.popResultColumn();
-            select.push(db.createColumnExpression("name", langTable));
-            select.popResultColumn();
-            select.push(db.createColumnExpression("number", langTable));
-            select.popResultColumn();
-            select.push(db.createColumnExpression("comment", langTable));
-            select.popResultColumn();
+            select.addResultColumn(db.createColumnExpression("id", langTable));
+            select.addResultColumn(db.createColumnExpression("name", langTable));
+            select.addResultColumn(db.createColumnExpression("number", langTable));
+            select.addResultColumn(db.createColumnExpression("comment", langTable));
 
             //id != 1
             select.addCondition(new LiteralComparison(3, ComparisonType.NotEqual, new IntegerValue(1)));
