@@ -94,6 +94,7 @@ public class AppTest
             {
                 final ResultSet results = db.select(table, query);
                 assertEquals(3, results.getRowCount());
+                assertEquals(1, results.rowLength);
                 assertTrue(Arrays.equals(new Value[]{
                             new IntegerValue(0), new IntegerValue(1), new IntegerValue(2)},
                         results.elements));
@@ -104,9 +105,18 @@ public class AppTest
             {
                 final ResultSet results = db.select(table, query);
                 assertEquals(2, results.getRowCount());
+                assertEquals(1, results.rowLength);
                 assertTrue(Arrays.equals(new Value[]{
                             new IntegerValue(0), new IntegerValue(2)},
                         results.elements));
+            }
+
+            query.addCondition(new LiteralComparison(0, ComparisonType.Equal, new IntegerValue(999)));
+
+            {
+                final ResultSet results = db.select(table, query);
+                assertEquals(0, results.getRowCount());
+                assertEquals(1, results.rowLength);
             }
         }
     }
