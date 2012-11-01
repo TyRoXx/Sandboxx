@@ -41,11 +41,10 @@ public class App {
             select.push(db.createColumnExpression("comment", langTable));
             select.popResultColumn();
 
-            select.push(db.createComparison(
-                    ComparisonType.NotEqual,
-                    db.createLiteral(1),
-                    db.createColumnExpression("id", langTable)));
-            select.popCondition();
+            //id != 1
+            select.addCondition(new LiteralComparison(3, ComparisonType.NotEqual, new IntegerValue(1)));
+
+            select.addCondition(new LiteralComparison(3, ComparisonType.NotEqual, new IntegerValue(3)));
 
             System.out.println("Select query created");
 

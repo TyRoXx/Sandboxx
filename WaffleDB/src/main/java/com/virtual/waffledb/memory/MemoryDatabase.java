@@ -3,13 +3,16 @@ package com.virtual.waffledb.memory;
 import com.virtual.waffledb.Column;
 import com.virtual.waffledb.ColumnType;
 import com.virtual.waffledb.ComparisonType;
+import com.virtual.waffledb.Condition;
 import com.virtual.waffledb.Database;
 import com.virtual.waffledb.DatabaseException;
 import com.virtual.waffledb.DatabaseRuntimeException;
 import com.virtual.waffledb.Expression;
 import com.virtual.waffledb.IntegerValue;
+import com.virtual.waffledb.LiteralComparison;
 import com.virtual.waffledb.SelectQueryBuilder;
 import com.virtual.waffledb.ResultSet;
+import com.virtual.waffledb.Selector;
 import com.virtual.waffledb.StringValue;
 import com.virtual.waffledb.TableDefinition;
 import com.virtual.waffledb.Value;
@@ -17,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  *
@@ -70,11 +74,10 @@ public class MemoryDatabase implements Database {
 
         final MemorySelectQueryBuilder memoryQuery = (MemorySelectQueryBuilder) query;
         final Table sourceTable = tables.get(tableName);
-        final TableDefinition sourceTableDefinition = sourceTable.definition;
         final ArrayList<Value> resultElements = new ArrayList<Value>();
 
         try {
-            final Iterator<Integer> affectedRows = getRowIndicesByCondition(sourceTable, memoryQuery.condition);
+            final Iterator<Integer> affectedRows = getRowIndicesBySelector(sourceTable, new Selector(memoryQuery.conditions.toArray(new Condition[memoryQuery.conditions.size()])));
 
             while (affectedRows.hasNext()) {
                 final int index = affectedRows.next();
@@ -167,6 +170,74 @@ public class MemoryDatabase implements Database {
 
             public void remove() {
                 throw new UnsupportedOperationException("Not supported yet.");
+            }
+        };
+    }
+
+    private static Iterator<Integer> getRowIndicesBySelector(
+            final Table table, final Selector selector) throws DatabaseException {
+        final int size = table.getElementCount();
+
+        return new Iterator<Integer>() {
+            int current = 0;
+
+            public boolean hasNext() {
+                for (;;) {
+                    assert (current % table.definition.columns.size() == 0);
+
+                    if (current == size) {
+                        return false;
+                    }
+
+                    if (selector == null) {
+                        return true;
+                    }
+
+                    boolean fulfillsConditions = true;
+
+                    for (final Condition condition : selector.conditions) {
+                        final Value conditionValue = evaluateCondition(condition, table, current);
+                        if (!(conditionValue instanceof IntegerValue)
+                                || ((IntegerValue) conditionValue).value == 0) {
+                            fulfillsConditions = false;
+                            break;
+                        }
+                    }
+
+                    if (fulfillsConditions) {
+                        return true;
+                    } else {
+                        next();
+                    }
+                }
+            }
+
+            public Integer next() {
+                final int result = current;
+                current = table.getNextUsedRowIndex(1 + current / table.definition.columns.size()) * table.definition.columns.size();
+                return result;
+            }
+
+            public void remove() {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            private Value evaluateCondition(Condition condition, Table table, int current) {
+                final LiteralComparison literalCon = (LiteralComparison) condition;
+                final IntegerValue literal = (IntegerValue) literalCon.literal;
+                final IntegerValue element = (IntegerValue) table.getElement(current + literalCon.columnIndex);
+
+                final long left = element.value;
+                final long right = literal.value;
+                boolean result;
+                switch (literalCon.type) {
+                case NotEqual:
+                    result = (left != right);
+                    break;
+                default:
+                    throw new NotImplementedException();
+                }
+                return (result ? IntegerValue.True : IntegerValue.False);
             }
         };
     }

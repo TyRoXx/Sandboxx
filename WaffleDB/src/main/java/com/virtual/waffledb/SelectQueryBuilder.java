@@ -7,6 +7,6 @@ package com.virtual.waffledb;
 public interface SelectQueryBuilder {
     void setSourceTable(TableDefinition table);
     void popResultColumn();
-    void popCondition();
+    void addCondition(Condition condition);
     void push(Expression expression);
 }

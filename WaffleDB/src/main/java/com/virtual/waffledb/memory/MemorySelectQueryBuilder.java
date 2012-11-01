@@ -2,6 +2,7 @@ package com.virtual.waffledb.memory;
 
 import com.virtual.waffledb.Column;
 import com.virtual.waffledb.ComparisonType;
+import com.virtual.waffledb.Condition;
 import com.virtual.waffledb.DatabaseException;
 import com.virtual.waffledb.DatabaseRuntimeException;
 import com.virtual.waffledb.Expression;
@@ -22,9 +23,9 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 class MemorySelectQueryBuilder implements SelectQueryBuilder {
 
     public TableDefinition sourceTable;
-    public List<MemoryExpression> resultColumns = new ArrayList<MemoryExpression>();
-    public MemoryExpression condition;
-    private Stack<MemoryExpression> expressionStack = new Stack<MemoryExpression>();
+    public final List<MemoryExpression> resultColumns = new ArrayList<MemoryExpression>();
+    public final ArrayList<Condition> conditions = new ArrayList<Condition>();
+    private final Stack<MemoryExpression> expressionStack = new Stack<MemoryExpression>();
 
     public void setSourceTable(TableDefinition table) {
         this.sourceTable = table;
@@ -34,8 +35,8 @@ class MemorySelectQueryBuilder implements SelectQueryBuilder {
         resultColumns.add(expressionStack.pop());
     }
 
-    public void popCondition() {
-        condition = expressionStack.pop();
+    public void addCondition(Condition condition) {
+        conditions.add(condition);
     }
 
     public void push(Expression expression) {
