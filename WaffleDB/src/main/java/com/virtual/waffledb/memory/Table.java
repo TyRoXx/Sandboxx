@@ -61,6 +61,8 @@ class Table {
 
     public void deleteRow(int rowIndex) {
         rowsInUse.set(rowIndex, false);
+
+        assert (getNextUsedRowIndex(rowIndex) != rowIndex);
     }
 
     public int getNextUsedRowIndex(int rowIndex) {

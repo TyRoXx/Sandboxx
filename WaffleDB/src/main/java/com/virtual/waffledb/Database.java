@@ -20,7 +20,7 @@ public interface Database {
 
     void insert(String tableName, Value[] rows) throws DatabaseException;
 
-    int delete(String tableName, Expression condition) throws DatabaseException;
+    int delete(String tableName, Selector conditions) throws DatabaseException;
 
     ColumnType getIntegerType();
 

@@ -83,7 +83,7 @@ public class MemoryDatabase implements Database {
                 final int index = affectedRows.next();
 
                 for (final MemoryExpression resultColumn : memoryQuery.resultColumns) {
-                    resultElements.add(resultColumn.evaluate(sourceTable, index));
+                    resultElements.add(resultColumn.evaluate(sourceTable, index * sourceTable.definition.columns.size()));
                 }
             }
         } catch (DatabaseRuntimeException ex) {
@@ -106,16 +106,19 @@ public class MemoryDatabase implements Database {
         }
     }
 
-    public int delete(String tableName, Expression condition) throws DatabaseException {
+    public int delete(String tableName, Selector conditions) throws DatabaseException {
         final Table sourceTable = tables.get(tableName);
         int deletedRowCount = 0;
 
         try {
-            final Iterator<Integer> affectedRows = getRowIndicesByCondition(sourceTable, (MemoryExpression) condition);
+            final Iterator<Integer> affectedRows = getRowIndicesBySelector(
+                    sourceTable,
+                    conditions);
 
             while (affectedRows.hasNext()) {
                 final int index = affectedRows.next();
                 sourceTable.deleteRow(index);
+                ++deletedRowCount;
             }
         } catch (DatabaseRuntimeException ex) {
             ex.rethrow();
@@ -132,60 +135,21 @@ public class MemoryDatabase implements Database {
         return new StringType();
     }
 
-    private static Iterator<Integer> getRowIndicesByCondition(
-            final Table table, final MemoryExpression condition) throws DatabaseException {
-        final int size = table.getElementCount();
-
-        return new Iterator<Integer>() {
-            int current = 0;
-
-            public boolean hasNext() {
-                for (;;) {
-                    assert (current % table.definition.columns.size() == 0);
-
-                    if (current == size) {
-                        return false;
-                    }
-
-                    if (condition != null) {
-                        final Value conditionValue = condition.evaluate(table, current);
-                        if ((conditionValue instanceof IntegerValue)
-                                && ((IntegerValue) conditionValue).value != 0) {
-                            return true;
-                        } else {
-                            next();
-                            continue;
-                        }
-                    }
-
-                    return true;
-                }
-            }
-
-            public Integer next() {
-                final int result = current;
-                current = table.getNextUsedRowIndex(1 + current / table.definition.columns.size()) * table.definition.columns.size();
-                return result;
-            }
-
-            public void remove() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-        };
-    }
-
     private static Iterator<Integer> getRowIndicesBySelector(
             final Table table, final Selector selector) throws DatabaseException {
-        final int size = table.getElementCount();
+        final int size = table.getRowCount();
 
         return new Iterator<Integer>() {
-            int current = 0;
+            int current = -1;
 
             public boolean hasNext() {
                 for (;;) {
-                    assert (current % table.definition.columns.size() == 0);
+                    current = table.getNextUsedRowIndex(1 + current);
 
-                    if (current == size) {
+                    assert (current >= 0);
+                    assert (current <= size);
+
+                    if (current >= size) {
                         return false;
                     }
 
@@ -206,26 +170,22 @@ public class MemoryDatabase implements Database {
 
                     if (fulfillsConditions) {
                         return true;
-                    } else {
-                        next();
                     }
                 }
             }
 
             public Integer next() {
-                final int result = current;
-                current = table.getNextUsedRowIndex(1 + current / table.definition.columns.size()) * table.definition.columns.size();
-                return result;
+                return current;
             }
 
             public void remove() {
                 throw new UnsupportedOperationException("Not supported yet.");
             }
 
-            private Value evaluateCondition(Condition condition, Table table, int current) {
+            private Value evaluateCondition(Condition condition, Table table, int currentRow) {
                 final LiteralComparison literalCon = (LiteralComparison) condition;
                 final IntegerValue literal = (IntegerValue) literalCon.literal;
-                final IntegerValue element = (IntegerValue) table.getElement(current + literalCon.columnIndex);
+                final IntegerValue element = (IntegerValue) table.getElement(currentRow * table.definition.columns.size() + literalCon.columnIndex);
 
                 final long left = element.value;
                 final long right = literal.value;

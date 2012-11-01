@@ -30,6 +30,9 @@ public class App {
             db.insert("lang", new Value[]{});
             System.out.println("Values inserted");
 
+            db.delete("lang", new Selector(new Condition[]{
+                new LiteralComparison(3, ComparisonType.Equal, new IntegerValue(2))}));
+
             final SelectQueryBuilder select = db.createQueryBuilder();
             select.setSourceTable(db.getTables().get("lang"));
             select.addResultColumn(db.createColumnExpression("id", langTable));
