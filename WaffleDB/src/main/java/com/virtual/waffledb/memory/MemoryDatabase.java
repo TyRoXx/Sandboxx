@@ -231,8 +231,23 @@ public class MemoryDatabase implements Database {
                 final long right = literal.value;
                 boolean result;
                 switch (literalCon.type) {
+                case Equal:
+                    result = (left == right);
+                    break;
                 case NotEqual:
                     result = (left != right);
+                    break;
+                case Less:
+                    result = (left < right);
+                    break;
+                case LessEqual:
+                    result = (left <= right);
+                    break;
+                case Greater:
+                    result = (left > right);
+                    break;
+                case GreaterEqual:
+                    result = (left >= right);
                     break;
                 default:
                     throw new NotImplementedException();

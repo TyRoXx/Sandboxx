@@ -44,7 +44,7 @@ public class App {
             //id != 1
             select.addCondition(new LiteralComparison(3, ComparisonType.NotEqual, new IntegerValue(1)));
 
-            select.addCondition(new LiteralComparison(3, ComparisonType.NotEqual, new IntegerValue(3)));
+//            select.addCondition(new LiteralComparison(3, ComparisonType.Less, new IntegerValue(2)));
 
             System.out.println("Select query created");
 
