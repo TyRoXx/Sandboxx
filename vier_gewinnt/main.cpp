@@ -6,6 +6,8 @@
 #include <memory>
 #include <random>
 #include <array>
+#include <algorithm>
+#include <stdexcept>
 #include <cassert>
 #include <cstdint>
 #include <ctime>
@@ -20,14 +22,17 @@ namespace vg
 		nobody,
 	};
 
+	typedef std::size_t uint;
+	typedef std::ptrdiff_t sint;
+
 	template <class T>
 	struct coordinates
 	{
 		typedef std::array<T, 2> type;
 	};
 
-	typedef coordinates<size_t>::type vectoru;
-	typedef coordinates<ptrdiff_t>::type vectori;
+	typedef coordinates<uint>::type vectoru;
+	typedef coordinates<sint>::type vectori;
 
 	enum
 	{
@@ -134,13 +139,13 @@ namespace vg
 		const auto streak_color = field.get_cell(convert_vector<size_t>(begin));
 		assert(streak_color != nobody);
 
-		const auto field_size = make_vector<ptrdiff_t>(field.width, field.get_height());
+		const auto field_size = make_vector<sint>(field.width, field.get_height());
 
 		size_t streak = 0;
 
 		for (;;)
 		{
-			add<ptrdiff_t>(begin, increment);
+			add<sint>(begin, increment);
 
 			if (!is_inside(field_size, begin))
 			{
@@ -178,13 +183,13 @@ namespace vg
 		)
 	{
 		const std::array<vectori, 3> directions =
-		{
-			make_vector<ptrdiff_t>(1, 0),
-			make_vector<ptrdiff_t>(1, 1),
-			make_vector<ptrdiff_t>(0, 1),
-		};
+		{{
+			make_vector<sint>(1, 0),
+			make_vector<sint>(1, 1),
+			make_vector<sint>(0, 1),
+		}};
 
-		const auto position_i = convert_vector<ptrdiff_t>(position);
+		const auto position_i = convert_vector<sint>(position);
 
 		return std::any_of(directions.begin(), directions.end(),
 			std::bind(has_row,
@@ -454,10 +459,10 @@ namespace vg
 	player::choose_column_t let_player_select_ai()
 	{
 		const std::array<ai_entry, 2> entries =
-		{
+		{{
 			ai_entry("Zufaellig", create_random_ai),
 			ai_entry("Einfach", create_easy_ai),
-		};
+		}};
 
 		for (size_t i = 0; i < entries.size(); ++i)
 		{
