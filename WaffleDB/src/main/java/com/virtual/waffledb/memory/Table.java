@@ -39,7 +39,7 @@ class Table {
 
     public void insertRows(Value[] inserted) throws DatabaseException {
         //TODO: make exception safe
-        
+
         final int rowWidth = definition.columns.size();
         assert (inserted.length % rowWidth == 0);
 
@@ -47,7 +47,7 @@ class Table {
         int e = 0;
         while (e != inserted.length) {
             endOfUsedRange = rowsInUse.nextClearBit(endOfUsedRange);
-            if (endOfUsedRange < 0
+            if ((endOfUsedRange < 0)
                     || (endOfUsedRange >= getRowCount())) {
                 for (; e != inserted.length; ++e) {
                     final Value value = inserted[e];
@@ -77,7 +77,6 @@ class Table {
 
     public void deleteRow(int rowIndex) {
         rowsInUse.set(rowIndex, false);
-
         assert (getNextUsedRowIndex(rowIndex) != rowIndex);
     }
 
