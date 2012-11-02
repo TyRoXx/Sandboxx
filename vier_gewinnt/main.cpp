@@ -38,6 +38,35 @@ namespace vg
 		return result;
 	}
 
+	template <class T>
+	void add(typename coordinates<T>::type &left, typename coordinates<T>::type right)
+	{
+		for (size_t i = 0; i < left.size(); ++i)
+		{
+			left[i] += right[i];
+		}
+	}
+
+	template <class T, class U>
+	typename coordinates<T>::type convert_vector(U source)
+	{
+		typename coordinates<T>::type result;
+		for (size_t i = 0; i < result.size(); ++i)
+		{
+			result[i] = static_cast<T>(source[i]);
+		}
+		return result;
+	}
+
+	template <class T>
+	void negate(std::array<T, 2> &vector)
+	{
+		for (size_t i = 0; i < vector.size(); ++i)
+		{
+			vector[i] = -vector[i];
+		}
+	}
+
 
 	struct field_state
 	{
@@ -76,16 +105,89 @@ namespace vg
 	};
 
 
+	bool is_inside(
+		vectori size,
+		vectori point)
+	{
+		for (size_t i = 0; i < size.size(); ++i)
+		{
+			if (point[i] < 0 ||
+				point[i] >= size[i])
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	size_t count_streak_after(
+		const field_state &field,
+		vectori begin,
+		vectori increment
+		)
+	{
+		const auto streak_color = field.get_cell(convert_vector<size_t>(begin));
+		assert(streak_color != nobody);
+
+		const auto field_size = make_vector<ptrdiff_t>(field.width, field.get_height());
+
+		size_t streak = 0;
+
+		for (;;)
+		{
+			add<ptrdiff_t>(begin, increment);
+
+			if (!is_inside(field_size, begin))
+			{
+				break;
+			}
+
+			if (field.get_cell(convert_vector<size_t>(begin)) != streak_color)
+			{
+				break;
+			}
+
+			++streak;
+		}
+
+		return streak;
+	}
+
+	bool has_row(
+		const field_state &field,
+		size_t row_length,
+		vectori position,
+		vectori direction)
+	{
+		const auto positive = count_streak_after(field, position, direction);
+		negate(direction);
+		const auto negative = count_streak_after(field, position, direction);
+		const auto streak = (1 + positive + negative);
+		return (streak >= row_length);
+	}
+
 	bool is_winning_turn(
 		const field_state &field,
 		size_t row_length,
 		vectoru position
 		)
 	{
-		assert(field.get_cell(position) != nobody);
+		const std::array<vectori, 3> directions =
+		{
+			make_vector<ptrdiff_t>(1, 0),
+			make_vector<ptrdiff_t>(1, 1),
+			make_vector<ptrdiff_t>(0, 1),
+		};
 
+		const auto position_i = convert_vector<ptrdiff_t>(position);
 
-		return false;
+		return std::any_of(directions.begin(), directions.end(),
+			std::bind(has_row,
+			std::ref(field),
+			row_length,
+			position_i,
+			std::placeholders::_1));
 	}
 
 	bool exists_turn(
