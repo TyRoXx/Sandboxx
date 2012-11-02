@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <array>
 #include <cassert>
 #include "console.hpp"
 
@@ -15,6 +16,28 @@ namespace vg
 		nobody,
 	};
 
+	template <class T>
+	struct coordinates
+	{
+		typedef std::array<T, 2> type;
+	};
+
+	typedef coordinates<size_t>::type vectoru;
+	typedef coordinates<ptrdiff_t>::type vectori;
+
+	enum
+	{
+		x,
+		y,
+	};
+
+	template <class T>
+	typename coordinates<T>::type make_vector(T x, T y)
+	{
+		typename coordinates<T>::type result = {{x, y}};
+		return result;
+	}
+
 
 	struct field_state
 	{
@@ -25,9 +48,9 @@ namespace vg
 		std::size_t width;
 
 
-		field_state(std::size_t width, std::size_t height)
-			: cells(width * height, nobody)
-			, width(width)
+		explicit field_state(vectoru size)
+			: cells(size[x] * size[y], nobody)
+			, width(size[x])
 		{
 		}
 
@@ -36,14 +59,19 @@ namespace vg
 			return (cells.size() / width);
 		}
 
-		cell_possession get_cell(size_t x, size_t y) const
+		size_t position_to_index(vectoru position) const
 		{
-			return cells[x + y * width];
+			return position[x] + position[y] * width;
 		}
 
-		void set_cell(size_t x, size_t y, cell_possession cell)
+		cell_possession get_cell(vectoru position) const
 		{
-			cells[x + y * width] = cell;
+			return cells[position_to_index(position)];
+		}
+
+		void set_cell(vectoru position, cell_possession cell)
+		{
+			cells[position_to_index(position)] = cell;
 		}
 	};
 
@@ -51,9 +79,12 @@ namespace vg
 	bool is_winning_turn(
 		const field_state &field,
 		size_t row_length,
-		size_t x,
-		size_t y)
+		vectoru position
+		)
 	{
+		assert(field.get_cell(position) != nobody);
+
+
 		return false;
 	}
 
@@ -62,7 +93,7 @@ namespace vg
 	{
 		for (size_t x = 0; x < field.width; ++x)
 		{
-			if (field.get_cell(x, 0) == nobody)
+			if (field.get_cell(make_vector<size_t>(x, 0)) == nobody)
 			{
 				return true;
 			}
@@ -80,7 +111,7 @@ namespace vg
 		size_t y = 0;
 		for (; y < height; ++y)
 		{
-			if (field.get_cell(column, y) != nobody)
+			if (field.get_cell(make_vector(column, y)) != nobody)
 			{
 				if (y == 0)
 				{
@@ -92,7 +123,7 @@ namespace vg
 		}
 
 		--y;
-		field.set_cell(column, y, color);
+		field.set_cell(make_vector(column, y), color);
 		return y;
 	}
 
@@ -121,7 +152,7 @@ namespace vg
 		const std::function<void (const field_state &)> &field_changed
 		)
 	{
-		field_state field(7, 6);
+		field_state field(make_vector<size_t>(7, 6));
 		field_changed(field);
 
 		for (bool turn = false; exists_turn(field); turn = !turn)
@@ -133,7 +164,7 @@ namespace vg
 
 			field_changed(field);
 
-			if (is_winning_turn(field, 4, chosen_column, coin_y))
+			if (is_winning_turn(field, 4, make_vector(chosen_column, coin_y)))
 			{
 				return &current;
 			}
@@ -197,7 +228,7 @@ namespace vg
 
 			for (size_t x = 0; x < width; ++x)
 			{
-				const auto cell = field.get_cell(x, y);
+				const auto cell = field.get_cell(make_vector(x, y));
 				set_cell_console_color(cell);
 				out << get_cell_char(cell);
 
@@ -224,7 +255,7 @@ namespace vg
 
 	bool check_column_input(const field_state &field, size_t column)
 	{
-		if (field.get_cell(column, 0) != nobody)
+		if (field.get_cell(make_vector<size_t>(column, 0)) != nobody)
 		{
 			std::cout << "Diese Spalte ist schon voll\n";
 			return true;
@@ -249,7 +280,7 @@ namespace vg
 		size_t x = 0;
 		for (; x < field.width; ++x)
 		{
-			if (field.get_cell(x, 0) == nobody)
+			if (field.get_cell(make_vector<size_t>(x, 0)) == nobody)
 			{
 				break;
 			}
