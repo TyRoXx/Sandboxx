@@ -253,8 +253,8 @@ namespace vg
 	};
 
 
-	player *play(
-		player *two_players,
+	const player *play(
+		const player *two_players,
 		const std::function<void (const field_state &)> &field_changed
 		)
 	{
@@ -263,7 +263,7 @@ namespace vg
 
 		for (bool turn = false; exists_turn(field); turn = !turn)
 		{
-			player &current = two_players[turn];
+			const player &current = two_players[turn];
 
 			const size_t chosen_column = current.choose_column(field);
 			const size_t coin_y = insert_coin(field, chosen_column, turn ? red : green);
@@ -383,6 +383,7 @@ namespace vg
 
 		for (;;)
 		{
+			std::cout << "> ";
 			in >> column;
 
 			if (!in)
@@ -481,10 +482,10 @@ int main()
 {
 	using namespace vg;
 
-	player players[2] =
+	const player players[2] =
 	{
-		player("player", let_player_choose_column),
-		player("computer", let_player_select_ai())
+		player("Spieler", let_player_choose_column),
+		player("Computer", let_player_select_ai())
 	};
 
 	if (!players[1].choose_column)
@@ -494,7 +495,7 @@ int main()
 
 	auto &out = std::cout;
 
-	player * const winner = play(
+	const player * const winner = play(
 		players,
 		std::bind(render_field, std::ref(out), std::placeholders::_1));
 
