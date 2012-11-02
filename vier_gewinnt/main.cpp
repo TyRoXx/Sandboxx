@@ -255,23 +255,47 @@ namespace vg
 
 	bool check_column_input(const field_state &field, size_t column)
 	{
+		if (column >= field.width)
+		{
+			std::cout << "Diese Spalte gibt es nicht\n";
+			return false;
+		}
+
 		if (field.get_cell(make_vector<size_t>(column, 0)) != nobody)
 		{
 			std::cout << "Diese Spalte ist schon voll\n";
-			return true;
+			return false;
 		}
 
-		return false;
+		return true;
 	}
 
 	size_t let_player_choose_column(const field_state &field)
 	{
 		size_t column = 0;
-		do
+		auto &in = std::cin;
+
+		for (;;)
 		{
-			std::cin >> column;
+			in >> column;
+
+			if (!in)
+			{
+				in.clear();
+				in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+				std::cout << "Bitte eine Zahl von 0 bis " << (field.width - 1) << " eingeben\n";
+				continue;
+			}
+
+			if (!check_column_input(field, column))
+			{
+				continue;
+			}
+
+			break;
 		}
-		while (check_column_input(field, column));
+
 		return column;
 	}
 
@@ -311,6 +335,6 @@ int main()
 	}
 	else
 	{
-		out << "unentschieden\n";
+		out << "Das Spiel endet unentschieden\n";
 	}
 }
