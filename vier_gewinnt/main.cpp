@@ -213,7 +213,7 @@ namespace vg
 		return false;
 	}
 
-	size_t insert_coin(field_state &field, unsigned column, cell_possession color)
+	size_t insert_coin(field_state &field, uint column, cell_possession color)
 	{
 		assert(color != nobody);
 
@@ -241,7 +241,7 @@ namespace vg
 
 	struct player
 	{
-		typedef std::function<unsigned (const field_state &)> choose_column_t;
+		typedef std::function<uint (const field_state &)> choose_column_t;
 
 
 		std::string name;
