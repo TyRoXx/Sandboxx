@@ -4,6 +4,7 @@
 #include <string>
 #include <functional>
 #include <cassert>
+#include "console.hpp"
 
 namespace vg
 {
@@ -151,13 +152,42 @@ namespace vg
 		}
 	}
 
+	void set_cell_console_color(cell_possession cell)
+	{
+		console_color foreground;
+
+		switch (cell)
+		{
+		case red:
+			foreground = Red;
+			break;
+
+		case green:
+			foreground = Green;
+			break;
+
+		default:
+			return;
+		}
+
+		set_console_color(foreground, Black);
+	}
+
+	void set_console_frame_color()
+	{
+		set_console_color(White, Black);
+	}
+
 	void render_field(
 		std::ostream &out,
 		const field_state &field)
 	{
+		clear_console();
+		set_console_frame_color();
+
 		const auto width = field.width;
 		const auto height = field.get_height();
-		const auto horizontal_bar = std::string(width + 2, '-');
+		const auto horizontal_bar = std::string(width * 2 + 1, '-');
 
 		out << horizontal_bar << '\n';
 
@@ -167,7 +197,16 @@ namespace vg
 
 			for (size_t x = 0; x < width; ++x)
 			{
-				out << get_cell_char(field.get_cell(x, y));
+				const auto cell = field.get_cell(x, y);
+				set_cell_console_color(cell);
+				out << get_cell_char(cell);
+
+				if (x != (width - 1))
+				{
+					out << ' ';
+				}
+
+				set_console_frame_color();
 			}
 
 			out << "|\n";
@@ -178,7 +217,7 @@ namespace vg
 		out << ' ';
 		for (size_t x = 0; x < width; ++x)
 		{
-			out << static_cast<char>('0' + (x % 10));
+			out << static_cast<char>('0' + (x % 10)) << ' ';
 		}
 		out << '\n';
 	}
