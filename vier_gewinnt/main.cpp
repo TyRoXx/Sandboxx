@@ -3,8 +3,12 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <memory>
+#include <random>
 #include <array>
 #include <cassert>
+#include <cstdint>
+#include <ctime>
 #include "console.hpp"
 
 namespace vg
@@ -401,17 +405,75 @@ namespace vg
 		return column;
 	}
 
-	size_t let_computer_choose_column(const field_state &field)
+	size_t random_ai(const field_state &field, std::shared_ptr<std::mt19937> random)
 	{
+		assert(random);
+
+		const size_t width = field.width;
+		const size_t offset = std::uniform_int_distribution<size_t>(0, width - 1)(*random);
 		size_t x = 0;
-		for (; x < field.width; ++x)
+		for (; x < width; ++x)
 		{
-			if (field.get_cell(make_vector<size_t>(x, 0)) == nobody)
+			if (field.get_cell(make_vector<size_t>((x + offset) % width, 0)) == nobody)
 			{
 				break;
 			}
 		}
-		return x;
+
+		return x + offset;
+	}
+
+	player::choose_column_t create_random_ai()
+	{
+		return std::bind(random_ai, std::placeholders::_1,
+			std::make_shared<std::mt19937>(static_cast<std::uint32_t>(std::time(0))));
+	}
+
+	player::choose_column_t create_easy_ai()
+	{
+		return create_random_ai(); //TODO
+	}
+
+	struct ai_entry
+	{
+		typedef std::function<player::choose_column_t ()> create_t;
+
+
+		std::string name;
+		create_t create;
+
+
+		ai_entry(std::string name, create_t create)
+			: name(std::move(name))
+			, create(std::move(create))
+		{
+		}
+	};
+
+	player::choose_column_t let_player_select_ai()
+	{
+		const std::array<ai_entry, 2> entries =
+		{
+			ai_entry("Zufaellig", create_random_ai),
+			ai_entry("Einfach", create_easy_ai),
+		};
+
+		for (size_t i = 0; i < entries.size(); ++i)
+		{
+			std::cout << i << " - " << entries[i].name << "\n";
+		}
+
+		std::cout << "> ";
+		size_t choice = 0;
+		std::cin >> choice;
+		if (!std::cin ||
+			(choice >= entries.size()))
+		{
+			std::cout << "Ungueltige Eingabe\n";
+			return player::choose_column_t();
+		}
+
+		return entries[choice].create();
 	}
 }
 
@@ -422,8 +484,13 @@ int main()
 	player players[2] =
 	{
 		player("player", let_player_choose_column),
-		player("computer", let_computer_choose_column)
+		player("computer", let_player_select_ai())
 	};
+
+	if (!players[1].choose_column)
+	{
+		return 1;
+	}
 
 	auto &out = std::cout;
 
