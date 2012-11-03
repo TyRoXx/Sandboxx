@@ -2,6 +2,16 @@
 	; comment
 	;
 	;;;
+	
+	var while_tests = function ()
+	{
+		while 1
+		{
+			var g = 0
+			var h = 0
+			g = h
+		}
+	}
 
 	var table_tests = function ()
 	{
@@ -70,7 +80,7 @@
 				}
 				
 				; loop
-				while true
+				while 1
 				{
 					break
 					continue

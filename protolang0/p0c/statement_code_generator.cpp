@@ -161,7 +161,30 @@ namespace p0
 
 	void statement_code_generator::visit(while_tree const &statement)
 	{
-		//TODO
+		temporary condition_variable(
+			m_frame,
+			1
+			);
+
+		const auto at_condition_check = m_emitter.get_current_jump_address();
+
+		{
+			rvalue_generator condition(
+				m_function_generator,
+				m_emitter,
+				m_frame,
+				condition_variable.address()
+				);
+			statement.condition().accept(condition);
+		}
+
+		m_emitter.not_(condition_variable.address().local_address());
+
+		const auto at_skip_body = m_emitter.get_current_jump_address();
+		m_emitter.jump_if(
+			0,
+			condition_variable.address().local_address()
+			);
 
 		generate_statement(
 			statement.body(),
@@ -169,6 +192,13 @@ namespace p0
 			m_emitter,
 			m_frame
 			);
+
+		m_emitter.jump(at_condition_check);
+
+		const auto at_after_loop = m_emitter.get_current_jump_address();
+		m_emitter.update_jump_destination(
+			at_skip_body,
+			at_after_loop);
 	}
 
 	void statement_code_generator::visit(break_tree const &statement)
