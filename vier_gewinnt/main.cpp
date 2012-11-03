@@ -241,7 +241,7 @@ namespace vg
 
 	struct player
 	{
-		typedef std::function<uint (const field_state &)> choose_column_t;
+		typedef std::function<uint (const field_state &, cell_possession)> choose_column_t;
 
 
 		std::string name;
@@ -269,9 +269,10 @@ namespace vg
 		for (bool turn = false; exists_turn(field); turn = !turn)
 		{
 			const player &current = two_players[turn];
+			const auto current_color = turn ? red : green;
 
-			const size_t chosen_column = current.choose_column(field);
-			const size_t coin_y = insert_coin(field, chosen_column, turn ? red : green);
+			const size_t chosen_column = current.choose_column(field, current_color);
+			const size_t coin_y = insert_coin(field, chosen_column, current_color);
 
 			field_changed(field);
 
@@ -381,7 +382,7 @@ namespace vg
 		return true;
 	}
 
-	size_t let_player_choose_column(const field_state &field)
+	size_t let_player_choose_column(const field_state &field, cell_possession self)
 	{
 		size_t column = 0;
 		auto &in = std::cin;
@@ -435,9 +436,117 @@ namespace vg
 			std::make_shared<std::mt19937>(static_cast<std::uint32_t>(std::time(0))));
 	}
 
+	namespace easy_ai
+	{
+		struct ai_state
+		{
+			explicit ai_state(
+				const field_state &field,
+				cell_possession self,
+				std::mt19937 &random)
+				: m_field(field)
+				, m_self(self)
+				, m_random(random)
+			{
+			}
+
+			uint choose_column()
+			{
+				uint top_column = std::uniform_int_distribution<uint>(0, m_field.width - 1)(m_random);
+				uint top_rating = 0;
+
+				for (size_t i = 0; i < m_field.width; ++i)
+				{
+					const auto rating = rate_column(i);
+					if (rating >= top_rating)
+					{
+						top_rating = rating;
+						top_column = i;
+					}
+				}
+
+				return top_column;
+			}
+
+		private:
+
+			const field_state &m_field;
+			const cell_possession m_self;
+			std::mt19937 &m_random;
+
+
+			uint get_remaining_space(uint column) const
+			{
+				const auto height = m_field.get_height();
+				uint top = 0;
+				while (
+					(top < height) &&
+					(m_field.get_cell(make_vector<uint>(column, top)) == nobody))
+				{
+					++top;
+				}
+				return top;
+			}
+
+			uint rate_column(uint column)
+			{
+				const uint space = get_remaining_space(column);
+				if (space == 0)
+				{
+					return 0;
+				}
+
+				const auto height = m_field.get_height();
+
+				cell_possession streak_owner = nobody;
+				uint streak = 0;
+				for (uint y = space; y < height; ++y, ++streak)
+				{
+					const auto current = m_field.get_cell(make_vector<uint>(column, y));
+					if (streak_owner == nobody)
+					{
+						streak_owner = current;
+					}
+					else if (streak_owner != current)
+					{
+						break;
+					}
+				}
+
+				if (streak == 3)
+				{
+					return std::numeric_limits<uint>::max();
+				}
+
+				if (streak == 2 &&
+					streak_owner == m_self)
+				{
+					return 2;
+				}
+
+				return 1;
+			}
+		};
+
+
+		uint choose_column(
+			const field_state &field,
+			cell_possession self,
+			const std::shared_ptr<std::mt19937> &random)
+		{
+			assert(random);
+			assert(self != nobody);
+
+			ai_state state(field, self, *random);
+			return state.choose_column();
+		}
+	}
+
 	player::choose_column_t create_easy_ai()
 	{
-		return create_random_ai(); //TODO
+		const auto random = std::make_shared<std::mt19937>(
+			static_cast<std::uint32_t>(std::time(0)));
+		return std::bind(easy_ai::choose_column, std::placeholders::_1, std::placeholders::_2, random);
 	}
 
 	struct ai_entry
