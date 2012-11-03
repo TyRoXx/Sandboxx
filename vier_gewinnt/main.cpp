@@ -175,10 +175,11 @@ namespace vg
 		vectoru position
 		)
 	{
-		const std::array<vectori, 3> directions =
+		const std::array<vectori, 4> directions =
 		{{
 			make_vector<sint>(1, 0),
 			make_vector<sint>(1, 1),
+			make_vector<sint>(1, -1),
 			make_vector<sint>(0, 1),
 		}};
 
@@ -565,7 +566,6 @@ namespace vg
 				return 1;
 			}
 		};
-
 
 		uint choose_column(
 			const field_state &field,
