@@ -452,16 +452,18 @@ namespace vg
 
 			uint choose_column()
 			{
-				uint top_column = std::uniform_int_distribution<uint>(0, m_field.width - 1)(m_random);
+				const auto offset = std::uniform_int_distribution<uint>(0, m_field.width - 1)(m_random);
+				uint top_column = offset;
 				uint top_rating = 0;
 
 				for (size_t i = 0; i < m_field.width; ++i)
 				{
-					const auto rating = rate_column(i);
-					if (rating >= top_rating)
+					const auto column = (i + offset) % m_field.width;
+					const auto rating = rate_column(column);
+					if (rating > top_rating)
 					{
 						top_rating = rating;
-						top_column = i;
+						top_column = column;
 					}
 				}
 
