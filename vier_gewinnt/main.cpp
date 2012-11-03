@@ -496,13 +496,30 @@ namespace vg
 					return 0;
 				}
 
+				const auto field_size = make_vector<sint>(m_field.width, m_field.get_height());
+				uint rating = 0;
+
+				rating += rate_streak(
+					make_vector<sint>(column, space),
+					make_vector<sint>(0, 1),
+					field_size);
+
+				return rating;
+			}
+
+			uint rate_streak(
+				vectori start,
+				vectori direction,
+				vectori field_size
+				)
+			{
 				const auto height = m_field.get_height();
 
 				cell_possession streak_owner = nobody;
 				uint streak = 0;
-				for (uint y = space; y < height; ++y, ++streak)
+				for (vectori pos = start; is_inside(field_size, pos); add<sint>(pos, direction), ++streak)
 				{
-					const auto current = m_field.get_cell(make_vector<uint>(column, y));
+					const auto current = m_field.get_cell(convert_vector<uint>(pos));
 					if (streak_owner == nobody)
 					{
 						streak_owner = current;
@@ -513,13 +530,15 @@ namespace vg
 					}
 				}
 
+				assert(streak <= 3);
+
 				if (streak == 3)
 				{
 					return std::numeric_limits<uint>::max();
 				}
 
 				if (streak == 2 &&
-					streak_owner == m_self)
+					(streak_owner == m_self))
 				{
 					return 2;
 				}
