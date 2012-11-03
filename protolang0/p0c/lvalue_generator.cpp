@@ -82,7 +82,7 @@ namespace p0
 			);
 	}
 
-	void lvalue_generator::visit(table_expression const &expression)
+	void lvalue_generator::visit(table_expression_tree const &expression)
 	{
 		throw compiler_error(
 			"A table literal is not an LValue",

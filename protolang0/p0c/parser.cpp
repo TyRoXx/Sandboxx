@@ -344,7 +344,7 @@ namespace p0
 
 		case token_type::bracket_left:
 			{
-				table_expression::element_vector elements;
+				table_expression_tree::element_vector elements;
 
 				//TODO: include full expression
 				auto const position = first.content;
@@ -389,7 +389,7 @@ namespace p0
 					}
 				}
 
-				return std::unique_ptr<expression_tree>(new table_expression(
+				return std::unique_ptr<expression_tree>(new table_expression_tree(
 					std::move(elements),
 					position
 					));

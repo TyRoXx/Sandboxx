@@ -17,7 +17,7 @@ namespace p0
 	struct call_expression_tree;
 	struct function_tree;
 	struct null_expression_tree;
-	struct table_expression;
+	struct table_expression_tree;
 	struct unary_expression_tree;
 	struct dot_element_expression_tree;
 
@@ -31,7 +31,7 @@ namespace p0
 		virtual void visit(call_expression_tree const &expression) = 0;
 		virtual void visit(function_tree const &expression) = 0;
 		virtual void visit(null_expression_tree const &expression) = 0;
-		virtual void visit(table_expression const &expression) = 0;
+		virtual void visit(table_expression_tree const &expression) = 0;
 		virtual void visit(unary_expression_tree const &expression) = 0;
 		virtual void visit(dot_element_expression_tree const &expression) = 0;
 	};
@@ -155,13 +155,13 @@ namespace p0
 	};
 
 
-	struct table_expression : expression_tree
+	struct table_expression_tree : expression_tree
 	{
 		typedef std::pair<source_range, std::unique_ptr<expression_tree>> element;
 		typedef std::vector<element> element_vector;
 
 
-		explicit table_expression(
+		explicit table_expression_tree(
 			element_vector elements,
 			source_range position
 			);

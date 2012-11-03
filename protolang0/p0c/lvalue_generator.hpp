@@ -40,7 +40,7 @@ namespace p0
 		virtual void visit(call_expression_tree const &expression) override;
 		virtual void visit(function_tree const &expression) override;
 		virtual void visit(null_expression_tree const &expression) override;
-		virtual void visit(table_expression const &expression) override;
+		virtual void visit(table_expression_tree const &expression) override;
 		virtual void visit(unary_expression_tree const &expression) override;
 		virtual void visit(dot_element_expression_tree const &expression) override;
 	};

@@ -170,7 +170,7 @@ namespace p0
 	}
 
 
-	table_expression::table_expression(
+	table_expression_tree::table_expression_tree(
 		element_vector elements,
 		source_range position
 		)
@@ -179,17 +179,17 @@ namespace p0
 	{
 	}
 
-	void table_expression::accept(expression_tree_visitor &visitor) const
+	void table_expression_tree::accept(expression_tree_visitor &visitor) const
 	{
 		visitor.visit(*this);
 	}
 
-	source_range table_expression::position() const
+	source_range table_expression_tree::position() const
 	{
 		return m_position;
 	}
 
-	table_expression::element_vector const &table_expression::elements() const
+	table_expression_tree::element_vector const &table_expression_tree::elements() const
 	{
 		return m_elements;
 	}

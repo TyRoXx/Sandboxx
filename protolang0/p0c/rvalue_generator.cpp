@@ -275,7 +275,7 @@ namespace p0
 		}
 	}
 
-	void rvalue_generator::visit(table_expression const &expression)
+	void rvalue_generator::visit(table_expression_tree const &expression)
 	{
 		auto const table_address = m_destination;
 
