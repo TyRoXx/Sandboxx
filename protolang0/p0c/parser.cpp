@@ -229,6 +229,23 @@ namespace p0
 
 	std::unique_ptr<expression_tree> parser::parse_expression()
 	{
+		return parse_infix_expression(0);
+	}
+
+	std::unique_ptr<expression_tree> parser::parse_infix_expression(size_t level)
+	{
+		auto left = parse_extended_primary_expression();
+
+		for (;;)
+		{
+			break;
+		}
+
+		return left;
+	}
+
+	std::unique_ptr<expression_tree> parser::parse_extended_primary_expression()
+	{
 		auto left = parse_primary_expression();
 
 		for (;;)
@@ -295,7 +312,7 @@ namespace p0
 			}
 		}
 
-		return std::move(left);
+		return left;
 	}
 
 	std::unique_ptr<expression_tree> parser::parse_primary_expression()
@@ -397,7 +414,7 @@ namespace p0
 
 		case token_type::minus:
 			{
-				auto input = parse_expression();
+				auto input = parse_extended_primary_expression();
 				return std::unique_ptr<expression_tree>(new unary_expression_tree(
 					unary_operator::negative,
 					std::move(input),
@@ -407,7 +424,7 @@ namespace p0
 
 		case token_type::exclamation_mark:
 			{
-				auto input = parse_expression();
+				auto input = parse_extended_primary_expression();
 				return std::unique_ptr<expression_tree>(new unary_expression_tree(
 					unary_operator::not_,
 					std::move(input),
@@ -417,7 +434,7 @@ namespace p0
 
 		case token_type::tilde:
 			{
-				auto input = parse_expression();
+				auto input = parse_extended_primary_expression();
 				return std::unique_ptr<expression_tree>(new unary_expression_tree(
 					unary_operator::inverse,
 					std::move(input),
