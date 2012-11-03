@@ -1,5 +1,4 @@
 #include <iostream>
-#include <bitset>
 #include <vector>
 #include <string>
 #include <functional>
@@ -25,14 +24,8 @@ namespace vg
 	typedef std::size_t uint;
 	typedef std::ptrdiff_t sint;
 
-	template <class T>
-	struct coordinates
-	{
-		typedef std::array<T, 2> type;
-	};
-
-	typedef coordinates<uint>::type vectoru;
-	typedef coordinates<sint>::type vectori;
+	typedef std::array<uint, 2> vectoru;
+	typedef std::array<sint, 2> vectori;
 
 	enum
 	{
@@ -41,14 +34,14 @@ namespace vg
 	};
 
 	template <class T>
-	typename coordinates<T>::type make_vector(T x, T y)
+	std::array<T, 2> make_vector(T x, T y)
 	{
-		typename coordinates<T>::type result = {{x, y}};
+		const std::array<T, 2> result = {{x, y}};
 		return result;
 	}
 
 	template <class T>
-	void add(typename coordinates<T>::type &left, typename coordinates<T>::type right)
+	void add(std::array<T, 2> &left, std::array<T, 2> right)
 	{
 		for (size_t i = 0; i < left.size(); ++i)
 		{
@@ -57,9 +50,9 @@ namespace vg
 	}
 
 	template <class T, class U>
-	typename coordinates<T>::type convert_vector(U source)
+	std::array<T, 2> convert_vector(std::array<U, 2> source)
 	{
-		typename coordinates<T>::type result;
+		std::array<T, 2> result;
 		for (size_t i = 0; i < result.size(); ++i)
 		{
 			result[i] = static_cast<T>(source[i]);
