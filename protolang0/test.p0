@@ -54,7 +54,12 @@
 		{
 			var i = x
 			var f = function { var a = 0 a = a return 123 }
-			var g = function (a, b, c) { a = c return add(a, b) }
+			var g = function (a, b, c)
+			{
+				var add = function (a, b) {}
+				a = c
+				return add(a, b)
+			}
 			var h = function (s) { var a = s }
 			function (a, b) {a = b a = b a = b b = a b = 1 b = 2}
 			f()
