@@ -499,27 +499,42 @@ namespace vg
 				const auto field_size = make_vector<sint>(m_field.width, m_field.get_height());
 				uint rating = 0;
 
-				rating += rate_streak(
-					make_vector<sint>(column, space),
+				rating += rate_streaks(
+					make_vector<sint>(column, space - 1),
 					make_vector<sint>(0, 1),
+					field_size);
+
+				rating += rate_streaks(
+					make_vector<sint>(column, space - 1),
+					make_vector<sint>(1, 0),
+					field_size);
+
+				rating += rate_streaks(
+					make_vector<sint>(column, space - 1),
+					make_vector<sint>(1, 1),
 					field_size);
 
 				return rating;
 			}
 
-			uint rate_streak(
+			std::pair<cell_possession, uint> find_streak(
 				vectori start,
 				vectori direction,
-				vectori field_size
-				)
+				vectori field_size)
 			{
-				const auto height = m_field.get_height();
-
 				cell_possession streak_owner = nobody;
 				uint streak = 0;
-				for (vectori pos = start; is_inside(field_size, pos); add<sint>(pos, direction), ++streak)
+
+				vectori pos = start;
+				add<sint>(pos, direction);
+				for (; is_inside(field_size, pos); add<sint>(pos, direction), ++streak)
 				{
 					const auto current = m_field.get_cell(convert_vector<uint>(pos));
+					if (current == nobody)
+					{
+						break;
+					}
+
 					if (streak_owner == nobody)
 					{
 						streak_owner = current;
@@ -531,16 +546,25 @@ namespace vg
 				}
 
 				assert(streak <= 3);
+				return std::make_pair(streak_owner, streak);
+			}
 
-				if (streak == 3)
-				{
-					return std::numeric_limits<uint>::max();
-				}
+			uint rate_streaks(
+				vectori start,
+				vectori direction,
+				vectori field_size
+				)
+			{
+				const auto positive = find_streak(start, direction, field_size);
+				negate(direction);
+				const auto negative = find_streak(start, direction, field_size);
 
-				if (streak == 2 &&
-					(streak_owner == m_self))
+				const size_t row_length = 4;
+
+				if ((negative.second + ((positive.first == negative.first) ? positive.second : 0)) >= (row_length - 1) ||
+					(positive.second + ((positive.first == negative.first) ? negative.second : 0)) >= (row_length - 1))
 				{
-					return 2;
+					return 2000;
 				}
 
 				return 1;
