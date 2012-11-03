@@ -19,6 +19,7 @@ namespace p0
 	struct null_expression_tree;
 	struct table_expression_tree;
 	struct unary_expression_tree;
+	struct binary_expression_tree;
 	struct dot_element_expression_tree;
 
 
@@ -33,6 +34,7 @@ namespace p0
 		virtual void visit(null_expression_tree const &expression) = 0;
 		virtual void visit(table_expression_tree const &expression) = 0;
 		virtual void visit(unary_expression_tree const &expression) = 0;
+		virtual void visit(binary_expression_tree const &expression) = 0;
 		virtual void visit(dot_element_expression_tree const &expression) = 0;
 	};
 
@@ -176,7 +178,7 @@ namespace p0
 	};
 
 
-	struct unary_operator
+	namespace unary_operator
 	{
 		enum Enum
 		{
@@ -202,6 +204,51 @@ namespace p0
 
 		unary_operator::Enum const m_type;
 		std::unique_ptr<expression_tree> m_input;
+		source_range const m_position;
+	};
+
+
+	namespace binary_operator
+	{
+		enum Enum
+		{
+			add,
+			sub,
+			mul,
+			div,
+			mod,
+			bit_and,
+			bit_or,
+			bit_xor,
+			equal,
+			not_equal,
+			less,
+			less_equal,
+			greater,
+			greater_equal,
+			logical_and,
+			logical_or,
+		};
+	};
+
+	struct binary_expression_tree : expression_tree
+	{
+		explicit binary_expression_tree(
+			binary_operator::Enum type,
+			std::unique_ptr<expression_tree> left,
+			std::unique_ptr<expression_tree> right,
+			source_range position
+			);
+		virtual void accept(expression_tree_visitor &visitor) const override;
+		virtual source_range position() const override;
+		binary_operator::Enum type() const;
+		expression_tree const &left() const;
+		expression_tree const &right() const;
+
+	private:
+
+		binary_operator::Enum m_type;
+		std::unique_ptr<expression_tree> m_left, m_right;
 		source_range const m_position;
 	};
 

@@ -379,6 +379,11 @@ namespace p0
 		}
 	}
 
+	void rvalue_generator::visit(binary_expression_tree const &expression)
+	{
+		//TODO
+	}
+
 	void rvalue_generator::visit(dot_element_expression_tree const &expression)
 	{
 		auto const table_address = m_destination;

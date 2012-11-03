@@ -228,6 +228,45 @@ namespace p0
 	}
 
 
+	binary_expression_tree::binary_expression_tree(
+		binary_operator::Enum type,
+		std::unique_ptr<expression_tree> left,
+		std::unique_ptr<expression_tree> right,
+		source_range position
+		)
+		: m_type(type)
+		, m_left(std::move(left))
+		, m_right(std::move(right))
+		, m_position(position)
+	{
+	}
+
+	void binary_expression_tree::accept(expression_tree_visitor &visitor) const
+	{
+		visitor.visit(*this);
+	}
+
+	source_range binary_expression_tree::position() const
+	{
+		return m_position;
+	}
+
+	binary_operator::Enum binary_expression_tree::type() const
+	{
+		return m_type;
+	}
+
+	expression_tree const &binary_expression_tree::left() const
+	{
+		return *m_left;
+	}
+
+	expression_tree const &binary_expression_tree::right() const
+	{
+		return *m_right;
+	}
+
+
 	dot_element_expression_tree::dot_element_expression_tree(
 		std::unique_ptr<expression_tree> table,
 		source_range element_name

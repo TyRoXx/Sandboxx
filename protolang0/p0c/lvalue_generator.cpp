@@ -98,6 +98,14 @@ namespace p0
 			);
 	}
 
+	void lvalue_generator::visit(binary_expression_tree const &expression)
+	{
+		throw compiler_error(
+			"A binary operator expression is not an LValue",
+			expression.position()
+			);
+	}
+
 	void lvalue_generator::visit(dot_element_expression_tree const &expression)
 	{
 		auto const element_variable = std::make_shared<temporary>(
