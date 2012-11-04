@@ -129,7 +129,7 @@ namespace p0
 		case '%': return eat_single_char_token(token_type::modulo);
 		case '&': return eat_single_or_double_token(token_type::ampersand, '&', token_type::ampersands);
 		case '|': return eat_single_or_double_token(token_type::pipe, '|', token_type::pipes);
-		case '<': return eat_single_or_triple_token(token_type::smaller, '<', token_type::shift_left, '=', token_type::smaller_equal);
+		case '<': return eat_single_or_triple_token(token_type::less, '<', token_type::shift_left, '=', token_type::less_equal);
 		case '>': return eat_single_or_triple_token(token_type::greater, '>', token_type::shift_right, '=', token_type::greater_equal);
 		case '!': return eat_single_or_double_token(token_type::exclamation_mark, '=', token_type::not_equal);
 		case '.': return eat_single_char_token(token_type::dot);

@@ -230,7 +230,7 @@ namespace p0
 	namespace
 	{
 		infix_precedence const strongest_precedence = 1;
-		infix_precedence const weakest_precedence = 7;
+		infix_precedence const weakest_precedence = 9;
 
 
 		infix_precedence get_stronger(infix_precedence precedence)
@@ -251,6 +251,36 @@ namespace p0
 		{
 			switch (token)
 			{
+			case token_type::equal:
+				precedence = 9;
+				operator_ = binary_operator::equal;
+				return true;
+
+			case token_type::not_equal:
+				precedence = 9;
+				operator_ = binary_operator::not_equal;
+				return true;
+
+			case token_type::less:
+				precedence = 8;
+				operator_ = binary_operator::less;
+				return true;
+
+			case token_type::less_equal:
+				precedence = 8;
+				operator_ = binary_operator::less_equal;
+				return true;
+
+			case token_type::greater:
+				precedence = 8;
+				operator_ = binary_operator::greater;
+				return true;
+
+			case token_type::greater_equal:
+				precedence = 8;
+				operator_ = binary_operator::greater_equal;
+				return true;
+
 			case token_type::shift_left:
 				precedence = 7;
 				operator_ = binary_operator::shift_left;

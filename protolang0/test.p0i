@@ -73,6 +73,25 @@ function
 end
 
 function
+00: set_from_constant          0         1
+01: set_from_constant          1         2
+02: set_from_constant          2         3
+03: set_from_constant          3         4
+04: mul                        2         3
+05: add                        1         2
+06: shift_left                 0         1
+07: set_from_constant          1         5
+08: shift_right                0         1
+09: set_from_constant          1         6
+10: set_from_constant          2         7
+11: less                       1         2
+12: set_from_constant          2         8
+13: greater                    1         2
+14: set_from_constant          2         9
+15: less_equal                 1         2
+16: set_from_constant          2        10
+17: greater_equal              1         2
+18: equal                      0         1
 end
 
 function
