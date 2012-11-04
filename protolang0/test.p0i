@@ -1,19 +1,19 @@
 function
 00: set_function               0         1
-01: set_function               1         4
+01: set_function               1         5
 02: copy                       2         1
 03: call                       0
-04: set_function               2         5
+04: set_function               2         6
 05: copy                       3         2
 06: call                       0
-07: set_function               3         6
+07: set_function               3         7
 08: copy                       4         3
 09: call                       0
 10: set_from_constant          4         0
 11: copy                       5         4
-12: set_function               6         7
-13: set_function               7         8
-14: set_function               8        10
+12: set_function               6         8
+13: set_function               7         9
+14: set_function               8        11
 15: copy                       9         6
 16: call                       0
 17: copy                      10         7
@@ -38,7 +38,7 @@ function
 36: not                       12
 37: jump_if                   39        12
 38: jump                      35
-39: set_function              11        13
+39: set_function              11        14
 40: call                       0
 end
 
@@ -120,6 +120,9 @@ function
 13: get_element                3         4         3
 14: xor                        2         3
 15: or                         1         2
+end
+
+function
 end
 
 function
@@ -239,7 +242,7 @@ function
 end
 
 function
-0: set_function               3         9
+0: set_function               3        10
 1: copy                       0         2
 2: copy                       5         3
 3: copy                       7         0

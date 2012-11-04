@@ -413,36 +413,45 @@ namespace p0
 	{
 		bool const is_result_stored = m_destination.is_valid();
 
+		switch (expression.type())
 		{
-			rvalue_generator left_generator(
-				m_function_generator,
-				m_emitter,
+		case binary_operator::logical_and:
+		case binary_operator::logical_or:
+			break; //TODO
+
+		default:
+			{
+				rvalue_generator left_generator(
+					m_function_generator,
+					m_emitter,
+					m_frame,
+					m_destination);
+				expression.left().accept(left_generator);
+			}
+
+			temporary const right_variable(
 				m_frame,
-				m_destination);
-			expression.left().accept(left_generator);
-		}
+				is_result_stored ? 1 : 0);
 
-		temporary const right_variable(
-			m_frame,
-			is_result_stored ? 1 : 0);
+			{
+				rvalue_generator right_generator(
+					m_function_generator,
+					m_emitter,
+					m_frame,
+					is_result_stored ? right_variable.address() : reference());
+				expression.right().accept(right_generator);
+			}
 
-		{
-			rvalue_generator right_generator(
-				m_function_generator,
-				m_emitter,
-				m_frame,
-				is_result_stored ? right_variable.address() : reference());
-			expression.right().accept(right_generator);
-		}
+			auto const instruction = binary_operation_to_instruction(expression.type());
 
-		auto const instruction = binary_operation_to_instruction(expression.type());
-
-		if (is_result_stored)
-		{
-			m_emitter.binary_operation(
-				instruction,
-				m_destination.local_address(),
-				right_variable.address().local_address());
+			if (is_result_stored)
+			{
+				m_emitter.binary_operation(
+					instruction,
+					m_destination.local_address(),
+					right_variable.address().local_address());
+			}
+			break;
 		}
 	}
 
