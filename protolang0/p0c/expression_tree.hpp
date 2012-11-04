@@ -220,6 +220,8 @@ namespace p0
 			bit_and,
 			bit_or,
 			bit_xor,
+			shift_left,
+			shift_right,
 			equal,
 			not_equal,
 			less,

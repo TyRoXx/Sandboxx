@@ -393,13 +393,26 @@ namespace p0
 			case binary_operator::mul: return instruction_type::mul;
 			case binary_operator::div: return instruction_type::div;
 			case binary_operator::mod: return instruction_type::mod;
-			default: assert(!"invalid binary operator id"); return instruction_type::nothing;
+			case binary_operator::bit_and: return instruction_type::and_;
+			case binary_operator::bit_or: return instruction_type::or_;
+			case binary_operator::bit_xor: return instruction_type::xor_;
+			case binary_operator::shift_left: return instruction_type::shift_left;
+			case binary_operator::shift_right: return instruction_type::shift_right;
+			case binary_operator::equal: return instruction_type::equal;
+			case binary_operator::not_equal: return instruction_type::not_equal;
+			case binary_operator::less: return instruction_type::less;
+			case binary_operator::less_equal: return instruction_type::less_equal;
+			case binary_operator::greater: return instruction_type::greater;
+			case binary_operator::greater_equal: return instruction_type::greater_equal;
+			default: assert(!"invalid binary operator id for direct translation"); return instruction_type::nothing;
 			}
 		}
 	}
 
 	void rvalue_generator::visit(binary_expression_tree const &expression)
 	{
+		bool const is_result_stored = m_destination.is_valid();
+
 		{
 			rvalue_generator left_generator(
 				m_function_generator,
@@ -411,23 +424,26 @@ namespace p0
 
 		temporary const right_variable(
 			m_frame,
-			1);
+			is_result_stored ? 1 : 0);
 
 		{
 			rvalue_generator right_generator(
 				m_function_generator,
 				m_emitter,
 				m_frame,
-				right_variable.address());
+				is_result_stored ? right_variable.address() : reference());
 			expression.right().accept(right_generator);
 		}
 
 		auto const instruction = binary_operation_to_instruction(expression.type());
 
-		m_emitter.binary_operation(
-			instruction,
-			m_destination.local_address(),
-			right_variable.address().local_address());
+		if (is_result_stored)
+		{
+			m_emitter.binary_operation(
+				instruction,
+				m_destination.local_address(),
+				right_variable.address().local_address());
+		}
 	}
 
 	void rvalue_generator::visit(dot_element_expression_tree const &expression)

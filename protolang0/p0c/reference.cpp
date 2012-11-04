@@ -1,4 +1,5 @@
 #include "reference.hpp"
+#include <cassert>
 
 
 namespace p0
@@ -17,11 +18,12 @@ namespace p0
 
 	size_t reference::local_address() const
 	{
+		assert(is_valid());
 		return m_local_address;
 	}
 
 	bool reference::is_valid() const
 	{
-		return (m_local_address != reference().local_address());
+		return (m_local_address != reference().m_local_address);
 	}
 }

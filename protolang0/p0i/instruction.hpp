@@ -35,6 +35,8 @@ namespace p0
 				and_,
 				or_,
 				xor_,
+				shift_left,
+				shift_right,
 				equal,
 				not_equal,
 				less,

@@ -29,6 +29,8 @@ namespace p0
 				{"and", 2},
 				{"or", 2},
 				{"xor", 2},
+				{"shift_left", 2},
+				{"shift_right", 2},
 				{"equal", 2},
 				{"not_equal", 2},
 				{"less", 2},
