@@ -28,7 +28,7 @@ namespace p0
 					begin(instruction.arguments()) + info.argument_count,
 					[&file](instruction_argument arg)
 				{
-					file << ' ' << std::setw(6) << arg;
+					file << ' ' << std::setw(6) << std::right << arg;
 				});
 
 				file << '\n';
