@@ -1,3 +1,5 @@
+integer-width: 64
+
 function 0
 00: set_function               0         1
 01: set_function               1         5
