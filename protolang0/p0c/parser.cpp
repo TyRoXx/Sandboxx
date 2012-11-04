@@ -544,6 +544,12 @@ namespace p0
 					));
 			}
 
+		case token_type::plus:
+			{
+				auto value = parse_extended_primary_expression();
+				return value;
+			}
+
 		case token_type::exclamation_mark:
 			{
 				auto input = parse_extended_primary_expression();
