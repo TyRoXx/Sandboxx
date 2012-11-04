@@ -227,13 +227,24 @@ namespace p0
 			));
 	}
 
-	std::unique_ptr<expression_tree> parser::parse_expression()
-	{
-		return parse_infix_expression(6);
-	}
-
 	namespace
 	{
+		enum
+		{
+			weakest_precedence = 6,
+		};
+
+		size_t get_stronger(size_t precedence)
+		{
+			assert(precedence >= 1);
+			return (precedence - 1);
+		}
+
+		bool is_acceptable_precedence(size_t found, size_t weakest)
+		{
+			return (found <= weakest);
+		}
+
 		bool is_infix_operator(
 			token_type::Enum token,
 			size_t &precedence,
@@ -257,7 +268,12 @@ namespace p0
 		}
 	}
 
-	std::unique_ptr<expression_tree> parser::parse_infix_expression(size_t max_precedence)
+	std::unique_ptr<expression_tree> parser::parse_expression()
+	{
+		return parse_infix_expression(weakest_precedence);
+	}
+
+	std::unique_ptr<expression_tree> parser::parse_infix_expression(size_t weakest_acceptable_precedence)
 	{
 		auto left = parse_extended_primary_expression();
 
@@ -272,10 +288,10 @@ namespace p0
 				potential_operator.type,
 				precedence,
 				operator_) &&
-				(precedence <= max_precedence))
+				is_acceptable_precedence(precedence, weakest_acceptable_precedence))
 			{
 				pop_token();
-				auto right = parse_infix_expression(max_precedence - 1);
+				auto right = parse_infix_expression(get_stronger(precedence));
 
 				auto const position = left->position(); //TODO
 
