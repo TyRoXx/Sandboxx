@@ -48,10 +48,11 @@ namespace p0
 
 			void save_function(
 				std::ostream &file,
-				function const &function
+				function const &function,
+				size_t index
 				)
 			{
-				file << "function\n";
+				file << "function " << index << "\n";
 				auto const &body = function.body();
 				auto const body_size = body.size();
 				auto const base10_address_width = get_base10_index_width(body_size);
@@ -100,9 +101,10 @@ namespace p0
 			unit const &unit
 			)
 		{
-			for (auto f = begin(unit.functions()); f != end(unit.functions()); ++f)
+			auto const &functions = unit.functions();
+			for (size_t i = 0; i < functions.size(); ++i)
 			{
-				save_function(file, *f);
+				save_function(file, functions[i], i);
 
 				file << '\n';
 			}
