@@ -18,6 +18,8 @@ namespace p0
 		, m_integer_width(integer_width)
 		, m_error_handler(std::move(error_handler))
 	{
+		assert(integer_width >= 1);
+		assert(integer_width <= std::numeric_limits<intermediate::instruction_argument>::digits);
 	}
 
 	size_t code_generator::integer_width() const

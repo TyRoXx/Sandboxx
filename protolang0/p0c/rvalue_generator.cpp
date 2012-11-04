@@ -3,6 +3,7 @@
 #include "compiler_error.hpp"
 #include "code_generator.hpp"
 #include "temporary.hpp"
+#include <sstream>
 #include <cctype>
 
 
@@ -59,8 +60,16 @@ namespace p0
 
 			if (value < previous_value)
 			{
+				std::ostringstream message;
+				message
+					<< "The integer literal is too large (maximum: 2^"
+					<< integer_width
+					<< "-1 = "
+					<< integer_mask
+					<< ")";
+
 				throw compiler_error(
-					"The integer literal is too large",
+					message.str(),
 					expression.position()
 					);
 			}
