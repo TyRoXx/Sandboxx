@@ -44,15 +44,23 @@ namespace p0
 			base = 10,
 		};
 
-		intermediate::instruction_argument value = 0;
-
-		//TODO: handle too large numbers
+		intermediate::instruction_argument value = 0, previous_value = 0;
 
 		auto const value_string = expression.value();
 		for (auto i = value_string.begin(); i != value_string.end(); ++i)
 		{
 			value *= base;
 			value += (*i - '0');
+
+			if (value < previous_value)
+			{
+				throw compiler_error(
+					"The integer literal is too large",
+					expression.position()
+					);
+			}
+
+			previous_value = value;
 		}
 
 		if (m_destination.is_valid())
