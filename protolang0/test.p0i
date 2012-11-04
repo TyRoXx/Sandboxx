@@ -45,81 +45,104 @@ end
 function
 00: set_from_constant          0         1
 01: not                        0
-02: jump_if                   36         0
+02: jump_if                   47         0
 03: set_from_constant          1         0
 04: set_from_constant          2         0
-05: set_from_constant          1         1
-06: set_from_constant          3         2
-07: mul                        1         3
-08: set_from_constant          3         3
-09: add                        1         3
-10: set_from_constant          2         1
-11: set_from_constant          3         2
-12: set_from_constant          4         3
-13: mul                        3         4
-14: add                        2         3
-15: set_from_constant          2         1
-16: negate                     2
-17: set_from_constant          3         2
-18: negate                     3
-19: add                        2         3
-20: set_from_constant          3         3
-21: negate                     3
-22: add                        2         3
-23: set_from_constant          3         4
-24: negate                     3
-25: add                        2         3
-26: set_from_constant          2         1
-27: set_from_constant          3         2
-28: add                        2         3
-29: set_from_constant          3         3
-30: add                        2         3
-31: set_from_constant          3         4
-32: add                        2         3
-33: set_from_constant          3         5
-34: add                        2         3
-35: jump                       0
+05: set_from_constant          4         1
+06: set_from_constant          5         2
+07: mul                        4         5
+08: copy                       3         4
+09: set_from_constant          4         3
+10: add                        3         4
+11: copy                       1         3
+12: set_from_constant          3         1
+13: set_from_constant          5         2
+14: set_from_constant          6         3
+15: mul                        5         6
+16: copy                       4         5
+17: add                        3         4
+18: copy                       2         3
+19: set_from_constant          5         1
+20: negate                     5
+21: set_from_constant          6         2
+22: negate                     6
+23: add                        5         6
+24: copy                       4         5
+25: set_from_constant          5         3
+26: negate                     5
+27: add                        4         5
+28: copy                       3         4
+29: set_from_constant          4         4
+30: negate                     4
+31: add                        3         4
+32: copy                       2         3
+33: set_from_constant          6         1
+34: set_from_constant          7         2
+35: add                        6         7
+36: copy                       5         6
+37: set_from_constant          6         3
+38: add                        5         6
+39: copy                       4         5
+40: set_from_constant          5         4
+41: add                        4         5
+42: copy                       3         4
+43: set_from_constant          4         5
+44: add                        3         4
+45: copy                       2         3
+46: jump                       0
 end
 
 function
-00: set_from_constant          0         1
-01: set_from_constant          1         2
-02: set_from_constant          2         3
-03: set_from_constant          3         4
-04: mul                        2         3
-05: add                        1         2
-06: shift_left                 0         1
-07: set_from_constant          1         5
-08: shift_right                0         1
-09: set_from_constant          1         6
-10: set_from_constant          2         7
-11: less                       1         2
-12: set_from_constant          2         8
-13: greater                    1         2
-14: set_from_constant          2         9
-15: less_equal                 1         2
-16: set_from_constant          2        10
-17: greater_equal              1         2
-18: equal                      0         1
+00: set_from_constant          3         1
+01: set_from_constant          5         2
+02: set_from_constant          7         3
+03: set_from_constant          8         4
+04: mul                        7         8
+05: copy                       6         7
+06: add                        5         6
+07: copy                       4         5
+08: shift_left                 3         4
+09: copy                       2         3
+10: set_from_constant          3         5
+11: shift_right                2         3
+12: copy                       1         2
+13: set_from_constant          6         6
+14: set_from_constant          7         7
+15: less                       6         7
+16: copy                       5         6
+17: set_from_constant          6         8
+18: greater                    5         6
+19: copy                       4         5
+20: set_from_constant          5         9
+21: less_equal                 4         5
+22: copy                       3         4
+23: set_from_constant          4        10
+24: greater_equal              3         4
+25: copy                       2         3
+26: equal                      1         2
+27: copy                       0         1
 end
 
 function
 00: new_table                  0
-01: copy                       1         0
-02: set_string                 2         0
-03: get_element                1         2         1
-04: copy                       2         0
-05: set_string                 3         1
-06: get_element                2         3         2
-07: copy                       3         0
-08: set_string                 4         2
-09: get_element                3         4         3
-10: and                        2         3
-11: copy                       3         0
-12: set_string                 4         3
-13: get_element                3         4         3
-14: xor                        2         3
-15: or                         1         2
+01: copy                       2         0
+02: set_string                 3         0
+03: get_element                2         3         2
+04: copy                       5         0
+05: set_string                 6         1
+06: get_element                5         6         5
+07: copy                       6         0
+08: set_string                 7         2
+09: get_element                6         7         6
+10: and                        5         6
+11: copy                       4         5
+12: copy                       5         0
+13: set_string                 6         3
+14: get_element                5         6         5
+15: xor                        4         5
+16: copy                       3         4
+17: or                         2         3
+18: copy                       1         2
 end
 
 function

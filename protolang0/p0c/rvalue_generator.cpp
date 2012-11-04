@@ -421,37 +421,48 @@ namespace p0
 
 		default:
 			{
-				rvalue_generator left_generator(
-					m_function_generator,
-					m_emitter,
+				temporary const left_variable(
 					m_frame,
-					m_destination);
-				expression.left().accept(left_generator);
-			}
+					is_result_stored ? 1 : 0);
 
-			temporary const right_variable(
-				m_frame,
-				is_result_stored ? 1 : 0);
+				{
+					rvalue_generator left_generator(
+						m_function_generator,
+						m_emitter,
+						m_frame,
+						is_result_stored ? left_variable.address() : reference());
+					expression.left().accept(left_generator);
+				}
 
-			{
-				rvalue_generator right_generator(
-					m_function_generator,
-					m_emitter,
+				temporary const right_variable(
 					m_frame,
-					is_result_stored ? right_variable.address() : reference());
-				expression.right().accept(right_generator);
-			}
+					is_result_stored ? 1 : 0);
 
-			auto const instruction = binary_operation_to_instruction(expression.type());
+				{
+					rvalue_generator right_generator(
+						m_function_generator,
+						m_emitter,
+						m_frame,
+						is_result_stored ? right_variable.address() : reference());
+					expression.right().accept(right_generator);
+				}
 
-			if (is_result_stored)
-			{
-				m_emitter.binary_operation(
-					instruction,
-					m_destination.local_address(),
-					right_variable.address().local_address());
+				auto const instruction = binary_operation_to_instruction(expression.type());
+
+				if (is_result_stored)
+				{
+					m_emitter.binary_operation(
+						instruction,
+						left_variable.address().local_address(),
+						right_variable.address().local_address()
+						);
+					m_emitter.copy(
+						m_destination.local_address(),
+						left_variable.address().local_address()
+						);
+				}
+				break;
 			}
-			break;
 		}
 	}
 
