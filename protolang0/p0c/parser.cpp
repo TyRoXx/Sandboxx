@@ -229,12 +229,13 @@ namespace p0
 
 	namespace
 	{
+		infix_precedence const strongest_precedence = 1;
 		infix_precedence const weakest_precedence = 6;
 
 
 		infix_precedence get_stronger(infix_precedence precedence)
 		{
-			assert(precedence >= 1);
+			assert(precedence > strongest_precedence);
 			return (precedence - 1);
 		}
 
