@@ -379,9 +379,55 @@ namespace p0
 		}
 	}
 
+	namespace
+	{
+		intermediate::instruction_type::Enum binary_operation_to_instruction(
+			binary_operator::Enum op)
+		{
+			using namespace intermediate;
+
+			switch (op)
+			{
+			case binary_operator::add: return instruction_type::add;
+			case binary_operator::sub: return instruction_type::sub;
+			case binary_operator::mul: return instruction_type::mul;
+			case binary_operator::div: return instruction_type::div;
+			case binary_operator::mod: return instruction_type::mod;
+			default: assert(!"invalid binary operator id"); return instruction_type::nothing;
+			}
+		}
+	}
+
 	void rvalue_generator::visit(binary_expression_tree const &expression)
 	{
-		//TODO
+		{
+			rvalue_generator left_generator(
+				m_function_generator,
+				m_emitter,
+				m_frame,
+				m_destination);
+			expression.left().accept(left_generator);
+		}
+
+		temporary const right_variable(
+			m_frame,
+			1);
+
+		{
+			rvalue_generator right_generator(
+				m_function_generator,
+				m_emitter,
+				m_frame,
+				right_variable.address());
+			expression.right().accept(right_generator);
+		}
+
+		auto const instruction = binary_operation_to_instruction(expression.type());
+
+		m_emitter.binary_operation(
+			instruction,
+			m_destination.local_address(),
+			right_variable.address().local_address());
 	}
 
 	void rvalue_generator::visit(dot_element_expression_tree const &expression)

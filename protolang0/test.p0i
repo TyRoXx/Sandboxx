@@ -1,0 +1,235 @@
+function
+  set_function       0      1     
+  set_function       1      2     
+  copy               2      1     
+  call               0     
+  set_function       2      3     
+  copy               3      2     
+  call               0     
+  set_function       3      4     
+  copy               4      3     
+  call               0     
+  set_from_constant  4      0     
+  copy               5      4     
+  set_function       6      5     
+  set_function       7      6     
+  set_function       8      8     
+  copy               9      6     
+  call               0     
+  copy               10     7     
+  set_from_constant  12     1     
+  set_from_constant  13     2     
+  set_from_constant  14     3     
+  call               3     
+  copy               9      11    
+  copy               10     8     
+  set_null           12    
+  call               1     
+  set_null           10    
+  set_null           10    
+  copy               11     10    
+  not                11    
+  jump_if            32     11    
+  jump               39    
+  set_from_constant  12     123   
+  not                12    
+  jump_if            35     12    
+  set_from_constant  12     1     
+  not                12    
+  jump_if            39     12    
+  jump               35    
+  set_function       11     11    
+  call               0     
+end
+
+function
+  set_from_constant  0      1     
+  not                0     
+  jump_if            7      0     
+  set_from_constant  1      0     
+  set_from_constant  2      0     
+  copy               1      2     
+  jump               0     
+end
+
+function
+  new_table          0     
+  set_from_constant  1      1     
+  copy               2      0     
+  set_string         3      0     
+  set_element        2      3      1     
+  copy               1      0     
+  set_string         2      0     
+  get_element        1      2      1     
+  new_table          2     
+  set_string         3      1     
+  set_from_constant  4      0     
+  set_element        2      3      4     
+  new_table          3     
+  set_string         4      2     
+  copy               5      0     
+  set_element        3      4      5     
+  set_string         4      3     
+  copy               5      2     
+  set_element        3      4      5     
+  new_table          4     
+  set_string         5      2     
+  copy               6      0     
+  set_element        4      5      6     
+  set_string         5      3     
+  copy               6      2     
+  set_element        4      5      6     
+  new_table          5     
+  set_string         6      2     
+  set_from_constant  7      12345 
+  set_element        5      6      7     
+  set_string         6      3     
+  set_from_constant  7      23446 
+  set_element        5      6      7     
+  new_table          6     
+  set_string         7      4     
+  set_from_constant  8      1     
+  set_element        6      7      8     
+  set_string         7      5     
+  set_from_constant  8      2     
+  set_element        6      7      8     
+  set_string         7      6     
+  set_from_constant  8      3     
+  set_element        6      7      8     
+  set_string         7      7     
+  set_from_constant  8      4     
+  set_element        6      7      8     
+  set_string         7      7     
+  set_from_constant  8      4     
+  set_element        6      7      8     
+  set_string         7      8     
+  set_from_constant  8      5     
+  set_element        6      7      8     
+  set_string         7      9     
+  set_from_constant  8      6     
+  set_element        6      7      8     
+  set_string         7      10    
+  set_from_constant  8      7     
+  set_element        6      7      8     
+  new_table          7     
+  set_string         8      11    
+  set_from_constant  9      8     
+  set_element        7      8      9     
+  set_string         8      12    
+  set_from_constant  9      9     
+  set_element        7      8      9     
+  set_string         8      13    
+  set_from_constant  9      10    
+  set_element        7      8      9     
+  set_string         8      14    
+  set_from_constant  9      11    
+  set_element        7      8      9     
+  set_string         8      15    
+  set_from_constant  9      12    
+  set_element        7      8      9     
+  set_string         8      16    
+  set_from_constant  9      13    
+  set_element        7      8      9     
+  set_string         8      17    
+  set_from_constant  9      14    
+  set_element        7      8      9     
+  set_string         8      18    
+  set_from_constant  9      15    
+  set_element        7      8      9     
+  new_table          8     
+  set_string         9      1     
+  set_from_constant  10     0     
+  set_element        8      9      10    
+  set_string         9      1     
+  set_from_constant  10     0     
+  set_element        8      9      10    
+end
+
+function
+  set_from_constant  0      1     
+  not                0     
+  invert             0     
+  negate             0     
+end
+
+function
+  set_string         0      19    
+  set_string         1      2     
+  set_string         2      20    
+  set_string         3      21    
+  set_string         4      22    
+  set_string         5      23    
+end
+
+function
+  set_from_constant  0      0     
+  copy               0      0     
+  set_from_constant  1      123   
+  return            
+end
+
+function
+  set_function       3      7     
+  copy               0      2     
+  copy               5      3     
+  copy               7      0     
+  copy               8      1     
+  call               2     
+  copy               4      6     
+  return            
+end
+
+function
+end
+
+function
+  copy               1      0     
+end
+
+function
+  copy               0      1     
+  copy               0      1     
+  copy               0      1     
+  copy               1      0     
+  set_from_constant  1      1     
+  set_from_constant  1      2     
+end
+
+function
+  set_from_constant  0      0     
+  copy               1      0     
+end
+
+function
+  set_from_constant  0      0     
+  not                0     
+  jump_if            5      0     
+  set_from_constant  1      2     
+  jump               6     
+  set_from_constant  1      4     
+end
+
+000: elem
+001: a
+002: abc
+003: def
+004: x1
+005: x2
+006: x3
+007: x4
+008: x5
+009: x6
+010: x7
+011: x8
+012: x9
+013: x10
+014: x11
+015: x12
+016: x13
+017: x14
+018: x15
+019: 
+020: \\ \' \" \x0a \x0d \x09
+015: abcdef
+016: \x00\x01\x02\x10\x11\x12IJKL\xff abc
+017: \x0a\x0b

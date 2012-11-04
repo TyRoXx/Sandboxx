@@ -230,6 +230,19 @@ namespace p0
 				));
 		}
 
+		void emitter::binary_operation(
+			instruction_type::Enum operation,
+			instruction_argument destination,
+			instruction_argument source)
+		{
+			assert(is_binary_arithmetic(operation));
+
+			push_instruction(instruction(
+				operation,
+				destination,
+				source));
+		}
+
 
 		void emitter::push_instruction(
 			instruction const &instruction

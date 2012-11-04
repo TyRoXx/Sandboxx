@@ -25,8 +25,10 @@ namespace p0
 				set_string,
 				copy,
 				add,
+				sub,
 				mul,
 				div,
+				mod,
 				not_,
 				invert,
 				negate,
@@ -34,8 +36,11 @@ namespace p0
 				or_,
 				xor_,
 				equal,
+				not_equal,
 				less,
+				less_equal,
 				greater,
+				greater_equal,
 				call,
 				jump,
 				jump_if,
@@ -57,6 +62,7 @@ namespace p0
 		};
 
 		instruction_info const &get_instruction_info(instruction_type::Enum instruction);
+		bool is_binary_arithmetic(instruction_type::Enum instruction);
 
 
 		struct instruction

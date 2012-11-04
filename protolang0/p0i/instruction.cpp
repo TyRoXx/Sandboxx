@@ -19,8 +19,10 @@ namespace p0
 				{"set_string", 2},
 				{"copy", 2},
 				{"add", 2},
+				{"sub", 2},
 				{"mul", 2},
 				{"div", 2},
+				{"mod", 2},
 				{"not", 1},
 				{"invert", 1},
 				{"negate", 1},
@@ -28,8 +30,11 @@ namespace p0
 				{"or", 2},
 				{"xor", 2},
 				{"equal", 2},
+				{"not_equal", 2},
 				{"less", 2},
+				{"less_equal", 2},
 				{"greater", 2},
+				{"greater_equal", 2},
 				{"call", 1},
 				{"jump", 1},
 				{"jump_if", 2},
@@ -39,6 +44,13 @@ namespace p0
 			}};
 
 			return infos[instruction];
+		}
+
+		bool is_binary_arithmetic(instruction_type::Enum instruction)
+		{
+			return
+				(instruction >= instruction_type::add) &&
+				(instruction <= instruction_type::greater_equal);
 		}
 
 

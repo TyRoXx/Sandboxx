@@ -86,6 +86,10 @@ namespace p0
 				instruction_argument key_address,
 				instruction_argument value_address
 				);
+			void binary_operation(
+				instruction_type::Enum operation,
+				instruction_argument destination,
+				instruction_argument source);
 
 		private:
 
