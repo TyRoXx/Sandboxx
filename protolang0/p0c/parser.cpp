@@ -229,7 +229,7 @@ namespace p0
 
 	namespace
 	{
-		static const infix_precedence weakest_precedence = 6;
+		infix_precedence const weakest_precedence = 6;
 
 
 		infix_precedence get_stronger(infix_precedence precedence)
