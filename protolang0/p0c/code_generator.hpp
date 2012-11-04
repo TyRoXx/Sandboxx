@@ -29,8 +29,10 @@ namespace p0
 
 		explicit code_generator(
 			function_tree const &tree,
+			size_t integer_width,
 			compiler_error_handler error_handler
 			);
+		size_t integer_width() const;
 		intermediate::unit generate_unit();
 		size_t generate_function(
 			function_tree const &function
@@ -48,6 +50,7 @@ namespace p0
 
 
 		function_tree const &m_tree;
+		size_t const m_integer_width;
 		compiler_error_handler const m_error_handler;
 		intermediate::unit::function_vector m_functions;
 		string_id_table m_string_ids;

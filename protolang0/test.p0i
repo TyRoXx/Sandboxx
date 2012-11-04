@@ -146,6 +146,7 @@ function 3
 end
 
 function 4
+0: set_from_constant          1     65535
 end
 
 function 5

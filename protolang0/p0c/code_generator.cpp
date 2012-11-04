@@ -11,11 +11,18 @@ namespace p0
 {
 	code_generator::code_generator(
 		function_tree const &tree,
+		size_t integer_width,
 		compiler_error_handler error_handler
 		)
 		: m_tree(tree)
+		, m_integer_width(integer_width)
 		, m_error_handler(std::move(error_handler))
 	{
+	}
+
+	size_t code_generator::integer_width() const
+	{
+		return m_integer_width;
 	}
 
 	intermediate::unit code_generator::generate_unit()

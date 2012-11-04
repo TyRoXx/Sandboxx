@@ -22,6 +22,7 @@
 			function ()
 			{
 				var a = b && c || d
+				var o = 65535 ;+ 65536
 			}
 		}
 	}

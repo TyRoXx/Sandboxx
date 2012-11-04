@@ -44,13 +44,18 @@ namespace p0
 			base = 10,
 		};
 
-		intermediate::instruction_argument value = 0, previous_value = 0;
+		typedef intermediate::instruction_argument integer;
+
+		integer value = 0, previous_value = 0;
+		auto const integer_width = m_function_generator.integer_width();
+		integer const integer_mask = (integer(1) << integer_width) - 1;
 
 		auto const value_string = expression.value();
 		for (auto i = value_string.begin(); i != value_string.end(); ++i)
 		{
 			value *= base;
 			value += (*i - '0');
+			value &= integer_mask;
 
 			if (value < previous_value)
 			{

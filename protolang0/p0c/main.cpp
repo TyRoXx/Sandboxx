@@ -142,8 +142,11 @@ int main(int argc, char **argv)
 
 		try
 		{
+			auto const integer_width = 64;
+
 			p0::compiler compiler(
 				source,
+				integer_width,
 				handle_error
 				);
 
