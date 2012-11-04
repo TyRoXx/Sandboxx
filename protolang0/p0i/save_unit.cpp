@@ -116,6 +116,7 @@ namespace p0
 					<< std::setw(base10_index_width)
 					<< std::setfill('0')
 					<< std::right
+					<< std::dec
 					<< s << ": "
 				;
 
