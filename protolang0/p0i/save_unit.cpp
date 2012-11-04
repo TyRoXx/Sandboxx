@@ -3,6 +3,7 @@
 #include "function.hpp"
 #include <algorithm>
 #include <iomanip>
+#include <cassert>
 
 
 namespace p0
@@ -11,16 +12,27 @@ namespace p0
 	{
 		namespace
 		{
+			namespace
+			{
+				size_t get_base10_index_width(size_t count)
+				{
+					return count ? static_cast<size_t>(1 + std::logl(count) / std::logl(10)) : 0;
+				}
+			}
+
 			void save_instruction(
 				std::ostream &file,
-				instruction const &instruction
+				instruction const &instruction,
+				size_t address,
+				size_t address_width
 				)
 			{
 				using namespace std;
 
 				auto const &info = get_instruction_info(instruction.type());
 
-				file << "  ";
+				file << std::setw(address_width) << std::setfill('0') << address << std::setfill(' ');
+				file << ": ";
 				file << std::setw(18) << std::left << info.name;
 
 				std::for_each(
@@ -28,7 +40,7 @@ namespace p0
 					begin(instruction.arguments()) + info.argument_count,
 					[&file](instruction_argument arg)
 				{
-					file << ' ' << std::setw(6) << std::right << arg;
+					file << ' ' << std::setw(9) << std::right << arg;
 				});
 
 				file << '\n';
@@ -40,9 +52,13 @@ namespace p0
 				)
 			{
 				file << "function\n";
-				for (auto i = begin(function.body()); i != end(function.body()); ++i)
+				auto const &body = function.body();
+				auto const body_size = body.size();
+				auto const base10_address_width = get_base10_index_width(body_size);
+
+				for (size_t i = 0; i < body.size(); ++i)
 				{
-					save_instruction(file, *i);
+					save_instruction(file, body[i], i, base10_address_width);
 				}
 				file << "end\n";
 			}
@@ -91,10 +107,13 @@ namespace p0
 				file << '\n';
 			}
 
-			for (size_t s = 0; s < unit.strings().size(); ++s)
+			auto const string_count = unit.strings().size();
+			auto const base10_index_width = get_base10_index_width(string_count);
+
+			for (size_t s = 0; s < string_count; ++s)
 			{
 				file
-					<< std::setw(3)
+					<< std::setw(base10_index_width)
 					<< std::setfill('0')
 					<< std::right
 					<< s << ": "
