@@ -229,16 +229,68 @@ namespace p0
 
 	std::unique_ptr<expression_tree> parser::parse_expression()
 	{
-		return parse_infix_expression(0);
+		return parse_infix_expression(6);
 	}
 
-	std::unique_ptr<expression_tree> parser::parse_infix_expression(size_t level)
+	namespace
+	{
+		bool is_infix_operator(
+			token_type::Enum token,
+			size_t &precedence,
+			binary_operator::Enum &operator_)
+		{
+			switch (token)
+			{
+			case token_type::plus:
+				precedence = 6;
+				operator_ = binary_operator::add;
+				return true;
+
+			case token_type::star:
+				precedence = 5;
+				operator_ = binary_operator::mul;
+				return true;
+
+			default:
+				return false;
+			}
+		}
+	}
+
+	std::unique_ptr<expression_tree> parser::parse_infix_expression(size_t max_precedence)
 	{
 		auto left = parse_extended_primary_expression();
 
 		for (;;)
 		{
-			break;
+			auto const potential_operator = peek_token();
+
+			size_t precedence;
+			binary_operator::Enum operator_;
+
+			if (is_infix_operator(
+				potential_operator.type,
+				precedence,
+				operator_) &&
+				(precedence <= max_precedence))
+			{
+				pop_token();
+				auto right = parse_infix_expression(max_precedence - 1);
+
+				auto const position = left->position(); //TODO
+
+				std::unique_ptr<expression_tree> infix_expr(new binary_expression_tree(
+					operator_,
+					std::move(left),
+					std::move(right),
+					position));
+
+				left = std::move(infix_expr);
+			}
+			else
+			{
+				break;
+			}
 		}
 
 		return left;
