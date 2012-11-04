@@ -134,6 +134,7 @@ namespace p0
 		case '!': return eat_single_or_double_token(token_type::exclamation_mark, '=', token_type::not_equal);
 		case '.': return eat_single_char_token(token_type::dot);
 		case '~': return eat_single_char_token(token_type::tilde);
+		case '^': return eat_single_char_token(token_type::caret);
 		case '"':
 			{
 				++m_pos;

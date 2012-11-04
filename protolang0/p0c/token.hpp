@@ -52,6 +52,7 @@ namespace p0
 			exclamation_mark,
 			dot,
 			tilde,
+			caret,
 			end_of_file,
 		};
 	};

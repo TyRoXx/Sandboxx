@@ -17,7 +17,7 @@
 			function ()
 			{
 				var tbl = []
-				var e = tbl.a + tbl.b * tbl.c
+				var e = tbl.a | tbl.b & tbl.c ^ tbl.d
 			}
 		}
 	}
