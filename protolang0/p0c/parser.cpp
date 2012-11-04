@@ -229,25 +229,23 @@ namespace p0
 
 	namespace
 	{
-		enum
-		{
-			weakest_precedence = 6,
-		};
+		static const infix_precedence weakest_precedence = 6;
 
-		size_t get_stronger(size_t precedence)
+
+		infix_precedence get_stronger(infix_precedence precedence)
 		{
 			assert(precedence >= 1);
 			return (precedence - 1);
 		}
 
-		bool is_acceptable_precedence(size_t found, size_t weakest)
+		bool is_acceptable_precedence(infix_precedence found, infix_precedence weakest)
 		{
 			return (found <= weakest);
 		}
 
 		bool is_infix_operator(
 			token_type::Enum token,
-			size_t &precedence,
+			infix_precedence &precedence,
 			binary_operator::Enum &operator_)
 		{
 			switch (token)
@@ -273,7 +271,7 @@ namespace p0
 		return parse_infix_expression(weakest_precedence);
 	}
 
-	std::unique_ptr<expression_tree> parser::parse_infix_expression(size_t weakest_acceptable_precedence)
+	std::unique_ptr<expression_tree> parser::parse_infix_expression(infix_precedence weakest_acceptable_precedence)
 	{
 		auto left = parse_extended_primary_expression();
 
@@ -281,7 +279,7 @@ namespace p0
 		{
 			auto const potential_operator = peek_token();
 
-			size_t precedence;
+			infix_precedence precedence;
 			binary_operator::Enum operator_;
 
 			if (is_infix_operator(
