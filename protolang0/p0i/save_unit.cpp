@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <cassert>
+#include <cmath>
 
 
 namespace p0
@@ -16,7 +17,7 @@ namespace p0
 			{
 				size_t get_base10_index_width(size_t count)
 				{
-					return count ? static_cast<size_t>(1 + std::logl(count) / std::logl(10)) : 0;
+					return count ? static_cast<size_t>(1 + std::log(static_cast<double>(count)) / std::log(10.0)) : 0;
 				}
 			}
 
