@@ -133,12 +133,15 @@ int main(int argc, char **argv)
 			);
 
 		size_t error_counter = 0;
-		auto const handle_error = std::bind(print_error_return_true,
-			std::ref(error_out),
-			source,
-			std::placeholders::_1,
-			std::ref(error_counter)
+		auto const handle_error = [&](p0::compiler_error const &error)
+		{
+			return print_error_return_true(
+				error_out,
+				source,
+				error,
+				error_counter
 			);
+		};
 
 		try
 		{
