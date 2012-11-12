@@ -193,6 +193,8 @@ bool node_plugin_handle_request(
 	{
 		if (!imstream_create(&response->body, response_body, response_body_size))
 		{
+			plugin->free(response_headers);
+			plugin->free(response_body);
 			return false;
 		}
 
