@@ -1,3 +1,0 @@
-home lua index.lua
-sub dir subdir
-empty plugin_empty ?
