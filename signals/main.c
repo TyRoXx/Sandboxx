@@ -27,7 +27,7 @@ static void test_signal_call(void)
 
 	for (i = 0; i < connection_count; ++i)
 	{
-		connection * const c = signal_connect(&s, test_signal_add_callback, &found);
+		connection * const c = signal_connect(&s, test_signal_add_callback, &found, 0);
 		assert(c);
 	}
 
@@ -55,7 +55,7 @@ static void test_signal_disconnect(void)
 
 	for (i = 0; i < (size_t)connection_count; ++i)
 	{
-		connections[i] = signal_connect(&s, test_signal_add_callback, &found);
+		connections[i] = signal_connect(&s, test_signal_add_callback, &found, 1);
 		assert(connections[i]);
 	}
 
@@ -81,7 +81,7 @@ static void test_connection_grab_drop(void)
 
 	signal_create(&s);
 
-	c = signal_connect(&s, test_signal_add_callback, 0);
+	c = signal_connect(&s, test_signal_add_callback, 0, 1);
 	assert(c);
 	assert(connection_is_connected(c));
 
@@ -105,7 +105,7 @@ static void test_connection_multi_grab_drop(void)
 
 	signal_create(&s);
 
-	c = signal_connect(&s, test_signal_add_callback, 0);
+	c = signal_connect(&s, test_signal_add_callback, 0, 0);
 	assert(c);
 	assert(connection_is_connected(c));
 
@@ -131,7 +131,7 @@ static void test_connection_disconnect(void)
 
 	signal_create(&s);
 
-	c = signal_connect(&s, test_signal_add_callback, 0);
+	c = signal_connect(&s, test_signal_add_callback, 0, 1);
 	assert(c);
 	assert(connection_is_connected(c));
 
@@ -160,7 +160,7 @@ static void test_connection_disconnect_on_call(void)
 
 	signal_create(&s);
 
-	c = signal_connect(&s, test_connection_disconnect_on_call_callback, &c);
+	c = signal_connect(&s, test_connection_disconnect_on_call_callback, &c, 0);
 	assert(c);
 	assert(connection_is_connected(c));
 
@@ -176,7 +176,7 @@ static void test_connection_disconnect_grabbed_on_call(void)
 
 	signal_create(&s);
 
-	c = signal_connect(&s, test_connection_disconnect_on_call_callback, &c);
+	c = signal_connect(&s, test_connection_disconnect_on_call_callback, &c, 1);
 	assert(c);
 	assert(connection_is_connected(c));
 
@@ -197,7 +197,7 @@ static void test_connection_drop_after_destroy(void)
 
 	signal_create(&s);
 
-	c = signal_connect(&s, test_connection_disconnect_on_call_callback, &c);
+	c = signal_connect(&s, test_connection_disconnect_on_call_callback, &c, 0);
 	assert(c);
 
 	connection_grab(c);

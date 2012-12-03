@@ -35,7 +35,7 @@ void signal_destroy(signal *s)
 	}
 }
 
-connection *signal_connect(signal *s, slot callback, void *user_data)
+connection *signal_connect(signal *s, slot callback, void *user_data, int at_end)
 {
 	connection *result;
 	assert(s);
@@ -46,21 +46,38 @@ connection *signal_connect(signal *s, slot callback, void *user_data)
 	{
 		result->callback = callback;
 		result->user_data = user_data;
-		result->previous = s->last;
-		result->next = 0;
 		result->external_refs = 0;
 		result->parent = s;
 		result->is_connected = 1;
 
-		if (s->last)
+		if (at_end)
 		{
-			s->last->next = result;
+			result->previous = s->last;
+			result->next = 0;
+			if (s->last)
+			{
+				s->last->next = result;
+			}
+			else
+			{
+				s->first = result;
+			}
+			s->last = result;
 		}
 		else
 		{
+			result->previous = 0;
+			result->next = s->first;
+			if (s->first)
+			{
+				s->first->previous = result;
+			}
+			else
+			{
+				s->last = result;
+			}
 			s->first = result;
 		}
-		s->last = result;
 	}
 	return result;
 }

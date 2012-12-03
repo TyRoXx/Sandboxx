@@ -14,7 +14,7 @@ struct signal
 
 void signal_create(signal *s);
 void signal_destroy(signal *s);
-connection *signal_connect(signal *s, slot callback, void *user_data);
+connection *signal_connect(signal *s, slot callback, void *user_data, int at_end);
 void signal_disconnect(signal *s, connection *c);
 void signal_call(signal *s, void *arguments);
 
