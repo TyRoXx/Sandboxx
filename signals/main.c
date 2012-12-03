@@ -381,6 +381,7 @@ static void test_connection_disconnect_on_call(void)
 
 	c = signal_connect(&s, test_connection_disconnect_on_call_callback, &c);
 	assert(c);
+	assert(connection_is_connected(c));
 
 	signal_call(&s, 0);
 
@@ -396,9 +397,13 @@ static void test_connection_disconnect_grabbed_on_call(void)
 
 	c = signal_connect(&s, test_connection_disconnect_on_call_callback, &c);
 	assert(c);
+	assert(connection_is_connected(c));
 
 	connection_grab(c);
+
 	signal_call(&s, 0);
+	assert(!connection_is_connected(c));
+
 	connection_drop(c);
 
 	signal_destroy(&s);
