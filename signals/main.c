@@ -18,6 +18,39 @@ struct connection
 	signal *parent;
 };
 
+static void connection_possible_deallocate(connection *c);
+static void connection_destroy(connection *c);
+static void connection_grab(connection *c);
+static void connection_drop(connection *c);
+static int connection_is_connected(connection const *c);
+static void connection_disconnect(connection *c);
+
+struct signal
+{
+	connection *first, *last;
+	size_t call_depth;
+};
+
+static void signal_create(signal *s);
+static void signal_destroy(signal *s);
+static connection *signal_connect(signal *s, slot callback, void *user_data);
+static void signal_disconnect(signal *s, connection *c);
+static void signal_call(signal const *s, void *arguments);
+
+
+static void connection_possible_deallocate(connection *c)
+{
+	signal *s;
+	assert(c);
+
+	s = c->parent;
+	if (!s || !s->call_depth)
+	{
+		connection_destroy(c);
+		free(c);
+	}
+}
+
 static void connection_destroy(connection *c)
 {
 	assert(c);
@@ -36,13 +69,10 @@ static void connection_drop(connection *c)
 	assert(c->external_refs > 0);
 
 	--(c->external_refs);
-	if (c->external_refs == 0)
+	if ((c->external_refs == 0) &&
+			!c->parent)
 	{
-		if (!c->parent)
-		{
-			connection_destroy(c);
-			free(c);
-		}
+		connection_possible_deallocate(c);
 	}
 }
 
@@ -64,21 +94,19 @@ static void connection_disconnect(connection *c)
 	signal_disconnect(c->parent, c);
 }
 
-struct signal
-{
-	connection *first, *last;
-};
 
 static void signal_create(signal *s)
 {
 	assert(s);
 	s->first = s->last = 0;
+	s->call_depth = 0;
 }
 
 static void signal_destroy(signal *s)
 {
 	connection *c;
 	assert(s);
+	assert(!s->call_depth);
 
 	c = s->first;
 	while (c)
@@ -146,8 +174,7 @@ static void signal_disconnect(signal *s, connection *c)
 	}
 	else
 	{
-		connection_destroy(c);
-		free(c);
+		connection_possible_deallocate(c);
 	}
 }
 
@@ -161,6 +188,7 @@ static void signal_call(signal const *s, void *arguments)
 		c->callback(c->user_data, arguments);
 	}
 }
+
 
 static void test_signal_add_callback(void *user_data, void *arguments)
 {
