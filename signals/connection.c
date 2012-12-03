@@ -49,7 +49,6 @@ void connection_remove_if_disconnected(connection *c)
 void connection_destroy(connection *c)
 {
 	assert(c);
-	free(c->user_data);
 }
 
 void connection_grab(connection *c)
