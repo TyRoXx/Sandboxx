@@ -312,6 +312,37 @@ static void test_connection_grab_drop(void)
 	signal_destroy(&s);
 }
 
+static void test_connection_multi_grab_drop(void)
+{
+	enum
+	{
+		grab_count = 32
+	};
+	signal s;
+	connection *c;
+	int i;
+
+	signal_create(&s);
+
+	c = signal_connect(&s, test_signal_add_callback, 0);
+	assert(c);
+	assert(connection_is_connected(c));
+
+	for (i = 0; i < grab_count; ++i)
+	{
+		connection_grab(c);
+	}
+
+	for (i = 0; i < grab_count; ++i)
+	{
+		connection_drop(c);
+	}
+
+	assert(connection_is_connected(c));
+
+	signal_destroy(&s);
+}
+
 static void test_connection_disconnect(void)
 {
 	signal s;
@@ -378,6 +409,7 @@ int main(void)
 	test_signal_call();
 	test_signal_disconnect();
 	test_connection_grab_drop();
+	test_connection_multi_grab_drop();
 	test_connection_disconnect();
 	test_connection_disconnect_on_call();
 	test_connection_disconnect_grabbed_on_call();
