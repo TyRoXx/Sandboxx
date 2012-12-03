@@ -15,5 +15,6 @@ Release/
 *.suo
 
 *.DS_Store
+CMakeLists.txt.user
 
 /WaffleDB/target/
