@@ -190,6 +190,21 @@ static void test_connection_disconnect_grabbed_on_call(void)
 	signal_destroy(&s);
 }
 
+static void test_connection_drop_after_destroy(void)
+{
+	signal s;
+	connection *c;
+
+	signal_create(&s);
+
+	c = signal_connect(&s, test_connection_disconnect_on_call_callback, &c);
+	assert(c);
+
+	connection_grab(c);
+	signal_destroy(&s);
+	connection_drop(c);
+}
+
 int main(void)
 {
 	test_signal_call();
@@ -199,8 +214,8 @@ int main(void)
 	test_connection_disconnect();
 	test_connection_disconnect_on_call();
 	test_connection_disconnect_grabbed_on_call();
+	test_connection_drop_after_destroy();
 
 	printf("Tests finished\n");
 	return 0;
 }
-

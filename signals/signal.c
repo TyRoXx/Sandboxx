@@ -21,9 +21,17 @@ void signal_destroy(signal *s)
 	while (c)
 	{
 		connection * const copy = c;
-		connection_destroy(c);
 		c = c->next;
-		free(copy);
+
+		if (copy->external_refs)
+		{
+			copy->parent = 0;
+		}
+		else
+		{
+			connection_destroy(copy);
+			free(copy);
+		}
 	}
 }
 

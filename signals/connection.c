@@ -10,24 +10,25 @@ void connection_remove(connection *c)
 	assert(c);
 
 	s = c->parent;
-	assert(s);
+	if (s)
+	{
+		if (c->previous)
+		{
+			c->previous->next = c->next;
+		}
+		else
+		{
+			s->first = c->next;
+		}
 
-	if (c->previous)
-	{
-		c->previous->next = c->next;
-	}
-	else
-	{
-		s->first = c->next;
-	}
-
-	if (c->next)
-	{
-		c->next->previous = c->previous;
-	}
-	else
-	{
-		s->last = c->previous;
+		if (c->next)
+		{
+			c->next->previous = c->previous;
+		}
+		else
+		{
+			s->last = c->previous;
+		}
 	}
 
 	connection_destroy(c);
