@@ -15,7 +15,7 @@ struct connection
 	void *user_data;
 	connection *previous, *next;
 	size_t external_refs;
-	struct signal *parent;
+	signal *parent;
 };
 
 static void connection_destroy(connection *c)
@@ -36,11 +36,13 @@ static void connection_drop(connection *c)
 	assert(c->external_refs > 0);
 
 	--(c->external_refs);
-	if ((c->external_refs == 0) &&
-			!c->parent)
+	if (c->external_refs == 0)
 	{
-		connection_destroy(c);
-		free(c);
+		if (!c->parent)
+		{
+			connection_destroy(c);
+			free(c);
+		}
 	}
 }
 
@@ -268,6 +270,7 @@ static void test_connection_disconnect(void)
 	connection_drop(c);
 	signal_destroy(&s);
 }
+
 int main(void)
 {
 	test_signal_call();
