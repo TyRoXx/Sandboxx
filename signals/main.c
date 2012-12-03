@@ -16,9 +16,11 @@ struct connection
 	connection *previous, *next;
 	size_t external_refs;
 	signal *parent;
+	int is_connected;
 };
 
-static void connection_possible_deallocate(connection *c);
+static void connection_remove(connection *c);
+static void connection_remove_if_disconnected(connection *c);
 static void connection_destroy(connection *c);
 static void connection_grab(connection *c);
 static void connection_drop(connection *c);
@@ -35,19 +37,48 @@ static void signal_create(signal *s);
 static void signal_destroy(signal *s);
 static connection *signal_connect(signal *s, slot callback, void *user_data);
 static void signal_disconnect(signal *s, connection *c);
-static void signal_call(signal const *s, void *arguments);
+static void signal_call(signal *s, void *arguments);
 
 
-static void connection_possible_deallocate(connection *c)
+static void connection_remove(connection *c)
 {
 	signal *s;
 	assert(c);
 
 	s = c->parent;
-	if (!s || !s->call_depth)
+	if (s)
 	{
-		connection_destroy(c);
-		free(c);
+		if (c->previous)
+		{
+			c->previous->next = c->next;
+		}
+		else
+		{
+			s->first = c->next;
+		}
+
+		if (c->next)
+		{
+			c->next->previous = c->previous;
+		}
+		else
+		{
+			s->last = c->previous;
+		}
+	}
+
+	connection_destroy(c);
+	free(c);
+}
+
+static void connection_remove_if_disconnected(connection *c)
+{
+	assert(c);
+	assert(!c->external_refs);
+
+	if (!c->is_connected)
+	{
+		connection_remove(c);
 	}
 }
 
@@ -69,24 +100,23 @@ static void connection_drop(connection *c)
 	assert(c->external_refs > 0);
 
 	--(c->external_refs);
-	if ((c->external_refs == 0) &&
-			!c->parent)
+	if (c->external_refs == 0)
 	{
-		connection_possible_deallocate(c);
+		connection_remove_if_disconnected(c);
 	}
 }
 
 static int connection_is_connected(connection const *c)
 {
 	assert(c);
-	return (c->parent != 0);
+	return c->is_connected;
 }
 
 static void connection_disconnect(connection *c)
 {
 	assert(c);
 
-	if (!c->parent)
+	if (!c->is_connected)
 	{
 		return;
 	}
@@ -111,8 +141,10 @@ static void signal_destroy(signal *s)
 	c = s->first;
 	while (c)
 	{
+		connection * const copy = c;
 		connection_destroy(c);
 		c = c->next;
+		free(copy);
 	}
 }
 
@@ -131,6 +163,7 @@ static connection *signal_connect(signal *s, slot callback, void *user_data)
 		result->next = 0;
 		result->external_refs = 0;
 		result->parent = s;
+		result->is_connected = 1;
 
 		if (s->last)
 		{
@@ -150,43 +183,42 @@ static void signal_disconnect(signal *s, connection *c)
 	assert(s);
 	assert(c);
 
-	if (c->previous)
-	{
-		c->previous->next = c->next;
-	}
-	else
-	{
-		s->first = c->next;
-	}
+	c->is_connected = 0;
 
-	if (c->next)
+	if (!s->call_depth &&
+			!c->external_refs)
 	{
-		c->next->previous = c->previous;
-	}
-	else
-	{
-		s->last = c->previous;
-	}
-
-	if (c->external_refs)
-	{
-		c->parent = 0;
-	}
-	else
-	{
-		connection_possible_deallocate(c);
+		connection_remove_if_disconnected(c);
 	}
 }
 
-static void signal_call(signal const *s, void *arguments)
+static void signal_call(signal *s, void *arguments)
 {
 	connection *c;
 	assert(s);
 
-	for (c = s->first; c; c = c->next)
+	++(s->call_depth);
+
+	for (c = s->first; c; )
 	{
-		c->callback(c->user_data, arguments);
+		connection *next;
+
+		if (c->is_connected)
+		{
+			c->callback(c->user_data, arguments);
+		}
+
+		next = c->next;
+
+		if (!c->is_connected)
+		{
+			connection_remove(c);
+		}
+
+		c = next;
 	}
+
+	--(s->call_depth);
 }
 
 
@@ -323,16 +355,31 @@ static void test_connection_disconnect_on_call(void)
 	signal_destroy(&s);
 }
 
+static void test_connection_disconnect_grabbed_on_call(void)
+{
+	signal s;
+	connection *c;
+
+	signal_create(&s);
+
+	c = signal_connect(&s, test_connection_disconnect_on_call_callback, &c);
+	assert(c);
+
+	connection_grab(c);
+	signal_call(&s, 0);
+	connection_drop(c);
+
+	signal_destroy(&s);
+}
+
 int main(void)
 {
 	test_signal_call();
 	test_signal_disconnect();
 	test_connection_grab_drop();
 	test_connection_disconnect();
-
-	/*TODO*/
-	(void)test_connection_disconnect_on_call;
-	/*test_connection_disconnect_on_call();*/
+	test_connection_disconnect_on_call();
+	(void)test_connection_disconnect_grabbed_on_call;
 
 	printf("Tests finished\n");
 	return 0;
