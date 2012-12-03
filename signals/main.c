@@ -46,25 +46,24 @@ static void connection_remove(connection *c)
 	assert(c);
 
 	s = c->parent;
-	if (s)
-	{
-		if (c->previous)
-		{
-			c->previous->next = c->next;
-		}
-		else
-		{
-			s->first = c->next;
-		}
+	assert(s);
 
-		if (c->next)
-		{
-			c->next->previous = c->previous;
-		}
-		else
-		{
-			s->last = c->previous;
-		}
+	if (c->previous)
+	{
+		c->previous->next = c->next;
+	}
+	else
+	{
+		s->first = c->next;
+	}
+
+	if (c->next)
+	{
+		c->next->previous = c->previous;
+	}
+	else
+	{
+		s->last = c->previous;
 	}
 
 	connection_destroy(c);
@@ -188,7 +187,7 @@ static void signal_disconnect(signal *s, connection *c)
 	if (!s->call_depth &&
 			!c->external_refs)
 	{
-		connection_remove_if_disconnected(c);
+		connection_remove(c);
 	}
 }
 
@@ -210,7 +209,9 @@ static void signal_call(signal *s, void *arguments)
 
 		next = c->next;
 
-		if (!c->is_connected)
+		if (!c->is_connected &&
+				!c->external_refs &&
+				(s->call_depth == 1))
 		{
 			connection_remove(c);
 		}
@@ -379,7 +380,7 @@ int main(void)
 	test_connection_grab_drop();
 	test_connection_disconnect();
 	test_connection_disconnect_on_call();
-	(void)test_connection_disconnect_grabbed_on_call;
+	test_connection_disconnect_grabbed_on_call();
 
 	printf("Tests finished\n");
 	return 0;
