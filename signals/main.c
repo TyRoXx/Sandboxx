@@ -271,12 +271,41 @@ static void test_connection_disconnect(void)
 	signal_destroy(&s);
 }
 
+static void test_connection_disconnect_on_call_callback(void *user_data, void *arguments)
+{
+	connection ** const c = user_data;
+	assert(c);
+	assert(!arguments);
+
+	connection_disconnect(*c);
+}
+
+static void test_connection_disconnect_on_call(void)
+{
+	signal s;
+	connection *c;
+
+	signal_create(&s);
+
+	c = signal_connect(&s, test_connection_disconnect_on_call_callback, &c);
+	assert(c);
+
+	signal_call(&s, 0);
+
+	signal_destroy(&s);
+}
+
 int main(void)
 {
 	test_signal_call();
 	test_signal_disconnect();
 	test_connection_grab_drop();
 	test_connection_disconnect();
+
+	/*TODO*/
+	(void)test_connection_disconnect_on_call;
+	/*test_connection_disconnect_on_call();*/
+
 	printf("Tests finished\n");
 	return 0;
 }
