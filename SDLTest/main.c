@@ -1,4 +1,5 @@
 #include "SDL.h"
+#include <math.h>
 
 
 typedef struct Tile
@@ -124,24 +125,27 @@ int main(void)
 
 		while (is_running)
 		{
-			SDL_WaitEvent(&event);
-			switch (event.type)
+			while (SDL_PollEvent(&event))
 			{
-			case SDL_QUIT:
-				is_running = 0;
-				break;
+				if (event.type == SDL_QUIT)
+				{
+					is_running = 0;
+					break;
+				}
 			}
 
 			if (screen->format->BytesPerPixel == 4)
 			{
 				unsigned x, y;
+				unsigned const time_ms = SDL_GetTicks();
+
 				for (y = 0; y < Height; ++y)
 				{
 					for (x = 0; x < Width; ++x)
 					{
 						uint32_t pixel = SDL_MapRGB(screen->format,
-													44,
-													44,
+													(Uint8)((1 + sin((float)time_ms / 2800.0f)) * 128),
+													(Uint8)((1 + cos((float)time_ms / 1700.0f)) * 128),
 													(Uint8)((float)y / (float)Height * 256.0f));
 
 						memcpy(((char *)screen->pixels) + ((Width * y) + x) * 4,
@@ -153,6 +157,8 @@ int main(void)
 				draw_tiles(screen, 64, 64, &grid);
 
 				SDL_UpdateRect(screen, 0, 0, Width, Height);
+
+				SDL_Delay(10);
 			}
 		}
 
