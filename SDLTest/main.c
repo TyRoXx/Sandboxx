@@ -154,13 +154,13 @@ int main(int argc, char **argv)
 							   4);
 					}
 				}
-
-				draw_tiles(screen, 64, 64, &grid);
-
-				SDL_UpdateRect(screen, 0, 0, Width, Height);
-
-				SDL_Delay(10);
 			}
+
+			draw_tiles(screen, 64, 64, &grid);
+
+			SDL_UpdateRect(screen, 0, 0, Width, Height);
+
+			SDL_Delay(10);
 		}
 
 		TileGrid_free(&grid);
