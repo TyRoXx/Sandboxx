@@ -114,18 +114,18 @@ static void draw_layered_tile(
 		)
 {
 	size_t i;
-	SDL_Rect dest;
-
-	dest.x = (Sint16)px;
-	dest.y = (Sint16)py;
-	/*other elements of dest are ignored by BlitSurface*/
-
 	for (i = 0; i < TILE_LAYER_COUNT; ++i)
 	{
 		TileKind const * const layer = tile->layers[i];
 		if (layer)
 		{
 			SDL_Surface * const image = images->images[layer->image_id];
+			SDL_Rect dest;
+			dest.x = (Sint16)px;
+			dest.y = (Sint16)py;
+			/*Other elements of dest are ignored by SDL_BlitSurface.*/
+			/*dest is not reused because SDL_BlitSurface may modify it.*/
+
 			SDL_BlitSurface(image, 0, screen, &dest);
 		}
 	}
