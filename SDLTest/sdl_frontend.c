@@ -180,7 +180,8 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 	front->base.type = &SDLFrontendType;
 	front->game = game;
 	front->screen = SDL_SetVideoMode(Width, Height, 32, SDL_SWSURFACE);
-	front->camera.position = Vector2f_zero;
+	front->camera.position.x = Width / 2;
+	front->camera.position.y = Height / 2;
 
 	if (!front->screen)
 	{
