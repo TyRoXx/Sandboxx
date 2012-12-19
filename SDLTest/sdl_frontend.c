@@ -243,7 +243,10 @@ static char const * const ImageFileNames[] =
 	"sprites/dirt_32.bmp",
 	"sprites/n_grass_s_dirt_32.bmp",
 	"sprites/n_dirt_s_grass_32.bmp",
-	"sprites/fence_32.bmp"
+	"sprites/fence_32.bmp",
+	"sprites/nw_dirt_on_grass_32.bmp",
+	"sprites/w_dirt_e_grass_32.bmp",
+	"sprites/sw_dirt_on_grass_32.bmp",
 };
 
 static int init_image_manager(ImageManager *images)
