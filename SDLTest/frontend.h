@@ -7,7 +7,7 @@ struct FrontendType;
 
 typedef struct Frontend
 {
-	struct FrontendType *type;
+	struct FrontendType const *type;
 }
 Frontend;
 

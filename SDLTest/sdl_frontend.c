@@ -1,5 +1,6 @@
 #include "sdl_frontend.h"
 #include "game.h"
+#include "vector2f.h"
 #include "SDL.h"
 #include "SDL_main.h"
 #include <stdlib.h>
@@ -11,12 +12,20 @@ enum
 	Width = 640, Height = 480
 };
 
+typedef struct Camera
+{
+	Vector2f position;
+}
+Camera;
+
+
 typedef struct SDLFrontend
 {
 	Frontend base;
 	Game *game;
 	SDL_Surface *screen;
 	SDL_Surface *tile_images[4];
+	Camera camera;
 }
 SDLFrontend;
 
@@ -38,13 +47,15 @@ static void SDLFrontend_destroy(Frontend *front)
 }
 
 static void draw_tiles(
+	Camera const *camera,
 	SDL_Surface *screen,
-	size_t x,
-	size_t y,
 	TileGrid const *tiles,
 	SDL_Surface * const *tile_images,
 	TileIndex tile_image_count)
 {
+	size_t const base_x = (size_t)camera->position.x - Width / 2;
+	size_t const base_y = (size_t)camera->position.y - Height / 2;
+
 	size_t ty;
 	for (ty = 0; ty < tiles->height; ++ty)
 	{
@@ -62,8 +73,8 @@ static void draw_tiles(
 
 			image = tile_images[tile_index];
 
-			dest.x = x + (tx * image->w);
-			dest.y = y + (ty * image->h);
+			dest.x = (tx * image->w) - base_x;
+			dest.y = (ty * image->h) - base_y;
 
 			SDL_BlitSurface(image, 0, screen, &dest);
 		}
@@ -85,6 +96,27 @@ static void SDLFrontend_main_loop(Frontend *front)
 			{
 				is_running = 0;
 				break;
+			}
+
+			if (event.type == SDL_KEYUP)
+			{
+				switch (event.key.keysym.sym)
+				{
+				case SDLK_LEFT:
+					sdl_front->camera.position.x -= 32;
+					break;
+				case SDLK_RIGHT:
+					sdl_front->camera.position.x += 32;
+					break;
+				case SDLK_UP:
+					sdl_front->camera.position.y -= 32;
+					break;
+				case SDLK_DOWN:
+					sdl_front->camera.position.y += 32;
+					break;
+				default:
+					break;
+				}
 			}
 		}
 
@@ -111,9 +143,8 @@ static void SDLFrontend_main_loop(Frontend *front)
 			}
 		}
 
-		draw_tiles(screen,
-				   64,
-				   64,
+		draw_tiles(&sdl_front->camera,
+				   screen,
 				   &sdl_front->game->grid,
 				   sdl_front->tile_images,
 				   sizeof(sdl_front->tile_images) / sizeof(sdl_front->tile_images[0]));
@@ -149,6 +180,7 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 	front->base.type = &SDLFrontendType;
 	front->game = game;
 	front->screen = SDL_SetVideoMode(Width, Height, 32, SDL_SWSURFACE);
+	front->camera.position = Vector2f_zero;
 
 	if (!front->screen)
 	{
