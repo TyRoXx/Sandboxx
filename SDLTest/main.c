@@ -1,6 +1,6 @@
 #include "SDL.h"
 #include "SDL_main.h"
-#include "tile_grid.h"
+#include "game.h"
 #include <math.h>
 
 
@@ -38,20 +38,7 @@ static void draw_tiles(SDL_Surface *screen,
 
 enum
 {
-	Width = 640, Height = 480,
-	MapWidth = 12, MapHeight = 8
-};
-
-static const TileIndex BuiltInMap[MapWidth * MapHeight] =
-{
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	2, 2, 2, 2, 2, 2, 5, 0, 0, 0, 0, 0,
-	1, 1, 1, 1, 1, 1, 4, 0, 0, 0, 0, 0,
-	3, 3, 3, 3, 3, 3, 6, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	Width = 640, Height = 480
 };
 
 int main(int argc, char **argv)
@@ -67,9 +54,9 @@ int main(int argc, char **argv)
 
 	{
 		SDL_Surface * const screen = SDL_SetVideoMode(Width, Height, 32, SDL_SWSURFACE);
-		SDL_Surface *tile_images[4] = {};
+		SDL_Surface *tile_images[4] = {0};
 		SDL_Surface **tile;
-		TileGrid grid;
+		Game game;
 		SDL_Event event;
 		int is_running = 1;
 
@@ -92,8 +79,7 @@ int main(int argc, char **argv)
 			return 1;
 		}
 
-		TileGrid_init(&grid, MapWidth, MapHeight);
-		memcpy(grid.tiles, BuiltInMap, sizeof(BuiltInMap));
+		Game_init(&game);
 
 		while (is_running)
 		{
@@ -127,7 +113,7 @@ int main(int argc, char **argv)
 				}
 			}
 
-			draw_tiles(screen, 64, 64, &grid, tile_images,
+			draw_tiles(screen, 64, 64, &game.grid, tile_images,
 					   sizeof(tile_images) / sizeof(tile_images[0]));
 
 			SDL_UpdateRect(screen, 0, 0, Width, Height);
@@ -135,7 +121,7 @@ int main(int argc, char **argv)
 			SDL_Delay(10);
 		}
 
-		TileGrid_free(&grid);
+		Game_free(&game);
 
 		for (tile = tile_images;
 			 tile != (tile_images + sizeof(tile_images) / sizeof(tile_images[0]));
