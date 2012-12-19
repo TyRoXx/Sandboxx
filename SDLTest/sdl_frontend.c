@@ -203,6 +203,9 @@ static void SDLFrontend_main_loop(Frontend *front)
 				case SDLK_DOWN:
 					sdl_front->camera.position.y += 32;
 					break;
+				case SDLK_ESCAPE:
+					is_running = 0;
+					break;
 				default:
 					break;
 				}
