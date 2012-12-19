@@ -30,7 +30,8 @@ static TileKind const TileKinds[] =
 
 static void init_demo_grid(TileGrid *g)
 {
-	size_t y;
+	size_t y, i;
+
 	for (y = 0; y < MapHeight; ++y)
 	{
 		size_t x;
@@ -41,23 +42,28 @@ static void init_demo_grid(TileGrid *g)
 					&TileKinds[BuiltInMap[index]];
 		}
 	}
+
+	for (i = 2; i < MapWidth - 2; ++i)
+	{
+		g->tiles[5 * MapWidth + i].layers[1] = &TileKinds[4];
+	}
 }
 
 
 int Game_init(Game *g)
 {
-	if (!TileGrid_init(&g->grid, 12, 8))
+	if (!TileGrid_init(&g->current_map.terrain, 12, 8))
 	{
 		return 0;
 	}
 
-	init_demo_grid(&g->grid);
+	init_demo_grid(&g->current_map.terrain);
 	return 1;
 }
 
 void Game_free(Game *g)
 {
-	TileGrid_free(&g->grid);
+	Map_free(&g->current_map);
 }
 
 int Game_update(Game *g)

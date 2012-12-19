@@ -214,8 +214,8 @@ static void SDLFrontend_main_loop(Frontend *front)
 		draw_background(screen);
 		draw_tiles(&sdl_front->camera,
 				   screen,
-				   &sdl_front->game->grid,
-					&sdl_front->images
+				   &sdl_front->game->current_map.terrain,
+				   &sdl_front->images
 				);
 
 		SDL_Flip(screen);

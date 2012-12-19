@@ -2,12 +2,12 @@
 #define GAME_H
 
 
-#include "tile_grid.h"
+#include "map.h"
 
 
 typedef struct Game
 {
-	TileGrid grid;
+	Map current_map;
 }
 Game;
 
