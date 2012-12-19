@@ -1,57 +1,15 @@
 #include "SDL.h"
 #include "SDL_main.h"
+#include "tile_grid.h"
 #include <math.h>
 
 
-typedef struct Tile
-{
-	SDL_Surface *image; /*owned*/
-}
-Tile;
-
-void Tile_init(Tile *t, SDL_Surface *image)
-{
-	t->image = image;
-}
-
-void Tile_free(Tile *t)
-{
-	SDL_FreeSurface(t->image);
-}
-
-
-typedef struct TileGrid
-{
-	Tile const **tiles; /*malloc'ed*/
-	size_t width, height;
-}
-TileGrid;
-
-int TileGrid_init(TileGrid *g, size_t width, size_t height)
-{
-	g->tiles = calloc(width * height, sizeof(*g->tiles));
-	g->width = width;
-	g->height = height;
-	return (g->tiles != 0);
-}
-
-void TileGrid_free(TileGrid *g)
-{
-	free(g->tiles);
-}
-
-Tile const *TileGrid_get(TileGrid const *g, size_t x, size_t y)
-{
-	return g->tiles[y * g->width + x];
-}
-
-void TileGrid_set(TileGrid const *g, size_t x, size_t y, Tile const *tile)
-{
-	g->tiles[y * g->width + x] = tile;
-}
-
-
-void draw_tiles(SDL_Surface *screen, size_t x, size_t y, TileGrid const *tiles)
+void draw_tiles(SDL_Surface *screen,
+				size_t x,
+				size_t y,
+				TileGrid const *tiles,
+				SDL_Surface * const *tile_images,
+				TileIndex tile_image_count)
 {
 	size_t ty;
 	for (ty = 0; ty < tiles->height; ++ty)
@@ -59,18 +17,21 @@ void draw_tiles(SDL_Surface *screen, size_t x, size_t y, TileGrid const *tiles)
 		size_t tx;
 		for (tx = 0; tx < tiles->width; ++tx)
 		{
-			Tile const * const tile = TileGrid_get(tiles, tx, ty);
+			TileIndex const tile_index = TileGrid_get(tiles, tx, ty);
 			SDL_Rect dest;
+			SDL_Surface *image;
 
-			if (!tile)
+			if (tile_index >= tile_image_count)
 			{
 				continue;
 			}
 
-			dest.x = x + (tx * tile->image->w);
-			dest.y = y + (ty * tile->image->h);
+			image = tile_images[tile_index];
 
-			SDL_BlitSurface(tile->image, 0, screen, &dest);
+			dest.x = x + (tx * image->w);
+			dest.y = y + (ty * image->h);
+
+			SDL_BlitSurface(image, 0, screen, &dest);
 		}
 	}
 }
@@ -79,7 +40,6 @@ enum
 {
 	Width = 640, Height = 480
 };
-
 
 int main(int argc, char **argv)
 {
@@ -91,8 +51,8 @@ int main(int argc, char **argv)
 
 	{
 		SDL_Surface * const screen = SDL_SetVideoMode(Width, Height, 32, SDL_SWSURFACE);
-		SDL_Surface *grass, *dirt, *grass_dirt;
-		Tile grass_tile, dirt_tile, grass_dirt_tile;
+		SDL_Surface *tile_images[3];
+		SDL_Surface **tile;
 		TileGrid grid;
 		SDL_Event event;
 		int is_running = 1;
@@ -104,24 +64,21 @@ int main(int argc, char **argv)
 			return 1;
 		}
 
-		grass = SDL_LoadBMP("sprites/grass32.bmp");
-		dirt = SDL_LoadBMP("sprites/dirt32.bmp");
-		grass_dirt = SDL_LoadBMP("sprites/grass_dirt32.bmp");
-		if (!grass || !dirt || !grass_dirt)
+		tile_images[0] = SDL_LoadBMP("sprites/grass32.bmp");
+		tile_images[1] = SDL_LoadBMP("sprites/dirt32.bmp");
+		tile_images[2] = SDL_LoadBMP("sprites/grass_dirt32.bmp");
+		if (!tile_images[0] || !tile_images[1] || !tile_images[2])
 		{
 			return 1;
 		}
 
-		Tile_init(&grass_tile, grass);
-		Tile_init(&dirt_tile, dirt);
-		Tile_init(&grass_dirt_tile, grass_dirt);
-		TileGrid_init(&grid, 12, 6);
+		TileGrid_init(&grid, 12, 3);
 
 		for (i = 0; i < 12; ++i)
 		{
-			TileGrid_set(&grid, i, 0, &grass_tile);
-			TileGrid_set(&grid, i, 1, &grass_dirt_tile);
-			TileGrid_set(&grid, i, 2, &dirt_tile);
+			TileGrid_set(&grid, i, 0, 0);
+			TileGrid_set(&grid, i, 1, 2);
+			TileGrid_set(&grid, i, 2, 1);
 		}
 
 		while (is_running)
@@ -156,7 +113,8 @@ int main(int argc, char **argv)
 				}
 			}
 
-			draw_tiles(screen, 64, 64, &grid);
+			draw_tiles(screen, 64, 64, &grid, tile_images,
+					   sizeof(tile_images) / sizeof(tile_images[0]));
 
 			SDL_UpdateRect(screen, 0, 0, Width, Height);
 
@@ -164,9 +122,13 @@ int main(int argc, char **argv)
 		}
 
 		TileGrid_free(&grid);
-		Tile_free(&grass_dirt_tile);
-		Tile_free(&dirt_tile);
-		Tile_free(&grass_tile);
+
+		for (tile = tile_images;
+			 tile != (tile_images + sizeof(tile_images) / sizeof(tile_images[0]));
+			 ++tile)
+		{
+			SDL_FreeSurface(*tile);
+		}
 	}
 
 	SDL_Quit();
