@@ -136,9 +136,9 @@ static void draw_tiles(
 		TileGrid const *tiles,
 		ImageManager const *images)
 {
-	size_t const base_x = (size_t)camera->position.x - Width / 2;
-	size_t const base_y = (size_t)camera->position.y - Height / 2;
 	size_t const tile_width = 32;
+	size_t const base_x = (size_t)(camera->position.x * tile_width) - Width / 2;
+	size_t const base_y = (size_t)(camera->position.y * tile_width) - Height / 2;
 
 	size_t ty;
 	for (ty = 0; ty < tiles->height; ++ty)
@@ -206,16 +206,16 @@ static void SDLFrontend_main_loop(Frontend *front)
 				switch (event.key.keysym.sym)
 				{
 				case SDLK_LEFT:
-					sdl_front->camera.position.x -= 32;
+					sdl_front->camera.position.x -= 1;
 					break;
 				case SDLK_RIGHT:
-					sdl_front->camera.position.x += 32;
+					sdl_front->camera.position.x += 1;
 					break;
 				case SDLK_UP:
-					sdl_front->camera.position.y -= 32;
+					sdl_front->camera.position.y -= 1;
 					break;
 				case SDLK_DOWN:
-					sdl_front->camera.position.y += 32;
+					sdl_front->camera.position.y += 1;
 					break;
 				case SDLK_ESCAPE:
 					is_running = 0;
@@ -312,8 +312,8 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 	front->base.type = &SDLFrontendType;
 	front->game = game;
 	front->screen = SDL_SetVideoMode(Width, Height, 32, SDL_SWSURFACE);
-	front->camera.position.x = Width / 2;
-	front->camera.position.y = Height / 2;
+	front->camera.position.x = 6.5f;
+	front->camera.position.y = 3.5f;
 
 	if (!front->screen)
 	{
