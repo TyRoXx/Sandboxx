@@ -32,7 +32,7 @@ float Vector2f_length_sq(Vector2f const *v)
 
 float Vector2f_length(Vector2f const *v)
 {
-	return sqrtf(Vector2f_length_sq(v));
+	return (float)sqrt(Vector2f_length_sq(v));
 }
 
 

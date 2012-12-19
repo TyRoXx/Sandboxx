@@ -102,8 +102,8 @@ static void draw_tiles(
 
 			image = textures[tile_index].surface;
 
-			dest.x = (tx * image->w) - base_x;
-			dest.y = (ty * image->h) - base_y;
+			dest.x = (Sint16)((tx * (size_t)image->w) - base_x);
+			dest.y = (Sint16)((ty * (size_t)image->h) - base_y);
 
 			SDL_BlitSurface(image, 0, screen, &dest);
 		}

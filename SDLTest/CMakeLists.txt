@@ -5,7 +5,7 @@ find_package(SDL REQUIRED)
 
 include_directories(${SDL_INCLUDE_DIR})
 
-list(APPEND CMAKE_C_FLAGS "-ansi -Wall -Wextra -pedantic -g")
+list(APPEND CMAKE_C_FLAGS "-ansi -Wall -Wextra -Wconversion -pedantic -g")
 
 file(GLOB sources "*.h" "*.c")
 
