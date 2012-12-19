@@ -110,6 +110,30 @@ static void draw_tiles(
 	}
 }
 
+static void draw_background(SDL_Surface *screen)
+{
+	if (screen->format->BytesPerPixel == 4)
+	{
+		unsigned x, y;
+		unsigned const time_ms = SDL_GetTicks();
+
+		for (y = 0; y < Height; ++y)
+		{
+			for (x = 0; x < Width; ++x)
+			{
+				uint32_t const pixel = SDL_MapRGB(screen->format,
+											(Uint8)((1 + sin((float)time_ms / 2800.0f)) * 128),
+											(Uint8)((1 + cos((float)time_ms / 1700.0f)) * 128),
+											(Uint8)((float)y / (float)Height * 256.0f));
+
+				memcpy(((char *)screen->pixels) + ((Width * y) + x) * 4,
+					   &pixel,
+					   4);
+			}
+		}
+	}
+}
+
 static void SDLFrontend_main_loop(Frontend *front)
 {
 	SDLFrontend * const sdl_front = (SDLFrontend *)front;
@@ -151,34 +175,14 @@ static void SDLFrontend_main_loop(Frontend *front)
 
 		Game_update(sdl_front->game);
 
-		if (screen->format->BytesPerPixel == 4)
-		{
-			unsigned x, y;
-			unsigned const time_ms = SDL_GetTicks();
-
-			for (y = 0; y < Height; ++y)
-			{
-				for (x = 0; x < Width; ++x)
-				{
-					uint32_t const pixel = SDL_MapRGB(screen->format,
-												(Uint8)((1 + sin((float)time_ms / 2800.0f)) * 128),
-												(Uint8)((1 + cos((float)time_ms / 1700.0f)) * 128),
-												(Uint8)((float)y / (float)Height * 256.0f));
-
-					memcpy(((char *)screen->pixels) + ((Width * y) + x) * 4,
-						   &pixel,
-						   4);
-				}
-			}
-		}
-
+		draw_background(screen);
 		draw_tiles(&sdl_front->camera,
 				   screen,
 				   &sdl_front->game->grid,
 				   sdl_front->textures,
 				   sizeof(sdl_front->textures) / sizeof(sdl_front->textures[0]));
 
-		SDL_UpdateRect(screen, 0, 0, Width, Height);
+		SDL_Flip(screen);
 
 		SDL_Delay(10);
 	}
@@ -192,6 +196,7 @@ static FrontendType const SDLFrontendType =
 };
 
 static SDL_Color const AlphaKey = {255, 0, 255, 0};
+static char const * const WindowTitle = "SDL Test";
 
 
 Frontend *SDLFrontEnd_create(struct Game *game)
@@ -207,6 +212,8 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 		 fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		 return 0;
 	}
+
+	SDL_WM_SetCaption(WindowTitle, WindowTitle);
 
 	front->base.type = &SDLFrontendType;
 	front->game = game;
