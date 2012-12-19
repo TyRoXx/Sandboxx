@@ -1,6 +1,7 @@
 #include "sdl_frontend.h"
 #include "game.h"
 #include "vector2f.h"
+#include "minmax.h"
 #include "SDL.h"
 #include "SDL_ttf.h"
 #include "SDL_main.h"
@@ -105,8 +106,8 @@ static void SDLFrontend_destroy(Frontend *front)
 }
 
 static void draw_layered_tile(
-		size_t x,
-		size_t y,
+		ptrdiff_t px,
+		ptrdiff_t py,
 		SDL_Surface *screen,
 		LayeredTile const *tile,
 		ImageManager const *images
@@ -115,8 +116,8 @@ static void draw_layered_tile(
 	size_t i;
 	SDL_Rect dest;
 
-	dest.x = (Sint16)x;
-	dest.y = (Sint16)y;
+	dest.x = (Sint16)px;
+	dest.y = (Sint16)py;
 	/*other elements of dest are ignored by BlitSurface*/
 
 	for (i = 0; i < TILE_LAYER_COUNT; ++i)
@@ -137,21 +138,29 @@ static void draw_tiles(
 		ImageManager const *images)
 {
 	size_t const tile_width = 32;
-	size_t const base_x = (size_t)(camera->position.x * tile_width) - Width / 2;
-	size_t const base_y = (size_t)(camera->position.y * tile_width) - Height / 2;
+	ptrdiff_t y;
 
-	size_t ty;
-	for (ty = 0; ty < tiles->height; ++ty)
+	ptrdiff_t visible_begin_idx = (ptrdiff_t)(camera->position.x - (float)Width  / (float)tile_width / 2.0f);
+	ptrdiff_t visible_begin_idy = (ptrdiff_t)(camera->position.y - (float)Height / (float)tile_width / 2.0f);
+	ptrdiff_t visible_end_idx   = (ptrdiff_t)(camera->position.x + (float)Width  / (float)tile_width / 2.0f + 0.5f);
+	ptrdiff_t visible_end_idy   = (ptrdiff_t)(camera->position.y + (float)Height / (float)tile_width / 2.0f + 0.5f);
+
+	visible_begin_idx = max_ptrdiff_t(visible_begin_idx, 0);
+	visible_begin_idy = max_ptrdiff_t(visible_begin_idy, 0);
+	visible_end_idx   = min_ptrdiff_t(visible_end_idx,   (ptrdiff_t)tiles->width);
+	visible_end_idy   = min_ptrdiff_t(visible_end_idy,   (ptrdiff_t)tiles->height);
+
+	for (y = visible_begin_idy; y < visible_end_idy; ++y)
 	{
-		size_t tx;
-		for (tx = 0; tx < tiles->width; ++tx)
+		ptrdiff_t x;
+		for (x = visible_begin_idx; x < visible_end_idx; ++x)
 		{
-			LayeredTile const * const tile = TileGrid_get(tiles, tx, ty);
+			LayeredTile const * const tile = TileGrid_get(tiles, (size_t)x, (size_t)y);
 			assert(tile);
 
 			draw_layered_tile(
-						(tx * tile_width) - base_x,
-						(ty * tile_width) - base_y,
+						(ptrdiff_t)((float)tile_width * ((float)x - camera->position.x) + Width  / 2.0f),
+						(ptrdiff_t)((float)tile_width * ((float)y - camera->position.y) + Height / 2.0f),
 						screen,
 						tile,
 						images
