@@ -61,24 +61,36 @@ SDLFrontend;
 
 static SDL_Color const AlphaKey = {255, 0, 255, 0};
 
-static SDL_Surface *load_bmp_texture(
-							char const *file_name)
+static SDL_Surface *load_bmp_texture(char const *file_name, SDL_PixelFormat *format)
 {
-	SDL_Surface * const surface = SDL_LoadBMP(file_name);
-	if (!surface)
+	SDL_Surface * const bitmap = SDL_LoadBMP(file_name);
+	SDL_Surface * converted;
+
+	if (!bitmap)
 	{
 		fprintf(stderr, "Could not load image %s\n", file_name);
 		return 0;
 	}
 
-	SDL_SetColorKey(surface,
-					SDL_SRCCOLORKEY,
-					SDL_MapRGB(surface->format,
-					AlphaKey.r,
-					AlphaKey.g,
-					AlphaKey.b));
+	converted = SDL_ConvertSurface(bitmap, format, 0);
+	if (!converted)
+	{
+		fprintf(stderr, "Could not convert image %s\n", file_name);
+		return bitmap;
+	}
 
-	return surface;
+	SDL_FreeSurface(bitmap);
+
+	if (SDL_SetColorKey(
+			converted,
+			SDL_SRCCOLORKEY,
+			SDL_MapRGB(converted->format,	AlphaKey.r,	AlphaKey.g,	AlphaKey.b)) < 0)
+	{
+		SDL_FreeSurface(converted);
+		return 0;
+	}
+
+	return converted;
 }
 
 
@@ -249,7 +261,7 @@ static char const * const ImageFileNames[] =
 	"sprites/sw_dirt_on_grass_32.bmp",
 };
 
-static int init_image_manager(ImageManager *images)
+static int init_image_manager(ImageManager *images, SDL_PixelFormat *format)
 {
 	size_t const image_count = sizeof(ImageFileNames) / sizeof(*ImageFileNames);
 	size_t i;
@@ -262,7 +274,8 @@ static int init_image_manager(ImageManager *images)
 	for (i = 0; i < image_count; ++i)
 	{
 		SDL_Surface * const image = load_bmp_texture(
-					ImageFileNames[i]
+					ImageFileNames[i],
+					format
 					);
 		if (!image)
 		{
@@ -308,7 +321,7 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 		return 0;
 	}
 
-	if (!init_image_manager(&front->images))
+	if (!init_image_manager(&front->images, front->screen->format))
 	{
 		return 0;
 	}
