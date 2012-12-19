@@ -5,6 +5,7 @@
 #include "SDL_main.h"
 #include <stdlib.h>
 #include <math.h>
+#include <assert.h>
 
 
 enum
@@ -18,72 +19,112 @@ typedef struct Camera
 }
 Camera;
 
-typedef struct Texture
+typedef struct ImageManager
 {
-	SDL_Surface *surface;
+	SDL_Surface **images;
+	size_t image_count;
 }
-Texture;
+ImageManager;
+
+static int ImageManager_init(ImageManager *im, size_t image_count)
+{
+	im->images = calloc(image_count, sizeof(*im->images));
+	if (im->images)
+	{
+		im->image_count = image_count;
+		return 1;
+	}
+	return 0;
+}
+
+static void ImageManager_free(ImageManager *im)
+{
+	size_t i;
+	for (i = 0; i < im->image_count; ++i)
+	{
+		SDL_Surface * const s = im->images[i];
+		SDL_FreeSurface(s);
+	}
+	free(im->images);
+}
 
 typedef struct SDLFrontend
 {
 	Frontend base;
 	Game *game;
 	SDL_Surface *screen;
-	Texture textures[5];
+	ImageManager images;
 	Camera camera;
 }
 SDLFrontend;
 
-static int load_bmp_texture(Texture *texture,
-							char const *file_name,
-							SDL_Color const *alpha_key)
+static SDL_Color const AlphaKey = {255, 0, 255, 0};
+
+static SDL_Surface *load_bmp_texture(
+							char const *file_name)
 {
-	texture->surface = SDL_LoadBMP(file_name);
-	if (!texture->surface)
+	SDL_Surface * const surface = SDL_LoadBMP(file_name);
+	if (!surface)
 	{
 		fprintf(stderr, "Could not load image %s\n", file_name);
 		return 0;
 	}
 
-	if (alpha_key)
-	{
-		SDL_SetColorKey(texture->surface,
-						SDL_SRCCOLORKEY,
-						SDL_MapRGB(texture->surface->format,
-						alpha_key->r,
-						alpha_key->g,
-						alpha_key->b));
-	}
+	SDL_SetColorKey(surface,
+					SDL_SRCCOLORKEY,
+					SDL_MapRGB(surface->format,
+					AlphaKey.r,
+					AlphaKey.g,
+					AlphaKey.b));
 
-	return 1;
+	return surface;
 }
 
 
 static void SDLFrontend_destroy(Frontend *front)
 {
-	Texture *texture;
 	SDLFrontend * const sdl_front = (SDLFrontend *)front;
 
-	for (texture = sdl_front->textures;
-		 texture != (sdl_front->textures +
-				  sizeof(sdl_front->textures) / sizeof(sdl_front->textures[0]));
-		 ++texture)
-	{
-		SDL_FreeSurface(texture->surface);
-	}
+	ImageManager_free(&sdl_front->images);
 
 	SDL_Quit();
 }
 
+static void draw_layered_tile(
+		size_t x,
+		size_t y,
+		SDL_Surface *screen,
+		LayeredTile const *tile,
+		ImageManager const *images
+		)
+{
+	size_t i;
+	SDL_Rect dest;
+
+	dest.x = (Sint16)x;
+	dest.y = (Sint16)y;
+	/*other elements of dest are ignored by BlitSurface*/
+
+	for (i = 0; i < TILE_LAYER_COUNT; ++i)
+	{
+		TileKind const * const layer = tile->layers[i];
+		if (layer)
+		{
+			SDL_Surface * const image = images->images[layer->image_id];
+			SDL_BlitSurface(image, 0, screen, &dest);
+		}
+	}
+}
+
 static void draw_tiles(
-	Camera const *camera,
-	SDL_Surface *screen,
-	TileGrid const *tiles,
-	Texture const *textures,
-	TileIndex texture_count)
+		Camera const *camera,
+		SDL_Surface *screen,
+		TileGrid const *tiles,
+		ImageManager const *images)
 {
 	size_t const base_x = (size_t)camera->position.x - Width / 2;
 	size_t const base_y = (size_t)camera->position.y - Height / 2;
+	size_t const tile_width = 32;
 
 	size_t ty;
 	for (ty = 0; ty < tiles->height; ++ty)
@@ -91,21 +132,16 @@ static void draw_tiles(
 		size_t tx;
 		for (tx = 0; tx < tiles->width; ++tx)
 		{
-			TileIndex const tile_index = TileGrid_get(tiles, tx, ty);
-			SDL_Rect dest;
-			SDL_Surface *image;
+			LayeredTile const * const tile = TileGrid_get(tiles, tx, ty);
+			assert(tile);
 
-			if (tile_index >= texture_count)
-			{
-				continue;
-			}
-
-			image = textures[tile_index].surface;
-
-			dest.x = (Sint16)((tx * (size_t)image->w) - base_x);
-			dest.y = (Sint16)((ty * (size_t)image->h) - base_y);
-
-			SDL_BlitSurface(image, 0, screen, &dest);
+			draw_layered_tile(
+						(tx * tile_width) - base_x,
+						(ty * tile_width) - base_y,
+						screen,
+						tile,
+						images
+						);
 		}
 	}
 }
@@ -179,8 +215,8 @@ static void SDLFrontend_main_loop(Frontend *front)
 		draw_tiles(&sdl_front->camera,
 				   screen,
 				   &sdl_front->game->grid,
-				   sdl_front->textures,
-				   sizeof(sdl_front->textures) / sizeof(sdl_front->textures[0]));
+					&sdl_front->images
+				);
 
 		SDL_Flip(screen);
 
@@ -195,9 +231,40 @@ static FrontendType const SDLFrontendType =
 	SDLFrontend_main_loop
 };
 
-static SDL_Color const AlphaKey = {255, 0, 255, 0};
 static char const * const WindowTitle = "SDL Test";
+static char const * const ImageFileNames[] =
+{
+	"sprites/grass_32.bmp",
+	"sprites/dirt_32.bmp",
+	"sprites/n_grass_s_dirt_32.bmp",
+	"sprites/n_dirt_s_grass_32.bmp",
+	"sprites/fence_32.bmp"
+};
 
+static int init_image_manager(ImageManager *images)
+{
+	size_t const image_count = sizeof(ImageFileNames) / sizeof(*ImageFileNames);
+	size_t i;
+
+	if (!ImageManager_init(images, image_count))
+	{
+		return 0;
+	}
+
+	for (i = 0; i < image_count; ++i)
+	{
+		SDL_Surface * const image = load_bmp_texture(
+					ImageFileNames[i]
+					);
+		if (!image)
+		{
+			return 0;
+		}
+		images->images[i] = image;
+	}
+
+	return 1;
+}
 
 Frontend *SDLFrontEnd_create(struct Game *game)
 {
@@ -227,12 +294,7 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 		return 0;
 	}
 
-	if (
-		!load_bmp_texture(front->textures + 0, "sprites/grass_32.bmp", 0) ||
-		!load_bmp_texture(front->textures + 1, "sprites/dirt_32.bmp", 0) ||
-		!load_bmp_texture(front->textures + 2, "sprites/n_grass_s_dirt_32.bmp", 0) ||
-		!load_bmp_texture(front->textures + 3, "sprites/n_dirt_s_grass_32.bmp", 0) ||
-		!load_bmp_texture(front->textures + 4, "sprites/fence_32.bmp", &AlphaKey))
+	if (!init_image_manager(&front->images))
 	{
 		return 0;
 	}
