@@ -46,9 +46,9 @@ static const TileIndex BuiltInMap[MapWidth * MapHeight] =
 {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0,
-	1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	2, 2, 2, 2, 2, 2, 5, 0, 0, 0, 0, 0,
+	1, 1, 1, 1, 1, 1, 4, 0, 0, 0, 0, 0,
+	3, 3, 3, 3, 3, 3, 6, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
 
 	{
 		SDL_Surface * const screen = SDL_SetVideoMode(Width, Height, 32, SDL_SWSURFACE);
-		SDL_Surface *tile_images[3];
+		SDL_Surface *tile_images[4] = {};
 		SDL_Surface **tile;
 		TileGrid grid;
 		SDL_Event event;
@@ -79,10 +79,15 @@ int main(int argc, char **argv)
 			return 1;
 		}
 
-		tile_images[0] = SDL_LoadBMP("sprites/grass32.bmp");
-		tile_images[1] = SDL_LoadBMP("sprites/dirt32.bmp");
-		tile_images[2] = SDL_LoadBMP("sprites/grass_dirt32.bmp");
-		if (!tile_images[0] || !tile_images[1] || !tile_images[2])
+		tile_images[0] = SDL_LoadBMP("sprites/grass_32.bmp");
+		tile_images[1] = SDL_LoadBMP("sprites/dirt_32.bmp");
+		tile_images[2] = SDL_LoadBMP("sprites/n_grass_s_dirt_32.bmp");
+		tile_images[3] = SDL_LoadBMP("sprites/n_dirt_s_grass_32.bmp");
+		if (!tile_images[0] ||
+				!tile_images[1] ||
+				!tile_images[2] ||
+				!tile_images[3]
+				)
 		{
 			return 1;
 		}
