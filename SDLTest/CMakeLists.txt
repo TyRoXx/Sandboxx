@@ -13,6 +13,7 @@ add_executable(${PROJECT_NAME} ${sources})
 
 if (MINGW)
 	target_link_libraries(${PROJECT_NAME} "-lmingw32")
+	target_link_libraries(${PROJECT_NAME} ${SDLMAIN_LIBRARY})
 endif()
 
-target_link_libraries(${PROJECT_NAME} ${SDLTTF_LIBRARY} ${SDLMAIN_LIBRARY} ${SDL_LIBRARY} "-lm")
+target_link_libraries(${PROJECT_NAME} ${SDLTTF_LIBRARY} ${SDL_LIBRARY} "-lm")
