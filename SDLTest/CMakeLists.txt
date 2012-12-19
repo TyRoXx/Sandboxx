@@ -8,7 +8,6 @@ include_directories(${SDL_INCLUDE_DIR})
 list(APPEND CMAKE_C_FLAGS "-ansi -Wall -Wextra -pedantic -g")
 
 file(GLOB sources "*.h" "*.c")
-
 add_executable(${PROJECT_NAME} ${sources})
 
 if (MINGW)
