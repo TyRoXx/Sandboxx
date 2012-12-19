@@ -2,8 +2,9 @@ project(SDLTest)
 cmake_minimum_required(VERSION 2.8)
 
 find_package(SDL REQUIRED)
+find_package(SDL_ttf REQUIRED)
 
-include_directories(${SDL_INCLUDE_DIR})
+include_directories(${SDL_INCLUDE_DIR} ${SDLTTF_INCLUDE_DIR})
 
 list(APPEND CMAKE_C_FLAGS "-ansi -Wall -Wextra -Wconversion -pedantic -g")
 
@@ -14,4 +15,4 @@ if (MINGW)
 	target_link_libraries(${PROJECT_NAME} "-lmingw32")
 endif()
 
-target_link_libraries(${PROJECT_NAME} ${SDLMAIN_LIBRARY} ${SDL_LIBRARY} "-lm")
+target_link_libraries(${PROJECT_NAME} ${SDLTTF_LIBRARY} ${SDLMAIN_LIBRARY} ${SDL_LIBRARY} "-lm")

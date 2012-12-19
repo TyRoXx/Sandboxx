@@ -2,6 +2,7 @@
 #include "game.h"
 #include "vector2f.h"
 #include "SDL.h"
+#include "SDL_ttf.h"
 #include "SDL_main.h"
 #include <stdlib.h>
 #include <math.h>
@@ -87,6 +88,7 @@ static void SDLFrontend_destroy(Frontend *front)
 
 	ImageManager_free(&sdl_front->images);
 
+	TTF_Quit();
 	SDL_Quit();
 }
 
@@ -281,6 +283,12 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 	{
 		 fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		 return 0;
+	}
+
+	if (TTF_Init() == -1)
+	{
+		fprintf(stderr, "SDL_tff error: %s\n", TTF_GetError());
+		return 0;
 	}
 
 	SDL_WM_SetCaption(WindowTitle, WindowTitle);
