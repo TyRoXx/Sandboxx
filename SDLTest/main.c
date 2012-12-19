@@ -1,4 +1,5 @@
 #include "SDL.h"
+#include "SDL_main.h"
 #include <math.h>
 
 
@@ -80,7 +81,7 @@ enum
 };
 
 
-int main(void)
+int main(int argc, char **argv)
 {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
