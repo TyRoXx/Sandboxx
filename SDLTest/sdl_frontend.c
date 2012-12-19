@@ -18,29 +18,58 @@ typedef struct Camera
 }
 Camera;
 
+typedef struct Texture
+{
+	SDL_Surface *surface;
+}
+Texture;
 
 typedef struct SDLFrontend
 {
 	Frontend base;
 	Game *game;
 	SDL_Surface *screen;
-	SDL_Surface *tile_images[4];
+	Texture textures[5];
 	Camera camera;
 }
 SDLFrontend;
 
+static int load_bmp_texture(Texture *texture,
+							char const *file_name,
+							SDL_Color const *alpha_key)
+{
+	texture->surface = SDL_LoadBMP(file_name);
+	if (!texture->surface)
+	{
+		fprintf(stderr, "Could not load image %s\n", file_name);
+		return 0;
+	}
+
+	if (alpha_key)
+	{
+		SDL_SetColorKey(texture->surface,
+						SDL_SRCCOLORKEY,
+						SDL_MapRGB(texture->surface->format,
+						alpha_key->r,
+						alpha_key->g,
+						alpha_key->b));
+	}
+
+	return 1;
+}
+
 
 static void SDLFrontend_destroy(Frontend *front)
 {
-	SDL_Surface **tile;
+	Texture *texture;
 	SDLFrontend * const sdl_front = (SDLFrontend *)front;
 
-	for (tile = sdl_front->tile_images;
-		 tile != (sdl_front->tile_images +
-				  sizeof(sdl_front->tile_images) / sizeof(sdl_front->tile_images[0]));
-		 ++tile)
+	for (texture = sdl_front->textures;
+		 texture != (sdl_front->textures +
+				  sizeof(sdl_front->textures) / sizeof(sdl_front->textures[0]));
+		 ++texture)
 	{
-		SDL_FreeSurface(*tile);
+		SDL_FreeSurface(texture->surface);
 	}
 
 	SDL_Quit();
@@ -50,8 +79,8 @@ static void draw_tiles(
 	Camera const *camera,
 	SDL_Surface *screen,
 	TileGrid const *tiles,
-	SDL_Surface * const *tile_images,
-	TileIndex tile_image_count)
+	Texture const *textures,
+	TileIndex texture_count)
 {
 	size_t const base_x = (size_t)camera->position.x - Width / 2;
 	size_t const base_y = (size_t)camera->position.y - Height / 2;
@@ -66,12 +95,12 @@ static void draw_tiles(
 			SDL_Rect dest;
 			SDL_Surface *image;
 
-			if (tile_index >= tile_image_count)
+			if (tile_index >= texture_count)
 			{
 				continue;
 			}
 
-			image = tile_images[tile_index];
+			image = textures[tile_index].surface;
 
 			dest.x = (tx * image->w) - base_x;
 			dest.y = (ty * image->h) - base_y;
@@ -146,8 +175,8 @@ static void SDLFrontend_main_loop(Frontend *front)
 		draw_tiles(&sdl_front->camera,
 				   screen,
 				   &sdl_front->game->grid,
-				   sdl_front->tile_images,
-				   sizeof(sdl_front->tile_images) / sizeof(sdl_front->tile_images[0]));
+				   sdl_front->textures,
+				   sizeof(sdl_front->textures) / sizeof(sdl_front->textures[0]));
 
 		SDL_UpdateRect(screen, 0, 0, Width, Height);
 
@@ -161,6 +190,8 @@ static FrontendType const SDLFrontendType =
 	SDLFrontend_destroy,
 	SDLFrontend_main_loop
 };
+
+static SDL_Color const AlphaKey = {255, 0, 255, 0};
 
 
 Frontend *SDLFrontEnd_create(struct Game *game)
@@ -189,16 +220,12 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 		return 0;
 	}
 
-	front->tile_images[0] = SDL_LoadBMP("sprites/grass_32.bmp");
-	front->tile_images[1] = SDL_LoadBMP("sprites/dirt_32.bmp");
-	front->tile_images[2] = SDL_LoadBMP("sprites/n_grass_s_dirt_32.bmp");
-	front->tile_images[3] = SDL_LoadBMP("sprites/n_dirt_s_grass_32.bmp");
-
-	if (!front->tile_images[0] ||
-			!front->tile_images[1] ||
-			!front->tile_images[2] ||
-			!front->tile_images[3]
-			)
+	if (
+		!load_bmp_texture(front->textures + 0, "sprites/grass_32.bmp", 0) ||
+		!load_bmp_texture(front->textures + 1, "sprites/dirt_32.bmp", 0) ||
+		!load_bmp_texture(front->textures + 2, "sprites/n_grass_s_dirt_32.bmp", 0) ||
+		!load_bmp_texture(front->textures + 3, "sprites/n_dirt_s_grass_32.bmp", 0) ||
+		!load_bmp_texture(front->textures + 4, "sprites/fence_32.bmp", &AlphaKey))
 	{
 		return 0;
 	}
