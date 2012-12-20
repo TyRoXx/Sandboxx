@@ -176,6 +176,14 @@ static void draw_background(SDL_Surface *screen)
 		unsigned x, y;
 		unsigned const time_ms = SDL_GetTicks();
 
+		if (SDL_MUSTLOCK(screen))
+		{
+			if (SDL_LockSurface(screen) < 0)
+			{
+				return;
+			}
+		}
+
 		for (y = 0; y < Height; ++y)
 		{
 			for (x = 0; x < Width; ++x)
@@ -189,6 +197,11 @@ static void draw_background(SDL_Surface *screen)
 					   &pixel,
 					   4);
 			}
+		}
+
+		if (SDL_MUSTLOCK(screen))
+		{
+			SDL_UnlockSurface(screen);
 		}
 	}
 }
@@ -246,7 +259,7 @@ static void SDLFrontend_main_loop(Frontend *front)
 
 		SDL_Flip(screen);
 
-		SDL_Delay(10);
+		SDL_Delay(16);
 	}
 }
 
@@ -320,7 +333,7 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 
 	front->base.type = &SDLFrontendType;
 	front->game = game;
-	front->screen = SDL_SetVideoMode(Width, Height, 32, SDL_SWSURFACE);
+	front->screen = SDL_SetVideoMode(Width, Height, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
 	front->camera.position.x = 6.5f;
 	front->camera.position.y = 3.5f;
 
