@@ -56,7 +56,7 @@ static int load_map_from_text_v0(struct Map *map, struct TileKind const *tile_ki
 				{
 					if (tile_kind_id >= tile_kind_count)
 					{
-						fprintf(stderr, "Invalid tile kind id %z\n", tile_kind_id);
+						fprintf(stderr, "Invalid tile kind id %u\n", (unsigned)tile_kind_id);
 						goto fail;
 					}
 
@@ -87,7 +87,7 @@ int load_map_from_text(struct Map *map, struct TileKind const *tile_kinds, size_
 	}
 	else
 	{
-		fprintf(error_out, "Unknown map version line\n", version);
+		fprintf(error_out, "Unknown map version line\n");
 		return 0;
 	}
 }

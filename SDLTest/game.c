@@ -71,5 +71,6 @@ void Game_free(Game *g)
 
 int Game_update(Game *g)
 {
+	(void)g;
 	return 1;
 }
