@@ -6,7 +6,9 @@ find_package(SDL_ttf REQUIRED)
 
 include_directories(${SDL_INCLUDE_DIR} ${SDLTTF_INCLUDE_DIR})
 
-list(APPEND CMAKE_C_FLAGS "-ansi -Wall -Wextra -Wconversion -pedantic -g")
+if(CMAKE_COMPILER_IS_GNUCXX)
+	list(APPEND CMAKE_C_FLAGS "-ansi -Wall -Wextra -Wconversion -pedantic -g")
+endif()
 
 file(GLOB sources "*.h" "*.c")
 
@@ -17,4 +19,8 @@ if (MINGW)
 	target_link_libraries(${PROJECT_NAME} ${SDLMAIN_LIBRARY})
 endif()
 
-target_link_libraries(${PROJECT_NAME} ${SDLTTF_LIBRARY} ${SDL_LIBRARY} "-lm")
+target_link_libraries(${PROJECT_NAME} ${SDLTTF_LIBRARY} ${SDL_LIBRARY})
+
+if (UNIX)
+	target_link_libraries(${PROJECT_NAME} "-lm")
+endif()
