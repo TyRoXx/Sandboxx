@@ -278,10 +278,26 @@ enum
 	TileWidth = 32
 };
 
+static void handle_move_input(Game *game, Direction dir)
+{
+	Entity * const avatar = game->avatar;
+	if (!avatar)
+	{
+		return;
+	}
+
+	/*TODO: collision*/
+	if (Entity_step(avatar))
+	{
+		avatar->direction = dir;
+	}
+}
+
 static void SDLFrontend_main_loop(Frontend *front)
 {
 	SDLFrontend * const sdl_front = (SDLFrontend *)front;
 	SDL_Surface * const screen = sdl_front->screen;
+	Game * const game = sdl_front->game;
 	int is_running = 1;
 	unsigned last_time = SDL_GetTicks();
 
@@ -313,6 +329,10 @@ static void SDLFrontend_main_loop(Frontend *front)
 				case SDLK_DOWN:
 					sdl_front->camera.position.y += 1;
 					break;
+				case SDLK_w: handle_move_input(game, Dir_North); break;
+				case SDLK_a: handle_move_input(game, Dir_West); break;
+				case SDLK_s: handle_move_input(game, Dir_South); break;
+				case SDLK_d: handle_move_input(game, Dir_East); break;
 				case SDLK_ESCAPE:
 					is_running = 0;
 					break;
@@ -324,14 +344,14 @@ static void SDLFrontend_main_loop(Frontend *front)
 
 		current_time = SDL_GetTicks();
 		assert(current_time >= last_time);
-		Game_update(sdl_front->game, (current_time - last_time));
+		Game_update(game, (current_time - last_time));
 		last_time = current_time;
 
 		draw_background(screen);
 
 		draw_tiles(&sdl_front->camera,
 				   screen,
-				   &sdl_front->game->current_map.terrain,
+				   &game->current_map.terrain,
 				   TileWidth,
 				   &sdl_front->images
 				);
@@ -339,7 +359,7 @@ static void SDLFrontend_main_loop(Frontend *front)
 		draw_entities(
 			&sdl_front->camera,
 			screen,
-			&sdl_front->game->world,
+			&game->world,
 			TileWidth,
 			&sdl_front->images
 			);

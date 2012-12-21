@@ -93,6 +93,7 @@ int Game_init(Game *g)
 		goto fail_0;
 	}
 
+	g->avatar = g->world.entities;
 	return 1;
 
 fail_0:

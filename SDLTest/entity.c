@@ -50,3 +50,15 @@ void Entity_update(Entity *e, unsigned delta)
 		}
 	}
 }
+
+int Entity_step(Entity *e)
+{
+	if (e->is_moving)
+	{
+		return 0;
+	}
+	
+	e->is_moving = 1;
+	e->move_progress = 0;
+	return 1;
+}

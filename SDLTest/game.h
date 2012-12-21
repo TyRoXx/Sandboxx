@@ -10,6 +10,7 @@ typedef struct Game
 {
 	World world;
 	Map current_map;
+	Entity *avatar;
 }
 Game;
 

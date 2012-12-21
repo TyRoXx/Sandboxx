@@ -41,6 +41,7 @@ int Entity_init(
 	);
 void Entity_free(Entity *e);
 void Entity_update(Entity *e, unsigned delta);
+int Entity_step(Entity *e);
 
 
 #endif
