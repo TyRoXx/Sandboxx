@@ -2,11 +2,13 @@
 #define GAME_H
 
 
+#include "world.h"
 #include "map.h"
 
 
 typedef struct Game
 {
+	World world;
 	Map current_map;
 }
 Game;

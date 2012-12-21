@@ -61,16 +61,27 @@ int Game_init(Game *g)
 	}
 
 	init_demo_grid(&g->current_map.terrain);
+
+	if (!World_init(&g->world, &g->current_map))
+	{
+		goto fail_0;
+	}
+
 	return 1;
+
+fail_0:
+	Map_free(&g->current_map);
+	return 0;
 }
 
 void Game_free(Game *g)
 {
+	World_free(&g->world);
 	Map_free(&g->current_map);
 }
 
 int Game_update(Game *g)
 {
-	(void)g;
+	World_update(&g->world);
 	return 1;
 }
