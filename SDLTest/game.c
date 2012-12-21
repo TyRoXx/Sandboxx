@@ -93,6 +93,7 @@ int Game_init(Game *g)
 		goto fail_0;
 	}
 
+	/*if there is an entity, choose the first one as the avatar*/
 	g->avatar = g->world.entities;
 	return 1;
 

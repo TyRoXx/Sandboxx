@@ -177,11 +177,13 @@ static void draw_layered_tile(
 	ptrdiff_t py,
 	SDL_Surface *screen,
 	LayeredTile const *tile,
-	ImageManager const *images
+	ImageManager const *images,
+	size_t layer_begin,
+	size_t layer_end
 )
 {
 	size_t i;
-	for (i = 0; i < TILE_LAYER_COUNT; ++i)
+	for (i = layer_begin; i < layer_end; ++i)
 	{
 		TileKind const * const layer = tile->layers[i];
 		if (layer)
@@ -198,12 +200,14 @@ static void draw_layered_tile(
 	}
 }
 
-static void draw_tiles(
+static void draw_tile_layers(
 		Camera const *camera,
 		SDL_Surface *screen,
 		TileGrid const *tiles,
 		size_t tile_width,
-		ImageManager const *images)
+		ImageManager const *images,
+		size_t layer_begin,
+		size_t layer_end)
 {
 	ptrdiff_t y;
 
@@ -226,12 +230,14 @@ static void draw_tiles(
 			assert(tile);
 
 			draw_layered_tile(
-						(ptrdiff_t)((float)tile_width * ((float)x - camera->position.x) + Width  / 2.0f),
-						(ptrdiff_t)((float)tile_width * ((float)y - camera->position.y) + Height / 2.0f),
-						screen,
-						tile,
-						images
-						);
+				(ptrdiff_t)((float)tile_width * ((float)x - camera->position.x) + Width  / 2.0f),
+				(ptrdiff_t)((float)tile_width * ((float)y - camera->position.y) + Height / 2.0f),
+				screen,
+				tile,
+				images,
+				layer_begin,
+				layer_end
+				);
 		}
 	}
 }
@@ -349,12 +355,15 @@ static void SDLFrontend_main_loop(Frontend *front)
 
 		draw_background(screen);
 
-		draw_tiles(&sdl_front->camera,
-				   screen,
-				   &game->current_map.terrain,
-				   TileWidth,
-				   &sdl_front->images
-				);
+		draw_tile_layers(
+			&sdl_front->camera,
+			screen,
+			&game->current_map.terrain,
+			TileWidth,
+			&sdl_front->images,
+			0,
+			2
+			);
 
 		draw_entities(
 			&sdl_front->camera,
@@ -362,6 +371,17 @@ static void SDLFrontend_main_loop(Frontend *front)
 			&game->world,
 			TileWidth,
 			&sdl_front->images
+			);
+
+		assert(TILE_LAYER_COUNT == 3);
+		draw_tile_layers(
+			&sdl_front->camera,
+			screen,
+			&game->current_map.terrain,
+			TileWidth,
+			&sdl_front->images,
+			2,
+			3
 			);
 
 		SDL_Flip(screen);
