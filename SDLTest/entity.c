@@ -62,8 +62,6 @@ void Entity_update(Entity *e, unsigned delta)
 		e->move_progress += e->max_velocity * (float)delta / 1000.0f;
 		while (e->move_progress >= 1)
 		{
-			add_direction_vector(&e->x, &e->y, e->direction, 1);
-
 			if (e->steps_to_go != (size_t)-1)
 			{
 				--(e->steps_to_go);
@@ -78,6 +76,8 @@ void Entity_update(Entity *e, unsigned delta)
 				e->steps_to_go = 0;
 				break;
 			}
+
+			add_direction_vector(&e->x, &e->y, e->direction, 1);
 
 			e->move_progress -= 1;
 		}
@@ -103,6 +103,8 @@ int Entity_move(Entity *e, size_t steps_to_go)
 	{
 		return 0;
 	}
+
+	add_direction_vector(&e->x, &e->y, e->direction, 1);
 	
 	e->steps_to_go = steps_to_go;
 	e->move_progress = 0;

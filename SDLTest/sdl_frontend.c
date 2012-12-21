@@ -198,8 +198,8 @@ static float get_move_offset(Direction move_dir, float progress, Direction dir)
 	long const diff = labs(move_dir - dir);
 	switch (diff)
 	{
-	case 0: return progress;
-	case 2: return -progress;
+	case 0: return progress - 1;
+	case 2: return -progress + 1;
 	default: return 0;
 	}
 }
