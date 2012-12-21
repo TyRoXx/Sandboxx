@@ -2,7 +2,6 @@
 #define MINMAX_H
 
 
-
 #define DEFINE_MAX_FUNCTION(type_) \
 type_ max_ ## type_(type_ left, type_ right) \
 { \

@@ -30,6 +30,8 @@ ImageManager;
 
 static int ImageManager_init(ImageManager *im, size_t image_count)
 {
+	assert(im);
+
 	im->images = calloc(image_count, sizeof(*im->images));
 	if (im->images)
 	{
@@ -67,6 +69,8 @@ static SDL_Surface *load_bmp_texture(char const *file_name, SDL_PixelFormat *for
 	SDL_Surface * const bitmap = SDL_LoadBMP(file_name);
 	SDL_Surface * converted;
 
+	assert(format);
+
 	if (!bitmap)
 	{
 		fprintf(stderr, "Could not load image %s\n", file_name);
@@ -98,8 +102,10 @@ static SDL_Surface *load_bmp_texture(char const *file_name, SDL_PixelFormat *for
 static void SDLFrontend_destroy(Frontend *front)
 {
 	SDLFrontend * const sdl_front = (SDLFrontend *)front;
+	assert(sdl_front);
 
 	ImageManager_free(&sdl_front->images);
+	free(front);
 
 	TTF_Quit();
 	SDL_Quit();
