@@ -111,13 +111,53 @@ static void SDLFrontend_destroy(Frontend *front)
 	SDL_Quit();
 }
 
+static void draw_entity(
+	ptrdiff_t px,
+	ptrdiff_t py,
+	SDL_Surface *screen,
+	Entity const *entity,
+	ImageManager const *images)
+{
+	SDL_Surface * const image = images->images[entity->appearance.tile_set_id];
+	SDL_Rect dest;
+	dest.x = (Sint16)px;
+	dest.y = (Sint16)py;
+	SDL_BlitSurface(image, 0, screen, &dest);
+}
+
+static void draw_entities(
+	Camera const *camera,
+	SDL_Surface *screen,
+	World const *world,
+	size_t tile_width,
+	ImageManager const *images)
+{
+	size_t i;
+
+	assert(world);
+	assert(camera);
+	assert(screen);
+	assert(images);
+
+	for (i = 0; i < world->entity_count; ++i)
+	{
+		Entity const * const entity = world->entities + i;
+		draw_entity(
+			(ptrdiff_t)((float)(entity->x - camera->position.x) * tile_width + (float)Width / 2),
+			(ptrdiff_t)((float)(entity->y - camera->position.y) * tile_width + (float)Height / 2),
+			screen,
+			entity,
+			images);
+	}
+}
+
 static void draw_layered_tile(
-		ptrdiff_t px,
-		ptrdiff_t py,
-		SDL_Surface *screen,
-		LayeredTile const *tile,
-		ImageManager const *images
-		)
+	ptrdiff_t px,
+	ptrdiff_t py,
+	SDL_Surface *screen,
+	LayeredTile const *tile,
+	ImageManager const *images
+)
 {
 	size_t i;
 	for (i = 0; i < TILE_LAYER_COUNT; ++i)
@@ -141,9 +181,9 @@ static void draw_tiles(
 		Camera const *camera,
 		SDL_Surface *screen,
 		TileGrid const *tiles,
+		size_t tile_width,
 		ImageManager const *images)
 {
-	size_t const tile_width = 32;
 	ptrdiff_t y;
 
 	ptrdiff_t visible_begin_idx = (ptrdiff_t)(camera->position.x - (float)Width  / (float)tile_width / 2.0f);
@@ -212,14 +252,21 @@ static void draw_background(SDL_Surface *screen)
 	}
 }
 
+enum
+{
+	TileWidth = 32
+};
+
 static void SDLFrontend_main_loop(Frontend *front)
 {
 	SDLFrontend * const sdl_front = (SDLFrontend *)front;
 	SDL_Surface * const screen = sdl_front->screen;
 	int is_running = 1;
+	unsigned last_time = SDL_GetTicks();
 
 	while (is_running)
 	{
+		unsigned current_time;
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{
@@ -254,14 +301,27 @@ static void SDLFrontend_main_loop(Frontend *front)
 			}
 		}
 
-		Game_update(sdl_front->game);
+		current_time = SDL_GetTicks();
+		assert(current_time >= last_time);
+		Game_update(sdl_front->game, (current_time - last_time));
+		last_time = current_time;
 
 		draw_background(screen);
+
 		draw_tiles(&sdl_front->camera,
 				   screen,
 				   &sdl_front->game->current_map.terrain,
+				   TileWidth,
 				   &sdl_front->images
 				);
+
+		draw_entities(
+			&sdl_front->camera,
+			screen,
+			&sdl_front->game->world,
+			TileWidth,
+			&sdl_front->images
+			);
 
 		SDL_Flip(screen);
 

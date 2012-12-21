@@ -20,23 +20,27 @@ typedef enum Direction
 Direction;
 
 
-typedef struct EntityLink
-{
-	struct EntityLink *previous, *next;
-}
-EntityLink;
-
-
 typedef struct Entity
 {
-	EntityLink existence;
 	ptrdiff_t x, y;
 	Direction direction;
 	Appearance appearance;
 	float max_velocity;
+	int is_moving;
 	float move_progress;
 }
 Entity;
+
+
+int Entity_init(
+	Entity *e,
+	ptrdiff_t x,
+	ptrdiff_t y,
+	Appearance appearance,
+	float max_velocity
+	);
+void Entity_free(Entity *e);
+void Entity_update(Entity *e, unsigned delta);
 
 
 #endif

@@ -52,6 +52,31 @@ static void init_demo_grid(TileGrid *g)
 	}
 }
 
+static int add_demo_entities(World *w)
+{
+	Appearance a;
+	Entity e;
+
+	a.radius = 1;
+	a.tile_set_id = 4;
+
+	if (!Entity_init(&e, 3, 4, a, 1.0f))
+	{
+		return 0;
+	}
+
+	e.is_moving = 1;
+	e.move_progress = 0;
+	e.direction = Dir_North;
+
+	if (!World_add_entity(w, &e))
+	{
+		Entity_free(&e);
+		return 0;
+	}
+
+	return 1;
+}
 
 int Game_init(Game *g)
 {
@@ -62,7 +87,8 @@ int Game_init(Game *g)
 
 	init_demo_grid(&g->current_map.terrain);
 
-	if (!World_init(&g->world, &g->current_map))
+	if (!World_init(&g->world, &g->current_map) ||
+		!add_demo_entities(&g->world))
 	{
 		goto fail_0;
 	}
@@ -80,8 +106,8 @@ void Game_free(Game *g)
 	Map_free(&g->current_map);
 }
 
-int Game_update(Game *g)
+int Game_update(Game *g, unsigned delta)
 {
-	World_update(&g->world);
+	World_update(&g->world, delta);
 	return 1;
 }
