@@ -125,6 +125,27 @@ static void draw_entity(
 	SDL_BlitSurface(image, 0, screen, &dest);
 }
 
+static float get_move_offset(Direction move_dir, float progress, Direction dir)
+{
+	long const diff = labs(move_dir - dir);
+	switch (diff)
+	{
+	case 0: return progress;
+	case 2: return -progress;
+	default: return 0;
+	}
+}
+
+static float get_entity_offset(Entity const *e, Direction dir)
+{
+	float offset = 0;
+	if (e->is_moving)
+	{
+		offset += get_move_offset(e->direction, e->move_progress, dir);
+	}
+	return offset;
+}
+
 static void draw_entities(
 	Camera const *camera,
 	SDL_Surface *screen,
@@ -143,8 +164,8 @@ static void draw_entities(
 	{
 		Entity const * const entity = world->entities + i;
 		draw_entity(
-			(ptrdiff_t)((float)(entity->x - camera->position.x) * tile_width + (float)Width / 2),
-			(ptrdiff_t)((float)(entity->y - camera->position.y) * tile_width + (float)Height / 2),
+			(ptrdiff_t)((float)(entity->x - camera->position.x + get_entity_offset(entity, Dir_East)) * tile_width + (float)Width / 2),
+			(ptrdiff_t)((float)(entity->y - camera->position.y + get_entity_offset(entity, Dir_South)) * tile_width + (float)Height / 2),
 			screen,
 			entity,
 			images);
