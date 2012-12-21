@@ -1,4 +1,5 @@
 #include "entity.h"
+#include <assert.h>
 
 
 static void add_direction_vector(
@@ -29,7 +30,7 @@ int Entity_init(
 	e->direction = Dir_South;
 	e->appearance = appearance;
 	e->max_velocity = max_velocity;
-	e->is_moving = 0;
+	e->steps_to_go = 0;
 	return 1;
 }
 
@@ -40,25 +41,43 @@ void Entity_free(Entity *e)
 
 void Entity_update(Entity *e, unsigned delta)
 {
-	if (e->is_moving)
+	if (e->steps_to_go > 0)
 	{
 		e->move_progress += e->max_velocity * (float)delta / 1000.0f;
-		if (e->move_progress >= 1)
+		while (e->move_progress >= 1)
 		{
 			add_direction_vector(&e->x, &e->y, e->direction, 1);
-			e->is_moving = 0;
+
+			if (e->steps_to_go != (size_t)-1)
+			{
+				--(e->steps_to_go);
+				if (e->steps_to_go == 0)
+				{
+					break;
+				}
+			}
+
+			e->move_progress -= 1;
 		}
 	}
 }
 
-int Entity_step(Entity *e)
+void Entity_stop(Entity *e)
 {
-	if (e->is_moving)
+	assert(e);
+	assert(e->steps_to_go > 0);
+
+	e->steps_to_go = 1;
+}
+
+int Entity_move(Entity *e, size_t steps_to_go)
+{
+	if (e->steps_to_go > 0)
 	{
 		return 0;
 	}
 	
-	e->is_moving = 1;
+	e->steps_to_go = steps_to_go;
 	e->move_progress = 0;
 	return 1;
 }

@@ -60,13 +60,11 @@ static int add_demo_entities(World *w)
 	a.radius = 1;
 	a.tile_set_id = 4;
 
-	if (!Entity_init(&e, 3, 4, a, 1.0f))
+	if (!Entity_init(&e, 3, 4, a, 1.6f))
 	{
 		return 0;
 	}
 
-	e.is_moving = 1;
-	e.move_progress = 0;
 	e.direction = Dir_North;
 
 	if (!World_add_entity(w, &e))

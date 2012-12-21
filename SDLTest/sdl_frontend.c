@@ -52,6 +52,68 @@ static void ImageManager_free(ImageManager *im)
 	free(im->images);
 }
 
+typedef struct AvatarController
+{
+	Game *game;
+	int is_current_input;
+	Direction current_input;
+}
+AvatarController;
+
+static int AvatarController_init(AvatarController *a, Game *g)
+{
+	a->game = g;
+	a->is_current_input = 0;
+	return 1;
+}
+
+static void AvatarController_free(AvatarController *a)
+{
+	(void)a;
+}
+
+static void AvatarController_handle_input(AvatarController *a, Direction dir, int is_down)
+{
+	Entity * const avatar = a->game->avatar;
+	if (!avatar)
+	{
+		return;
+	}
+
+	if (is_down)
+	{
+		a->is_current_input = 1;
+		a->current_input = dir;
+
+		if (!avatar->steps_to_go)
+		{
+			avatar->direction = a->current_input;
+			Entity_move(avatar, (size_t)-1);
+		}
+	}
+	else
+	{
+		a->is_current_input = 0;
+		Entity_stop(avatar);
+	}
+}
+
+static void AvatarController_update(AvatarController *a)
+{
+	Entity * const avatar = a->game->avatar;
+	if (!avatar)
+	{
+		return;
+	}
+
+	if (a->is_current_input &&
+		(avatar->steps_to_go == 0))
+	{
+		avatar->direction = a->current_input;
+		Entity_move(avatar, (size_t)-1);
+	}
+}
+
 typedef struct SDLFrontend
 {
 	Frontend base;
@@ -59,6 +121,7 @@ typedef struct SDLFrontend
 	SDL_Surface *screen;
 	ImageManager images;
 	Camera camera;
+	AvatarController avatar_controller;
 }
 SDLFrontend;
 
@@ -104,6 +167,8 @@ static void SDLFrontend_destroy(Frontend *front)
 	SDLFrontend * const sdl_front = (SDLFrontend *)front;
 	assert(sdl_front);
 
+	AvatarController_free(&sdl_front->avatar_controller);
+
 	ImageManager_free(&sdl_front->images);
 	free(front);
 
@@ -139,7 +204,7 @@ static float get_move_offset(Direction move_dir, float progress, Direction dir)
 static float get_entity_offset(Entity const *e, Direction dir)
 {
 	float offset = 0;
-	if (e->is_moving)
+	if (e->steps_to_go > 0)
 	{
 		offset += get_move_offset(e->direction, e->move_progress, dir);
 	}
@@ -284,26 +349,12 @@ enum
 	TileWidth = 32
 };
 
-static void handle_move_input(Game *game, Direction dir)
-{
-	Entity * const avatar = game->avatar;
-	if (!avatar)
-	{
-		return;
-	}
-
-	/*TODO: collision*/
-	if (Entity_step(avatar))
-	{
-		avatar->direction = dir;
-	}
-}
-
 static void SDLFrontend_main_loop(Frontend *front)
 {
 	SDLFrontend * const sdl_front = (SDLFrontend *)front;
 	SDL_Surface * const screen = sdl_front->screen;
 	Game * const game = sdl_front->game;
+	AvatarController * const avatar_controller = &sdl_front->avatar_controller;
 	int is_running = 1;
 	unsigned last_time = SDL_GetTicks();
 
@@ -335,13 +386,25 @@ static void SDLFrontend_main_loop(Frontend *front)
 				case SDLK_DOWN:
 					sdl_front->camera.position.y += 1;
 					break;
-				case SDLK_w: handle_move_input(game, Dir_North); break;
-				case SDLK_a: handle_move_input(game, Dir_West); break;
-				case SDLK_s: handle_move_input(game, Dir_South); break;
-				case SDLK_d: handle_move_input(game, Dir_East); break;
+				case SDLK_w: AvatarController_handle_input(avatar_controller, Dir_North, 0); break;
+				case SDLK_a: AvatarController_handle_input(avatar_controller, Dir_West, 0); break;
+				case SDLK_s: AvatarController_handle_input(avatar_controller, Dir_South, 0); break;
+				case SDLK_d: AvatarController_handle_input(avatar_controller, Dir_East, 0); break;
 				case SDLK_ESCAPE:
 					is_running = 0;
 					break;
+				default:
+					break;
+				}
+			}
+			else if (event.type == SDL_KEYDOWN)
+			{
+				switch (event.key.keysym.sym)
+				{
+				case SDLK_w: AvatarController_handle_input(avatar_controller, Dir_North, 1); break;
+				case SDLK_a: AvatarController_handle_input(avatar_controller, Dir_West, 1); break;
+				case SDLK_s: AvatarController_handle_input(avatar_controller, Dir_South, 1); break;
+				case SDLK_d: AvatarController_handle_input(avatar_controller, Dir_East, 1); break;
 				default:
 					break;
 				}
@@ -352,6 +415,8 @@ static void SDLFrontend_main_loop(Frontend *front)
 		assert(current_time >= last_time);
 		Game_update(game, (current_time - last_time));
 		last_time = current_time;
+
+		AvatarController_update(avatar_controller);
 
 		draw_background(screen);
 
@@ -474,6 +539,13 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 	{
 		return 0;
 	}
+
+	if (!AvatarController_init(&front->avatar_controller, game))
+	{
+		return 0;
+	}
+
+	/*TODO: free resources on failure*/
 
 	return (Frontend *)front;
 }

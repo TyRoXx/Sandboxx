@@ -26,7 +26,7 @@ typedef struct Entity
 	Direction direction;
 	Appearance appearance;
 	float max_velocity;
-	int is_moving;
+	size_t steps_to_go;
 	float move_progress;
 }
 Entity;
@@ -41,7 +41,8 @@ int Entity_init(
 	);
 void Entity_free(Entity *e);
 void Entity_update(Entity *e, unsigned delta);
-int Entity_step(Entity *e);
+int Entity_move(Entity *e, size_t steps_to_go);
+void Entity_stop(Entity *e);
 
 
 #endif
