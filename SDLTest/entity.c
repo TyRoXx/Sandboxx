@@ -1,4 +1,5 @@
 #include "entity.h"
+#include "world.h"
 #include <assert.h>
 
 
@@ -17,12 +18,26 @@ static void add_direction_vector(
 	}
 }
 
+static int is_possible_step(
+	Entity const *entity,
+	Direction dir
+	)
+{
+	ptrdiff_t new_x = entity->x;
+	ptrdiff_t new_y = entity->y;
+	add_direction_vector(&new_x, &new_y, dir, 1);
+
+	return World_is_walkable(entity->world, new_x, new_y);
+}
+
+
 int Entity_init(
 	Entity *e,
 	ptrdiff_t x,
 	ptrdiff_t y,
 	Appearance appearance,
-	float max_velocity
+	float max_velocity,
+    struct World *world
 	)
 {
 	e->x = x;
@@ -31,6 +46,7 @@ int Entity_init(
 	e->appearance = appearance;
 	e->max_velocity = max_velocity;
 	e->steps_to_go = 0;
+	e->world = world;
 	return 1;
 }
 
@@ -57,6 +73,12 @@ void Entity_update(Entity *e, unsigned delta)
 				}
 			}
 
+			if (!is_possible_step(e, e->direction))
+			{
+				e->steps_to_go = 0;
+				break;
+			}
+
 			e->move_progress -= 1;
 		}
 	}
@@ -73,6 +95,11 @@ void Entity_stop(Entity *e)
 int Entity_move(Entity *e, size_t steps_to_go)
 {
 	if (e->steps_to_go > 0)
+	{
+		return 0;
+	}
+
+	if (!is_possible_step(e, e->direction))
 	{
 		return 0;
 	}

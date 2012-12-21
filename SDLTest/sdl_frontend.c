@@ -94,7 +94,10 @@ static void AvatarController_handle_input(AvatarController *a, Direction dir, in
 	else
 	{
 		a->is_current_input = 0;
-		Entity_stop(avatar);
+		if (avatar->steps_to_go > 0)
+		{
+			Entity_stop(avatar);
+		}
 	}
 }
 
@@ -307,43 +310,6 @@ static void draw_tile_layers(
 	}
 }
 
-static void draw_background(SDL_Surface *screen)
-{
-	if (screen->format->BytesPerPixel == 4)
-	{
-		unsigned x, y;
-		unsigned const time_ms = SDL_GetTicks();
-
-		if (SDL_MUSTLOCK(screen))
-		{
-			if (SDL_LockSurface(screen) < 0)
-			{
-				return;
-			}
-		}
-
-		for (y = 0; y < Height; ++y)
-		{
-			for (x = 0; x < Width; ++x)
-			{
-				uint32_t const pixel = SDL_MapRGB(screen->format,
-											(Uint8)((1 + sin((float)time_ms / 2800.0f)) * 128),
-											(Uint8)((1 + cos((float)time_ms / 1700.0f)) * 128),
-											(Uint8)((float)y / (float)Height * 256.0f));
-
-				memcpy(((char *)screen->pixels) + ((Width * y) + x) * 4,
-					   &pixel,
-					   4);
-			}
-		}
-
-		if (SDL_MUSTLOCK(screen))
-		{
-			SDL_UnlockSurface(screen);
-		}
-	}
-}
-
 enum
 {
 	TileWidth = 32
@@ -418,7 +384,7 @@ static void SDLFrontend_main_loop(Frontend *front)
 
 		AvatarController_update(avatar_controller);
 
-		draw_background(screen);
+		SDL_FillRect(screen, 0, 0);
 
 		draw_tile_layers(
 			&sdl_front->camera,

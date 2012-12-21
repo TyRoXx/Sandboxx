@@ -5,6 +5,9 @@
 #include <stddef.h>
 
 
+struct World;
+
+
 typedef struct Appearance
 {
 	size_t radius;
@@ -28,6 +31,7 @@ typedef struct Entity
 	float max_velocity;
 	size_t steps_to_go;
 	float move_progress;
+	struct World *world;
 }
 Entity;
 
@@ -37,7 +41,8 @@ int Entity_init(
 	ptrdiff_t x,
 	ptrdiff_t y,
 	Appearance appearance,
-	float max_velocity
+	float max_velocity,
+	struct World *world
 	);
 void Entity_free(Entity *e);
 void Entity_update(Entity *e, unsigned delta);

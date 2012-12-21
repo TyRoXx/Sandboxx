@@ -1,5 +1,7 @@
 #include "world.h"
+#include "map.h"
 #include <stdlib.h>
+#include <assert.h>
 
 
 int World_init(World *w, struct Map *map)
@@ -42,4 +44,55 @@ int World_add_entity(World *w, Entity const *entity)
 	w->entities = new_entities;
 	w->entity_count = new_count;
 	return 1;
+}
+
+static int is_entity_on(
+	World const *world,
+	ptrdiff_t x,
+	ptrdiff_t y)
+{
+	size_t i;
+	assert(world);
+
+	for (i = 0; i < world->entity_count; ++i)
+	{
+		Entity const * const e = world->entities + i;
+		assert(e);
+
+		if (e->x == x &&
+			e->y == y)
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+static int is_walkable_tile(
+	TileGrid const *tiles,
+	ptrdiff_t x,
+	ptrdiff_t y)
+{
+	if (x < 0 ||
+		y < 0 ||
+		x >= (ptrdiff_t)tiles->width ||
+		y >= (ptrdiff_t)tiles->height)
+	{
+		return 0;
+	}
+
+	return LayeredTile_is_walkable(
+		TileGrid_get(tiles, (size_t)x, (size_t)y)
+		);
+}
+
+int World_is_walkable(
+	World const *world,
+	ptrdiff_t x,
+	ptrdiff_t y)
+{
+	return
+		is_walkable_tile(&world->current_map->terrain, x, y) &&
+		!is_entity_on(world, x, y);
 }

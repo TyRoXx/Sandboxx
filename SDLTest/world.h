@@ -20,6 +20,10 @@ int World_init(World *w, struct Map *map);
 void World_free(World *w);
 void World_update(World *w, unsigned delta);
 int World_add_entity(World *w, Entity const *entity);
+int World_is_walkable(
+	World const *world,
+	ptrdiff_t x,
+	ptrdiff_t y);
 
 
 #endif

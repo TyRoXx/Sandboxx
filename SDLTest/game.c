@@ -25,7 +25,7 @@ static TileKind const TileKinds[] =
 	{1, 1},
 	{2, 1},
 	{3, 1},
-	{4, 1},
+	{4, 0},
 	{5, 1},
 	{6, 1},
 	{7, 1},
@@ -60,7 +60,7 @@ static int add_demo_entities(World *w)
 	a.radius = 1;
 	a.tile_set_id = 4;
 
-	if (!Entity_init(&e, 3, 4, a, 1.6f))
+	if (!Entity_init(&e, 3, 4, a, 1.5f, w))
 	{
 		return 0;
 	}

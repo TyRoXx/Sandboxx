@@ -20,6 +20,9 @@ typedef struct LayeredTile
 }
 LayeredTile;
 
+int LayeredTile_is_walkable(LayeredTile const *tile);
+
+
 typedef struct TileGrid
 {
 	LayeredTile *tiles; /*malloc'ed*/

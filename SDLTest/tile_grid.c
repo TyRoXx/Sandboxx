@@ -3,6 +3,29 @@
 #include <assert.h>
 
 
+int LayeredTile_is_walkable(LayeredTile const *tile)
+{
+	size_t i;
+	for (i = 0; i < TILE_LAYER_COUNT; ++i)
+	{
+		TileKind const * const layer = tile->layers[i];
+
+		/*cannot walk when there is no ground*/
+		if (!layer && (i == 0))
+		{
+			return 0;
+		}
+
+		if (layer &&
+			!layer->is_walkable)
+		{
+			return 0;
+		}
+	}
+	return 1;
+}
+
+
 int TileGrid_init(TileGrid *g, size_t width, size_t height)
 {
 	assert(g);
