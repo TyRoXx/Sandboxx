@@ -1,7 +1,8 @@
-#include "map_text_file.h"
+#include "world_text_file.h"
 #include "world.h"
 #include <assert.h>
 #include <limits.h>
+#include <stdlib.h>
 #include <string.h>
 
 
@@ -20,13 +21,18 @@ static int scan_size_t(FILE *in, size_t *value)
 	return 0;
 }
 
-static int load_world_from_text_v0(struct World *world, struct TileKind const *tile_kinds, size_t tile_kind_count, FILE *in, FILE *error_out)
+static int load_world_from_text_v1(struct World *world, struct TileKind const *tile_kinds, size_t tile_kind_count, FILE *in, FILE *error_out)
 {
 	size_t width, height;
 	size_t y;
 
+	assert(world);
+	assert(tile_kinds);
+	assert(in);
+	assert(error_out);
+
 	if (!scan_size_t(in, &width) ||
-			!scan_size_t(in, &height))
+	    !scan_size_t(in, &height))
 	{
 		fprintf(error_out, "Invalid map size\n");
 		return 0;
@@ -67,6 +73,48 @@ static int load_world_from_text_v0(struct World *world, struct TileKind const *t
 		}
 	}
 
+	{
+		Entity *entities;
+		size_t entity_count;
+		size_t i;
+		if (!scan_size_t(in, &entity_count))
+		{
+			goto fail;
+		}
+
+		entities = malloc(entity_count * sizeof(*entities));
+		if (!entities)
+		{
+			goto fail;
+		}
+
+		for (i = 0; i < entity_count; ++i)
+		{
+			int x, y;
+			int direction;
+			Appearance app;
+
+			if (fscanf(in, "%d%d%d", &x, &y, &direction) != 3 ||
+				!scan_size_t(in, &app.tile_set_id))
+			{
+				goto fail;
+			}
+
+			if (!Entity_init(entities + i, Vector2i_new(x, y), app, 1.7f, world))
+			{
+				while (i--)
+				{
+					Entity_free(entities + i);
+				}
+				free(entities);
+				goto fail;
+			}
+		}
+
+		world->entities = entities;
+		world->entity_count = entity_count;
+	}
+
 	return 1;
 
 fail:
@@ -82,9 +130,9 @@ int load_world_from_text(struct World *world, struct TileKind const *tile_kinds,
 	assert(in);
 
 	fgets(version, sizeof(version), in);
-	if (!strcmp(version, VersionLine_0))
+	if (!strcmp(version, VersionLine_1))
 	{
-		return load_world_from_text_v0(world, tile_kinds, tile_kind_count, in, error_out);
+		return load_world_from_text_v1(world, tile_kinds, tile_kind_count, in, error_out);
 	}
 	else
 	{

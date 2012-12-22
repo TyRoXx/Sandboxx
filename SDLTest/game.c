@@ -1,5 +1,5 @@
 #include "game.h"
-#include "map_text_file.h"
+#include "world_text_file.h"
 #include <string.h>
 #include <stdio.h>
 
