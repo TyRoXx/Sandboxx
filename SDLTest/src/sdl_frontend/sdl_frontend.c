@@ -1,7 +1,4 @@
 #include "sdl_frontend.h"
-#include "avatar_controller.h"
-#include "camera.h"
-#include "image_manager.h"
 #include "base/adventure_state.h"
 #include "base/game.h"
 #include "base/minmax.h"
@@ -15,17 +12,6 @@ enum
 {
 	Width = 640, Height = 480
 };
-
-typedef struct SDLFrontend
-{
-	Frontend base;
-	Game *game;
-	SDL_Surface *screen;
-	ImageManager images;
-	Camera camera;
-	AvatarController avatar_controller;
-}
-SDLFrontend;
 
 static SDL_Color const AlphaKey = {255, 0, 255, 0};
 
@@ -266,18 +252,6 @@ static void SDLFrontend_main_loop(Frontend *front)
 			{
 				switch (event.key.keysym.sym)
 				{
-				case SDLK_LEFT:
-					sdl_front->camera.position.x -= 1;
-					break;
-				case SDLK_RIGHT:
-					sdl_front->camera.position.x += 1;
-					break;
-				case SDLK_UP:
-					sdl_front->camera.position.y -= 1;
-					break;
-				case SDLK_DOWN:
-					sdl_front->camera.position.y += 1;
-					break;
 				case SDLK_w: AvatarController_handle_input(avatar_controller, Dir_North, 0); break;
 				case SDLK_a: AvatarController_handle_input(avatar_controller, Dir_West, 0); break;
 				case SDLK_s: AvatarController_handle_input(avatar_controller, Dir_South, 0); break;

@@ -7,11 +7,12 @@
 
 struct GameState;
 struct GameStateView;
+struct SDLFrontend;
 
 
 typedef struct GameStateViewType
 {
-	struct GameStateView *(*create)(struct GameState *);
+	struct GameStateView *(*create)(struct GameState *, struct SDLFrontend *front);
 	void (*destroy)(struct GameStateView *);
 	void (*draw)(struct GameStateView *);
 	void (*handle_event)(struct GameStateView *, SDL_Event const *);
