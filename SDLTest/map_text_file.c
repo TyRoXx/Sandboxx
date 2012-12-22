@@ -6,6 +6,7 @@
 
 
 static char const * const VersionLine_0 = "Map_v0\n";
+static char const * const VersionLine_1 = "World_v1\n";
 
 
 static int scan_size_t(FILE *in, size_t *value)
@@ -128,11 +129,36 @@ static void save_tiles_to_text(TileGrid const *tiles, struct TileKind const *til
 	}
 }
 
+static void save_entity_to_text(Entity const *entity, FILE *out)
+{
+	assert(entity);
+	assert(out);
+
+	fprintf(out, "%d %d\n",	(int)entity->position.x, (int)entity->position.y);
+	fprintf(out, "%d\n", (int)entity->direction);
+	fprintf(out, "%u\n", (unsigned)entity->appearance.tile_set_id);
+	
+	fputs("\n", out);
+}
+
+static void save_entities_to_text(struct World const *world, FILE *out)
+{
+	size_t i;
+
+	fprintf(out, "%u\n\n", (unsigned)world->entity_count);
+
+	for (i = 0; i < world->entity_count; ++i)
+	{
+		save_entity_to_text(world->entities + i, out);
+	}
+}
+
 void save_world_to_text(struct World const *world, struct TileKind const *tile_kinds, FILE *out)
 {
 	assert(world);
 	assert(out);
 
-	fputs(VersionLine_0, out);
+	fputs(VersionLine_1, out);
 	save_tiles_to_text(&world->tiles, tile_kinds, out);
+	save_entities_to_text(world, out);
 }
