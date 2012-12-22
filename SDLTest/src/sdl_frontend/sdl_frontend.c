@@ -3,13 +3,10 @@
 #include "camera.h"
 #include "image_manager.h"
 #include "base/game.h"
-#include "base/vector2f.h"
 #include "base/minmax.h"
 #include "SDL.h"
 #include "SDL_ttf.h"
 #include "SDL_main.h"
-#include <stdlib.h>
-#include <math.h>
 #include <assert.h>
 
 
