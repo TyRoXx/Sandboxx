@@ -4,11 +4,11 @@
 #include <string.h>
 
 
-int AvatarController_init(AvatarController *a, struct Game *g)
+int AvatarController_init(AvatarController *a, struct Entity *avatar)
 {
 	assert(a);
-	assert(g);
-	a->game = g;
+	assert(avatar);
+	a->avatar = avatar;
 	memset(a->is_direction_key_down, 0, sizeof(a->is_direction_key_down));
 	return 1;
 }
@@ -20,7 +20,7 @@ void AvatarController_free(AvatarController *a)
 
 void AvatarController_handle_input(AvatarController *a, Direction dir, int is_down)
 {
-	Entity * const avatar = a->game->avatar;
+	Entity * const avatar = a->avatar;
 	if (!avatar)
 	{
 		return;
@@ -53,7 +53,7 @@ void AvatarController_handle_input(AvatarController *a, Direction dir, int is_do
 
 void AvatarController_update(AvatarController *a)
 {
-	Entity * const avatar = a->game->avatar;
+	Entity * const avatar = a->avatar;
 	if (!avatar)
 	{
 		return;

@@ -2,6 +2,7 @@
 #include "avatar_controller.h"
 #include "camera.h"
 #include "image_manager.h"
+#include "base/adventure_state.h"
 #include "base/game.h"
 #include "base/minmax.h"
 #include "SDL.h"
@@ -194,6 +195,48 @@ enum
 	TileWidth = 32
 };
 
+static void update_adventure_state(
+	AdventureState *adv_state,
+	SDLFrontend *sdl_front
+	)
+{
+	SDL_Surface * const screen = sdl_front->screen;
+
+	if (adv_state->avatar)
+	{
+		Camera_focus_on(&sdl_front->camera, adv_state->avatar);
+	}
+
+	draw_tile_layers(
+		&sdl_front->camera,
+		screen,
+		&adv_state->world.tiles,
+		TileWidth,
+		&sdl_front->images,
+		0,
+		2
+		);
+
+	draw_entities(
+		&sdl_front->camera,
+		screen,
+		&adv_state->world,
+		TileWidth,
+		&sdl_front->images
+		);
+
+	assert(TILE_LAYER_COUNT == 3);
+	draw_tile_layers(
+		&sdl_front->camera,
+		screen,
+		&adv_state->world.tiles,
+		TileWidth,
+		&sdl_front->images,
+		2,
+		3
+		);
+}
+
 static void SDLFrontend_main_loop(Frontend *front)
 {
 	SDLFrontend * const sdl_front = (SDLFrontend *)front;
@@ -265,38 +308,9 @@ static void SDLFrontend_main_loop(Frontend *front)
 
 		SDL_FillRect(screen, 0, 0);
 
-		if (game->avatar)
-		{
-			Camera_focus_on(&sdl_front->camera, game->avatar);
-		}
-
-		draw_tile_layers(
-			&sdl_front->camera,
-			screen,
-			&game->world.tiles,
-			TileWidth,
-			&sdl_front->images,
-			0,
-			2
-			);
-
-		draw_entities(
-			&sdl_front->camera,
-			screen,
-			&game->world,
-			TileWidth,
-			&sdl_front->images
-			);
-
-		assert(TILE_LAYER_COUNT == 3);
-		draw_tile_layers(
-			&sdl_front->camera,
-			screen,
-			&game->world.tiles,
-			TileWidth,
-			&sdl_front->images,
-			2,
-			3
+		update_adventure_state(
+			(AdventureState *)game->state,
+			sdl_front
 			);
 
 		SDL_Flip(screen);
@@ -395,7 +409,8 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 		return 0;
 	}
 
-	if (!AvatarController_init(&front->avatar_controller, game))
+	if (!AvatarController_init(&front->avatar_controller,
+		((AdventureState *)game->state)->avatar)) /*TODO*/
 	{
 		return 0;
 	}
