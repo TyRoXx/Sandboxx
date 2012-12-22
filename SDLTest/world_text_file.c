@@ -6,7 +6,6 @@
 #include <string.h>
 
 
-static char const * const VersionLine_0 = "Map_v0\n";
 static char const * const VersionLine_1 = "World_v1\n";
 
 
