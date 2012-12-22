@@ -310,6 +310,15 @@ static void draw_tile_layers(
 	}
 }
 
+static void center_camera(Camera *cam, Entity const *entity)
+{
+	assert(cam);
+	assert(entity);
+
+	cam->position.x = (float)entity->x + get_entity_offset(entity, Dir_East);
+	cam->position.y = (float)entity->y + get_entity_offset(entity, Dir_South);
+}
+
 enum
 {
 	TileWidth = 32
@@ -385,6 +394,11 @@ static void SDLFrontend_main_loop(Frontend *front)
 		AvatarController_update(avatar_controller);
 
 		SDL_FillRect(screen, 0, 0);
+
+		if (game->avatar)
+		{
+			center_camera(&sdl_front->camera, game->avatar);
+		}
 
 		draw_tile_layers(
 			&sdl_front->camera,
