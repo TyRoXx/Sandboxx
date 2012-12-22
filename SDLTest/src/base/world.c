@@ -22,6 +22,7 @@ void World_free(World *w)
 		Entity_free(w->entities + i);
 	}
 	free(w->entities);
+	TileGrid_free(&w->tiles);
 }
 
 void World_update(World *w, unsigned delta)
