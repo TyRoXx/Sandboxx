@@ -85,6 +85,7 @@ static void save_world(World const *world)
 		return;
 	}
 	save_world_to_text(world, TileKinds, file);
+	fclose(file);
 }
 
 int Game_init(Game *g)
