@@ -55,15 +55,14 @@ static void ImageManager_free(ImageManager *im)
 typedef struct AvatarController
 {
 	Game *game;
-	int is_current_input;
-	Direction current_input;
+	int is_direction_key_down[4];
 }
 AvatarController;
 
 static int AvatarController_init(AvatarController *a, Game *g)
 {
 	a->game = g;
-	a->is_current_input = 0;
+	memset(a->is_direction_key_down, 0, sizeof(a->is_direction_key_down));
 	return 1;
 }
 
@@ -82,21 +81,25 @@ static void AvatarController_handle_input(AvatarController *a, Direction dir, in
 
 	if (is_down)
 	{
-		a->is_current_input = 1;
-		a->current_input = dir;
-
-		if (!avatar->steps_to_go)
+		a->is_direction_key_down[dir] = 1;
+		if (avatar->steps_to_go == 0)
 		{
-			avatar->direction = a->current_input;
+			avatar->direction = dir;
 			Entity_move(avatar, (size_t)-1);
 		}
 	}
 	else
 	{
-		a->is_current_input = 0;
-		if (avatar->steps_to_go > 0)
+		int * const previous = &a->is_direction_key_down[dir];
+		if (*previous)
 		{
-			Entity_stop(avatar);
+			*previous = 0;
+
+			if ((avatar->direction == dir) &&
+				(avatar->steps_to_go > 0))
+			{
+				Entity_stop(avatar);
+			}
 		}
 	}
 }
@@ -109,11 +112,19 @@ static void AvatarController_update(AvatarController *a)
 		return;
 	}
 
-	if (a->is_current_input &&
-		(avatar->steps_to_go == 0))
+	if (avatar->steps_to_go == 0)
 	{
-		avatar->direction = a->current_input;
-		Entity_move(avatar, (size_t)-1);
+		int input_dir = 0;
+		while ((input_dir < 4) &&
+			!a->is_direction_key_down[input_dir])
+		{
+			++input_dir;
+		}
+		if (input_dir < 4)
+		{
+			avatar->direction = (Direction)input_dir;
+			Entity_move(avatar, (size_t)-1);
+		}
 	}
 }
 
