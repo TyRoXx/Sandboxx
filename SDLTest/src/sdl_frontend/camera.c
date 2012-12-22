@@ -1,7 +1,6 @@
 #include "camera.h"
 #include "base/entity.h"
 #include <assert.h>
-#include <math.h>
 #include <stdlib.h>
 
 
