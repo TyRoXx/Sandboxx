@@ -1,5 +1,5 @@
-#include "game.h"
-#include "sdl_frontend.h"
+#include "base/game.h"
+#include "sdl_frontend/sdl_frontend.h"
 
 
 int main(int argc, char **argv)

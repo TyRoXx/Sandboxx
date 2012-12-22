@@ -2,7 +2,7 @@
 #define SDL_FRONTEND_H
 
 
-#include "frontend.h"
+#include "base/frontend.h"
 
 
 struct Game;

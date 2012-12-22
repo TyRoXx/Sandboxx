@@ -14,17 +14,8 @@ if (MSVC)
 	add_definitions("/D_CRT_SECURE_NO_WARNINGS")
 endif()
 
-file(GLOB sources "*.h" "*.c")
+include_directories(".")
 
-add_executable(${PROJECT_NAME} ${sources})
-
-if (MINGW)
-	target_link_libraries(${PROJECT_NAME} "-lmingw32")
-	target_link_libraries(${PROJECT_NAME} ${SDLMAIN_LIBRARY})
-endif()
-
-target_link_libraries(${PROJECT_NAME} ${SDLTTF_LIBRARY} ${SDL_LIBRARY})
-
-if (UNIX)
-	target_link_libraries(${PROJECT_NAME} "-lm")
-endif()
+add_subdirectory(base)
+add_subdirectory(sdl_frontend)
+add_subdirectory(game)
