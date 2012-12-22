@@ -1,5 +1,7 @@
 #include "game.h"
+#include "map_text_file.h"
 #include <string.h>
+#include <stdio.h>
 
 
 enum
@@ -76,6 +78,16 @@ static int add_demo_entities(World *w)
 	return 1;
 }
 
+static void save_world(World const *world)
+{
+	FILE * const file = fopen("world.txt", "w");
+	if (!file)
+	{
+		return;
+	}
+	save_world_to_text(world, TileKinds, file);
+}
+
 int Game_init(Game *g)
 {
 	TileGrid demo_tiles;
@@ -92,6 +104,8 @@ int Game_init(Game *g)
 	{
 		goto fail_0;
 	}
+
+	save_world(&g->world);
 
 	/*if there is an entity, choose the first one as the avatar*/
 	g->avatar = g->world.entities;

@@ -113,11 +113,11 @@ static void save_tiles_to_text(TileGrid const *tiles, struct TileKind const *til
 				if (layer)
 				{
 					size_t const kind_id = (size_t)(layer - tile_kinds);
-					fprintf(out, "%u ", (unsigned)kind_id);
+					fprintf(out, "%3u ", (unsigned)kind_id);
 				}
 				else
 				{
-					fputs("-1 ", out);
+					fputs(" -1 ", out);
 				}
 			}
 
