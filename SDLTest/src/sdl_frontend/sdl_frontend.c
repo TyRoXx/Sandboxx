@@ -81,16 +81,15 @@ static void SDLFrontend_destroy(Frontend *front)
 }
 
 static void draw_entity(
-	ptrdiff_t px,
-	ptrdiff_t py,
+	Vector2i pixel_pos,
 	SDL_Surface *screen,
 	Entity const *entity,
 	ImageManager const *images)
 {
 	SDL_Surface * const image = images->images[entity->appearance.tile_set_id];
 	SDL_Rect dest;
-	dest.x = (Sint16)px;
-	dest.y = (Sint16)py;
+	dest.x = (Sint16)pixel_pos.x;
+	dest.y = (Sint16)pixel_pos.y;
 	SDL_BlitSurface(image, 0, screen, &dest);
 }
 
@@ -111,9 +110,11 @@ static void draw_entities(
 	for (i = 0; i < world->entity_count; ++i)
 	{
 		Entity const * const entity = world->entities + i;
+		Vector2i pixel_pos;
+		pixel_pos.x = (ptrdiff_t)(((float)entity->position.x - camera->position.x + get_entity_offset(entity, Dir_East )) * (float)tile_width) + Width  / 2;
+		pixel_pos.y = (ptrdiff_t)(((float)entity->position.y - camera->position.y + get_entity_offset(entity, Dir_South)) * (float)tile_width) + Height / 2;
 		draw_entity(
-			(ptrdiff_t)(((float)entity->position.x - camera->position.x + get_entity_offset(entity, Dir_East )) * (float)tile_width) + Width  / 2,
-			(ptrdiff_t)(((float)entity->position.y - camera->position.y + get_entity_offset(entity, Dir_South)) * (float)tile_width) + Height / 2,
+			pixel_pos,
 			screen,
 			entity,
 			images);
@@ -121,8 +122,7 @@ static void draw_entities(
 }
 
 static void draw_layered_tile(
-	ptrdiff_t px,
-	ptrdiff_t py,
+	Vector2i pixel_pos,
 	SDL_Surface *screen,
 	LayeredTile const *tile,
 	ImageManager const *images,
@@ -138,8 +138,8 @@ static void draw_layered_tile(
 		{
 			SDL_Surface * const image = images->images[layer->image_id];
 			SDL_Rect dest;
-			dest.x = (Sint16)px;
-			dest.y = (Sint16)py;
+			dest.x = (Sint16)pixel_pos.x;
+			dest.y = (Sint16)pixel_pos.y;
 			/*Other elements of dest are ignored by SDL_BlitSurface.*/
 			/*dest is not reused because SDL_BlitSurface may modify it.*/
 
@@ -175,11 +175,15 @@ static void draw_tile_layers(
 		for (x = visible_begin_idx; x < visible_end_idx; ++x)
 		{
 			LayeredTile const * const tile = TileGrid_get(tiles, (size_t)x, (size_t)y);
+			Vector2i pixel_pos;
+
 			assert(tile);
 
+			pixel_pos.x = (ptrdiff_t)((float)tile_width * ((float)x - camera->position.x) + Width  / 2.0f);
+			pixel_pos.y = (ptrdiff_t)((float)tile_width * ((float)y - camera->position.y) + Height / 2.0f);
+
 			draw_layered_tile(
-				(ptrdiff_t)((float)tile_width * ((float)x - camera->position.x) + Width  / 2.0f),
-				(ptrdiff_t)((float)tile_width * ((float)y - camera->position.y) + Height / 2.0f),
+				pixel_pos,
 				screen,
 				tile,
 				images,
