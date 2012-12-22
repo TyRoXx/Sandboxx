@@ -1,9 +1,12 @@
 #include "base/game.h"
+#include "base/adventure_state.h"
 #include "sdl_frontend/sdl_frontend.h"
 
 
 int main(int argc, char **argv)
 {
+	int result = 0;
+
 	(void)argc;
 	(void)argv;
 
@@ -19,14 +22,24 @@ int main(int argc, char **argv)
 		frontend = SDLFrontEnd_create(&game);
 		if (!frontend)
 		{
-			return 1;
+			result = 1;
+			goto fail_1;
+		}
+
+		if (!Game_enter_state(&game, &AdventureStateDef))
+		{
+			result = 1;
+			goto fail_0;
 		}
 
 		frontend->type->main_loop(frontend);
+
+fail_0:
 		frontend->type->destroy(frontend);
 
+fail_1:
 		Game_free(&game);
 	}
 
-	return 0;
+	return result;
 }

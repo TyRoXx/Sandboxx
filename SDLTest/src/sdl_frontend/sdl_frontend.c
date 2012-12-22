@@ -368,6 +368,20 @@ static int init_image_manager(ImageManager *images, SDL_PixelFormat *format)
 	return 1;
 }
 
+static void on_enter_game_state(void *user_data, GameState *state)
+{
+	SDLFrontend * const sdl_front = user_data;
+
+	assert(sdl_front);
+	assert(state);
+
+	if (!AvatarController_init(&sdl_front->avatar_controller,
+		((AdventureState *)state)->avatar))
+	{
+		return; /*TODO*/
+	}
+}
+
 Frontend *SDLFrontEnd_create(struct Game *game)
 {
 	SDLFrontend * const front = malloc(sizeof(*front));
@@ -409,18 +423,16 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 		return 0;
 	}
 
-	if (!AvatarController_init(&front->avatar_controller,
-		((AdventureState *)game->state)->avatar)) /*TODO*/
-	{
-		return 0;
-	}
-
 	if (!Camera_init(&front->camera))
 	{
 		return 0;
 	}
 
 	/*TODO: free resources on failure*/
+
+	assert(!game->on_enter_state.function);
+	game->on_enter_state.function = on_enter_game_state;
+	game->on_enter_state.user_data = front;
 
 	return (Frontend *)front;
 }

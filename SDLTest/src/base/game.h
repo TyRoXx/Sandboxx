@@ -6,9 +6,18 @@
 #include "game_state.h"
 
 
+typedef struct GameStateEnterCallback
+{
+	void (*function)(void *, GameState *);
+	void *user_data;
+}
+GameStateEnterCallback;
+
+
 typedef struct Game
 {
 	GameState *state;
+	GameStateEnterCallback on_enter_state;
 }
 Game;
 

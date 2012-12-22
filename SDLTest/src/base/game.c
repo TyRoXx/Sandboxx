@@ -1,11 +1,11 @@
 #include "game.h"
-#include "adventure_state.h"
 
 
 int Game_init(Game *g)
 {
 	g->state = 0;
-	return Game_enter_state(g, &AdventureStateDef);
+	g->on_enter_state.function = 0;
+	return 1;
 }
 
 void Game_free(Game *g)
@@ -32,5 +32,9 @@ int Game_enter_state(Game *g, GameStateDefinition const *state)
 		g->state->definition->destroy(g->state);
 	}
 	g->state = new_state;
+	if (g->on_enter_state.function)
+	{
+		g->on_enter_state.function(g->on_enter_state.user_data, new_state);
+	}
 	return 1;
 }
