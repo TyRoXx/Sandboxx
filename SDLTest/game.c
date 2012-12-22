@@ -78,14 +78,16 @@ static int add_demo_entities(World *w)
 
 int Game_init(Game *g)
 {
-	if (!TileGrid_init(&g->current_map.terrain, 12, 8))
+	TileGrid demo_tiles;
+
+	if (!TileGrid_init(&demo_tiles, 12, 8))
 	{
 		return 0;
 	}
 
-	init_demo_grid(&g->current_map.terrain);
+	init_demo_grid(&demo_tiles);
 
-	if (!World_init(&g->world, &g->current_map) ||
+	if (!World_init(&g->world, &demo_tiles) ||
 		!add_demo_entities(&g->world))
 	{
 		goto fail_0;
@@ -96,14 +98,13 @@ int Game_init(Game *g)
 	return 1;
 
 fail_0:
-	Map_free(&g->current_map);
+	TileGrid_free(&demo_tiles);
 	return 0;
 }
 
 void Game_free(Game *g)
 {
 	World_free(&g->world);
-	Map_free(&g->current_map);
 }
 
 int Game_update(Game *g, unsigned delta)

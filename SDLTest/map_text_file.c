@@ -1,5 +1,5 @@
 #include "map_text_file.h"
-#include "map.h"
+#include "world.h"
 #include <assert.h>
 #include <limits.h>
 #include <string.h>
@@ -19,7 +19,7 @@ static int scan_size_t(FILE *in, size_t *value)
 	return 0;
 }
 
-static int load_map_from_text_v0(struct Map *map, struct TileKind const *tile_kinds, size_t tile_kind_count, FILE *in, FILE *error_out)
+static int load_world_from_text_v0(struct World *world, struct TileKind const *tile_kinds, size_t tile_kind_count, FILE *in, FILE *error_out)
 {
 	size_t width, height;
 	size_t y;
@@ -31,7 +31,7 @@ static int load_map_from_text_v0(struct Map *map, struct TileKind const *tile_ki
 		return 0;
 	}
 
-	if (!TileGrid_init(&map->terrain, width, height))
+	if (!TileGrid_init(&world->tiles, width, height))
 	{
 		fprintf(error_out, "Could not initialize the tile grid\n");
 		return 0;
@@ -60,7 +60,7 @@ static int load_map_from_text_v0(struct Map *map, struct TileKind const *tile_ki
 						goto fail;
 					}
 
-					TileGrid_get(&map->terrain, x, y)->layers[i] = tile_kinds + tile_kind_id;
+					TileGrid_get(&world->tiles, x, y)->layers[i] = tile_kinds + tile_kind_id;
 				}
 			}
 		}
@@ -69,21 +69,21 @@ static int load_map_from_text_v0(struct Map *map, struct TileKind const *tile_ki
 	return 1;
 
 fail:
-	TileGrid_free(&map->terrain);
+	TileGrid_free(&world->tiles);
 	return 0;
 }
 
-int load_map_from_text(struct Map *map, struct TileKind const *tile_kinds, size_t tile_kind_count, FILE *in, FILE *error_out)
+int load_world_from_text(struct World *world, struct TileKind const *tile_kinds, size_t tile_kind_count, FILE *in, FILE *error_out)
 {
 	char version[32];
 
-	assert(map);
+	assert(world);
 	assert(in);
 
 	fgets(version, sizeof(version), in);
 	if (!strcmp(version, VersionLine_0))
 	{
-		return load_map_from_text_v0(map, tile_kinds, tile_kind_count, in, error_out);
+		return load_world_from_text_v0(world, tile_kinds, tile_kind_count, in, error_out);
 	}
 	else
 	{
@@ -128,11 +128,11 @@ static void save_tiles_to_text(TileGrid const *tiles, struct TileKind const *til
 	}
 }
 
-void save_map_to_text(struct Map const *map, struct TileKind const *tile_kinds, FILE *out)
+void save_world_to_text(struct World const *world, struct TileKind const *tile_kinds, FILE *out)
 {
-	assert(map);
+	assert(world);
 	assert(out);
 
 	fputs(VersionLine_0, out);
-	save_tiles_to_text(&map->terrain, tile_kinds, out);
+	save_tiles_to_text(&world->tiles, tile_kinds, out);
 }

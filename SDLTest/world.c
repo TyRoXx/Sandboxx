@@ -1,14 +1,16 @@
 #include "world.h"
-#include "map.h"
 #include <stdlib.h>
 #include <assert.h>
 
 
-int World_init(World *w, struct Map *map)
+int World_init(World *w, TileGrid const *tiles)
 {
-	w->current_map = map;
+	assert(w);
+	assert(tiles);
+
 	w->entities = 0;
 	w->entity_count = 0;
+	w->tiles = *tiles;
 	return 1;
 }
 
@@ -93,6 +95,6 @@ int World_is_walkable(
 	ptrdiff_t y)
 {
 	return
-		is_walkable_tile(&world->current_map->terrain, x, y) &&
+		is_walkable_tile(&world->tiles, x, y) &&
 		!is_entity_on(world, x, y);
 }

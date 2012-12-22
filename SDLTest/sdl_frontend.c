@@ -389,7 +389,7 @@ static void SDLFrontend_main_loop(Frontend *front)
 		draw_tile_layers(
 			&sdl_front->camera,
 			screen,
-			&game->current_map.terrain,
+			&game->world.tiles,
 			TileWidth,
 			&sdl_front->images,
 			0,
@@ -408,7 +408,7 @@ static void SDLFrontend_main_loop(Frontend *front)
 		draw_tile_layers(
 			&sdl_front->camera,
 			screen,
-			&game->current_map.terrain,
+			&game->world.tiles,
 			TileWidth,
 			&sdl_front->images,
 			2,

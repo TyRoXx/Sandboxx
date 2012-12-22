@@ -5,11 +5,11 @@
 #include <stdio.h>
 
 
-struct Map;
+struct World;
 struct TileKind;
 
-int load_map_from_text(struct Map *map, struct TileKind const *tile_kinds, size_t tile_kind_count, FILE *in, FILE *error_out);
-void save_map_to_text(struct Map const *map, struct TileKind const *tile_kinds, FILE *out);
+int load_world_from_text(struct World *world, struct TileKind const *tile_kinds, size_t tile_kind_count, FILE *in, FILE *error_out);
+void save_world_to_text(struct World const *world, struct TileKind const *tile_kinds, FILE *out);
 
 
 #endif
