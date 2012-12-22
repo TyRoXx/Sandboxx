@@ -387,7 +387,7 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 	SDLFrontend * const front = malloc(sizeof(*front));
 	if (!front)
 	{
-		return 0;
+		goto fail_0;
 	}
 
 	assert(game);
@@ -395,16 +395,14 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
 		 fprintf(stderr, "SDL error: %s\n", SDL_GetError());
-		 return 0;
+		 goto fail_1;
 	}
 
 	if (TTF_Init() == -1)
 	{
 		fprintf(stderr, "SDL_tff error: %s\n", TTF_GetError());
-		return 0;
+		goto fail_2;
 	}
-
-	SDL_WM_SetCaption(WindowTitle, WindowTitle);
 
 	front->base.type = &SDLFrontendType;
 	front->game = game;
@@ -415,24 +413,39 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 	if (!front->screen)
 	{
 		fprintf(stderr, "Cannot create screen: %s\n", SDL_GetError());
-		return 0;
+		goto fail_3;
 	}
 
 	if (!init_image_manager(&front->images, front->screen->format))
 	{
-		return 0;
+		goto fail_3;
 	}
 
 	if (!Camera_init(&front->camera))
 	{
-		return 0;
+		goto fail_4;
 	}
-
-	/*TODO: free resources on failure*/
-
+	
 	assert(!game->on_enter_state.function);
 	game->on_enter_state.function = on_enter_game_state;
 	game->on_enter_state.user_data = front;
 
+	SDL_WM_SetCaption(WindowTitle, WindowTitle);
+
 	return (Frontend *)front;
+
+fail_4:
+	ImageManager_free(&front->images);
+
+fail_3:
+	TTF_Quit();
+
+fail_2:
+	SDL_Quit();
+
+fail_1:
+	free(front);
+
+fail_0:
+	return 0;
 }
