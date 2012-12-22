@@ -79,45 +79,41 @@ static void SDLFrontend_main_loop(Frontend *front)
 
 	while (is_running)
 	{
-		unsigned current_time;
-		SDL_Event event;
-		while (SDL_PollEvent(&event))
 		{
-			if (event.type == SDL_QUIT)
+			SDL_Event event;
+			while (SDL_PollEvent(&event))
 			{
-				is_running = 0;
-				break;
-			}
-
-			if (event.type == SDL_KEYUP)
-			{
-				switch (event.key.keysym.sym)
+				if (event.type == SDL_QUIT)
 				{
-				case SDLK_ESCAPE:
 					is_running = 0;
 					break;
-				default:
-					break;
 				}
-			}
-			else if (event.type == SDL_KEYDOWN)
-			{
-				switch (event.key.keysym.sym)
-				{
-				default:
-					break;
-				}
-			}
 
-			sdl_front->state_view->type->handle_event(
-						sdl_front->state_view,
-						&event);
+				if (event.type == SDL_KEYUP)
+				{
+					switch (event.key.keysym.sym)
+					{
+					case SDLK_ESCAPE:
+						is_running = 0;
+						break;
+					default:
+						break;
+					}
+				}
+
+				sdl_front->state_view->type->handle_event(
+							sdl_front->state_view,
+							&event);
+			}
 		}
 
-		current_time = SDL_GetTicks();
-		assert(current_time >= last_time);
-		Game_update(game, (current_time - last_time));
-		last_time = current_time;
+		{
+			unsigned current_time;
+			current_time = SDL_GetTicks();
+			assert(current_time >= last_time);
+			Game_update(game, (current_time - last_time));
+			last_time = current_time;
+		}
 
 		sdl_front->state_view->type->update(sdl_front->state_view);
 
@@ -126,7 +122,6 @@ static void SDLFrontend_main_loop(Frontend *front)
 		sdl_front->state_view->type->draw(sdl_front->state_view);
 
 		SDL_Flip(screen);
-
 		SDL_Delay(16);
 	}
 }
