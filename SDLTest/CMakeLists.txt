@@ -6,8 +6,13 @@ find_package(SDL_ttf REQUIRED)
 
 include_directories(${SDL_INCLUDE_DIR} ${SDLTTF_INCLUDE_DIR})
 
-if(CMAKE_COMPILER_IS_GNUCXX)
+if (CMAKE_COMPILER_IS_GNUCXX)
 	list(APPEND CMAKE_C_FLAGS "-ansi -Wall -Wextra -Wconversion -pedantic -g")
+endif()
+
+if (MSVC)
+	add_definitions("/D_SCL_SECURE_NO_WARNINGS")
+	#list(APPEND CMAKE_C_FLAGS "/wd4996") #This function or variable may be unsafe.
 endif()
 
 file(GLOB sources "*.h" "*.c")
