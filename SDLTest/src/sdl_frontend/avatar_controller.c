@@ -6,6 +6,8 @@
 
 int AvatarController_init(AvatarController *a, struct Game *g)
 {
+	assert(a);
+	assert(g);
 	a->game = g;
 	memset(a->is_direction_key_down, 0, sizeof(a->is_direction_key_down));
 	return 1;

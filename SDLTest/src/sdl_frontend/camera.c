@@ -41,6 +41,9 @@ float get_move_offset(Direction move_dir, float progress, Direction dir)
 float get_entity_offset(Entity const *e, Direction dir)
 {
 	float offset = 0;
+
+	assert(e);
+
 	if (e->steps_to_go > 0)
 	{
 		offset += get_move_offset(e->direction, e->move_progress, dir);

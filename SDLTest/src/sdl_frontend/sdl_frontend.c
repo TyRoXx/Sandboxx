@@ -330,6 +330,9 @@ static int init_image_manager(ImageManager *images, SDL_PixelFormat *format)
 	size_t const image_count = sizeof(ImageFileNames) / sizeof(*ImageFileNames);
 	size_t i;
 
+	assert(images);
+	assert(format);
+
 	if (!ImageManager_init(images, image_count))
 	{
 		return 0;
@@ -358,6 +361,8 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 	{
 		return 0;
 	}
+
+	assert(game);
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
