@@ -186,6 +186,13 @@ static void AdventureStateView_destroy(GameStateView *view)
 	free(view);
 }
 
+static void AdventureStateView_update(GameStateView *view)
+{
+	AdventureStateView * const adv_view = (AdventureStateView *)view;
+
+	AvatarController_update(&adv_view->avatar_controller);
+}
+
 static void AdventureStateView_draw(GameStateView *view)
 {
 	AdventureStateView * const adv_view = (AdventureStateView *)view;
@@ -261,6 +268,7 @@ GameStateViewType const AdventureStateViewType =
 {
 	AdventureStateView_create,
 	AdventureStateView_destroy,
+	AdventureStateView_update,
 	AdventureStateView_draw,
-	AdventureStateView_handle_event
+	AdventureStateView_handle_event,
 };

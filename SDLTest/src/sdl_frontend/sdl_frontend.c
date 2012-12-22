@@ -1,7 +1,7 @@
 #include "sdl_frontend.h"
+#include "adventure_state_view.h"
 #include "base/adventure_state.h"
 #include "base/game.h"
-#include "base/minmax.h"
 #include "SDL.h"
 #include "SDL_ttf.h"
 #include "SDL_main.h"
@@ -55,10 +55,6 @@ static void SDLFrontend_destroy(Frontend *front)
 	SDLFrontend * const sdl_front = (SDLFrontend *)front;
 	assert(sdl_front);
 
-	Camera_free(&sdl_front->camera);
-
-	AvatarController_free(&sdl_front->avatar_controller);
-
 	ImageManager_free(&sdl_front->images);
 	free(front);
 
@@ -66,173 +62,11 @@ static void SDLFrontend_destroy(Frontend *front)
 	SDL_Quit();
 }
 
-static void draw_entity(
-	Vector2i pixel_pos,
-	SDL_Surface *screen,
-	Entity const *entity,
-	ImageManager const *images)
-{
-	SDL_Surface * const image = images->images[entity->appearance.tile_set_id];
-	SDL_Rect dest;
-	dest.x = (Sint16)pixel_pos.x;
-	dest.y = (Sint16)pixel_pos.y;
-	SDL_BlitSurface(image, 0, screen, &dest);
-}
-
-static void draw_entities(
-	Camera const *camera,
-	SDL_Surface *screen,
-	World const *world,
-	size_t tile_width,
-	ImageManager const *images)
-{
-	size_t i;
-
-	assert(world);
-	assert(camera);
-	assert(screen);
-	assert(images);
-
-	for (i = 0; i < world->entity_count; ++i)
-	{
-		Entity const * const entity = world->entities + i;
-		Vector2i pixel_pos;
-		pixel_pos.x = (ptrdiff_t)(((float)entity->position.x - camera->position.x + get_entity_offset(entity, Dir_East )) * (float)tile_width) + Width  / 2;
-		pixel_pos.y = (ptrdiff_t)(((float)entity->position.y - camera->position.y + get_entity_offset(entity, Dir_South)) * (float)tile_width) + Height / 2;
-		draw_entity(
-			pixel_pos,
-			screen,
-			entity,
-			images);
-	}
-}
-
-static void draw_layered_tile(
-	Vector2i pixel_pos,
-	SDL_Surface *screen,
-	LayeredTile const *tile,
-	ImageManager const *images,
-	size_t layer_begin,
-	size_t layer_end
-)
-{
-	size_t i;
-	for (i = layer_begin; i < layer_end; ++i)
-	{
-		TileKind const * const layer = tile->layers[i];
-		if (layer)
-		{
-			SDL_Surface * const image = images->images[layer->image_id];
-			SDL_Rect dest;
-			dest.x = (Sint16)pixel_pos.x;
-			dest.y = (Sint16)pixel_pos.y;
-			/*Other elements of dest are ignored by SDL_BlitSurface.*/
-			/*dest is not reused because SDL_BlitSurface may modify it.*/
-
-			SDL_BlitSurface(image, 0, screen, &dest);
-		}
-	}
-}
-
-static void draw_tile_layers(
-		Camera const *camera,
-		SDL_Surface *screen,
-		TileGrid const *tiles,
-		size_t tile_width,
-		ImageManager const *images,
-		size_t layer_begin,
-		size_t layer_end)
-{
-	ptrdiff_t y;
-
-	ptrdiff_t visible_begin_idx = (ptrdiff_t)(camera->position.x - (float)Width  / (float)tile_width / 2.0f);
-	ptrdiff_t visible_begin_idy = (ptrdiff_t)(camera->position.y - (float)Height / (float)tile_width / 2.0f);
-	ptrdiff_t visible_end_idx   = (ptrdiff_t)(camera->position.x + (float)Width  / (float)tile_width / 2.0f + 1.0f);
-	ptrdiff_t visible_end_idy   = (ptrdiff_t)(camera->position.y + (float)Height / (float)tile_width / 2.0f + 1.0f);
-
-	visible_begin_idx = max_ptrdiff_t(visible_begin_idx, 0);
-	visible_begin_idy = max_ptrdiff_t(visible_begin_idy, 0);
-	visible_end_idx   = min_ptrdiff_t(visible_end_idx,   (ptrdiff_t)tiles->width);
-	visible_end_idy   = min_ptrdiff_t(visible_end_idy,   (ptrdiff_t)tiles->height);
-
-	for (y = visible_begin_idy; y < visible_end_idy; ++y)
-	{
-		ptrdiff_t x;
-		for (x = visible_begin_idx; x < visible_end_idx; ++x)
-		{
-			LayeredTile const * const tile = TileGrid_get(tiles, (size_t)x, (size_t)y);
-			Vector2i pixel_pos;
-
-			assert(tile);
-
-			pixel_pos.x = (ptrdiff_t)((float)tile_width * ((float)x - camera->position.x) + Width  / 2.0f);
-			pixel_pos.y = (ptrdiff_t)((float)tile_width * ((float)y - camera->position.y) + Height / 2.0f);
-
-			draw_layered_tile(
-				pixel_pos,
-				screen,
-				tile,
-				images,
-				layer_begin,
-				layer_end
-				);
-		}
-	}
-}
-
-enum
-{
-	TileWidth = 32
-};
-
-static void update_adventure_state(
-	AdventureState *adv_state,
-	SDLFrontend *sdl_front
-	)
-{
-	SDL_Surface * const screen = sdl_front->screen;
-
-	if (adv_state->avatar)
-	{
-		Camera_focus_on(&sdl_front->camera, adv_state->avatar);
-	}
-
-	draw_tile_layers(
-		&sdl_front->camera,
-		screen,
-		&adv_state->world.tiles,
-		TileWidth,
-		&sdl_front->images,
-		0,
-		2
-		);
-
-	draw_entities(
-		&sdl_front->camera,
-		screen,
-		&adv_state->world,
-		TileWidth,
-		&sdl_front->images
-		);
-
-	assert(TILE_LAYER_COUNT == 3);
-	draw_tile_layers(
-		&sdl_front->camera,
-		screen,
-		&adv_state->world.tiles,
-		TileWidth,
-		&sdl_front->images,
-		2,
-		3
-		);
-}
-
 static void SDLFrontend_main_loop(Frontend *front)
 {
 	SDLFrontend * const sdl_front = (SDLFrontend *)front;
 	SDL_Surface * const screen = sdl_front->screen;
 	Game * const game = sdl_front->game;
-	AvatarController * const avatar_controller = &sdl_front->avatar_controller;
 	int is_running = 1;
 	unsigned last_time = SDL_GetTicks();
 
@@ -252,10 +86,6 @@ static void SDLFrontend_main_loop(Frontend *front)
 			{
 				switch (event.key.keysym.sym)
 				{
-				case SDLK_w: AvatarController_handle_input(avatar_controller, Dir_North, 0); break;
-				case SDLK_a: AvatarController_handle_input(avatar_controller, Dir_West, 0); break;
-				case SDLK_s: AvatarController_handle_input(avatar_controller, Dir_South, 0); break;
-				case SDLK_d: AvatarController_handle_input(avatar_controller, Dir_East, 0); break;
 				case SDLK_ESCAPE:
 					is_running = 0;
 					break;
@@ -267,14 +97,14 @@ static void SDLFrontend_main_loop(Frontend *front)
 			{
 				switch (event.key.keysym.sym)
 				{
-				case SDLK_w: AvatarController_handle_input(avatar_controller, Dir_North, 1); break;
-				case SDLK_a: AvatarController_handle_input(avatar_controller, Dir_West, 1); break;
-				case SDLK_s: AvatarController_handle_input(avatar_controller, Dir_South, 1); break;
-				case SDLK_d: AvatarController_handle_input(avatar_controller, Dir_East, 1); break;
 				default:
 					break;
 				}
 			}
+
+			sdl_front->state_view->type->handle_event(
+						sdl_front->state_view,
+						&event);
 		}
 
 		current_time = SDL_GetTicks();
@@ -282,14 +112,12 @@ static void SDLFrontend_main_loop(Frontend *front)
 		Game_update(game, (current_time - last_time));
 		last_time = current_time;
 
-		AvatarController_update(avatar_controller);
+		assert(sdl_front->state_view);
+		sdl_front->state_view->type->update(sdl_front->state_view);
 
 		SDL_FillRect(screen, 0, 0);
 
-		update_adventure_state(
-			(AdventureState *)game->state,
-			sdl_front
-			);
+		sdl_front->state_view->type->draw(sdl_front->state_view);
 
 		SDL_Flip(screen);
 
@@ -352,12 +180,15 @@ static void on_enter_game_state(void *user_data, GameState *state)
 
 	assert(sdl_front);
 	assert(state);
+	assert(state->definition == &AdventureStateDef);
 
-	if (!AvatarController_init(&sdl_front->avatar_controller,
-		((AdventureState *)state)->avatar))
+	sdl_front->state_view = AdventureStateViewType.create(state, sdl_front);
+	if (!sdl_front->state_view)
 	{
-		return; /*TODO*/
+		/*TODO*/
+		return;
 	}
+	sdl_front->state_view->type = &AdventureStateViewType;
 }
 
 Frontend *SDLFrontEnd_create(struct Game *game)
@@ -385,8 +216,7 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 	front->base.type = &SDLFrontendType;
 	front->game = game;
 	front->screen = SDL_SetVideoMode(Width, Height, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
-	front->camera.position.x = 6.5f;
-	front->camera.position.y = 3.5f;
+	front->state_view = 0;
 
 	if (!front->screen)
 	{
@@ -398,11 +228,6 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 	{
 		goto fail_3;
 	}
-
-	if (!Camera_init(&front->camera))
-	{
-		goto fail_4;
-	}
 	
 	assert(!game->on_enter_state.function);
 	game->on_enter_state.function = on_enter_game_state;
@@ -411,9 +236,6 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 	SDL_WM_SetCaption(WindowTitle, WindowTitle);
 
 	return (Frontend *)front;
-
-fail_4:
-	ImageManager_free(&front->images);
 
 fail_3:
 	TTF_Quit();
