@@ -19,3 +19,4 @@ include_directories(".")
 add_subdirectory(base)
 add_subdirectory(sdl_frontend)
 add_subdirectory(game)
+
