@@ -61,7 +61,7 @@ static int add_demo_entities(World *w)
 
 	a.tile_set_id = 4;
 
-	if (!Entity_init(&e, 3, 4, a, 1.7f, w))
+	if (!Entity_init(&e, Vector2i_new(3, 4), a, 1.7f, w))
 	{
 		return 0;
 	}

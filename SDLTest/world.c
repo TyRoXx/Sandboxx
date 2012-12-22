@@ -50,8 +50,7 @@ int World_add_entity(World *w, Entity const *entity)
 
 static int is_entity_on(
 	World const *world,
-	ptrdiff_t x,
-	ptrdiff_t y)
+	Vector2i const *position)
 {
 	size_t i;
 	assert(world);
@@ -61,8 +60,7 @@ static int is_entity_on(
 		Entity const * const e = world->entities + i;
 		assert(e);
 
-		if (e->x == x &&
-			e->y == y)
+		if (Vector2i_equal(position, &e->position))
 		{
 			return 1;
 		}
@@ -73,28 +71,26 @@ static int is_entity_on(
 
 static int is_walkable_tile(
 	TileGrid const *tiles,
-	ptrdiff_t x,
-	ptrdiff_t y)
+	Vector2i const *position)
 {
-	if (x < 0 ||
-		y < 0 ||
-		x >= (ptrdiff_t)tiles->width ||
-		y >= (ptrdiff_t)tiles->height)
+	if (position->x < 0 ||
+		position->y < 0 ||
+		position->x >= (ptrdiff_t)tiles->width ||
+		position->y >= (ptrdiff_t)tiles->height)
 	{
 		return 0;
 	}
 
 	return LayeredTile_is_walkable(
-		TileGrid_get(tiles, (size_t)x, (size_t)y)
+		TileGrid_get(tiles, (size_t)position->x, (size_t)position->y)
 		);
 }
 
 int World_is_walkable(
 	World const *world,
-	ptrdiff_t x,
-	ptrdiff_t y)
+	Vector2i const *position)
 {
 	return
-		is_walkable_tile(&world->tiles, x, y) &&
-		!is_entity_on(world, x, y);
+		is_walkable_tile(&world->tiles, position) &&
+		!is_entity_on(world, position);
 }

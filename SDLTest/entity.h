@@ -2,7 +2,7 @@
 #define ENTITY_H
 
 
-#include <stddef.h>
+#include "vector2i.h"
 
 
 struct World;
@@ -24,7 +24,7 @@ Direction;
 
 typedef struct Entity
 {
-	ptrdiff_t x, y;
+	Vector2i position;
 	Direction direction;
 	Appearance appearance;
 	float max_velocity;
@@ -37,8 +37,7 @@ Entity;
 
 int Entity_init(
 	Entity *e,
-	ptrdiff_t x,
-	ptrdiff_t y,
+	Vector2i position,
 	Appearance appearance,
 	float max_velocity,
 	struct World *world

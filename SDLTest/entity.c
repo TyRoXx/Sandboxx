@@ -4,17 +4,17 @@
 
 
 static void add_direction_vector(
-	ptrdiff_t *x,
-	ptrdiff_t *y,
+	Vector2i *dest,
 	Direction dir,
 	ptrdiff_t amount)
 {
+	assert(dest);
 	switch (dir)
 	{
-	case Dir_North: *y -= amount; break;
-	case Dir_West:  *x -= amount; break;
-	case Dir_South: *y += amount; break;
-	case Dir_East:  *x += amount; break;
+	case Dir_North: dest->y -= amount; break;
+	case Dir_West:  dest->x -= amount; break;
+	case Dir_South: dest->y += amount; break;
+	case Dir_East:  dest->x += amount; break;
 	}
 }
 
@@ -23,25 +23,22 @@ static int is_possible_step(
 	Direction dir
 	)
 {
-	ptrdiff_t new_x = entity->x;
-	ptrdiff_t new_y = entity->y;
-	add_direction_vector(&new_x, &new_y, dir, 1);
+	Vector2i new_pos = entity->position;
+	add_direction_vector(&new_pos, dir, 1);
 
-	return World_is_walkable(entity->world, new_x, new_y);
+	return World_is_walkable(entity->world, &new_pos);
 }
 
 
 int Entity_init(
 	Entity *e,
-	ptrdiff_t x,
-	ptrdiff_t y,
+	Vector2i position,
 	Appearance appearance,
 	float max_velocity,
     struct World *world
 	)
 {
-	e->x = x;
-	e->y = y;
+	e->position = position;
 	e->direction = Dir_South;
 	e->appearance = appearance;
 	e->max_velocity = max_velocity;
@@ -77,7 +74,7 @@ void Entity_update(Entity *e, unsigned delta)
 				break;
 			}
 
-			add_direction_vector(&e->x, &e->y, e->direction, 1);
+			add_direction_vector(&e->position, e->direction, 1);
 
 			e->move_progress -= 1;
 		}
@@ -104,7 +101,7 @@ int Entity_move(Entity *e, size_t steps_to_go)
 		return 0;
 	}
 
-	add_direction_vector(&e->x, &e->y, e->direction, 1);
+	add_direction_vector(&e->position, e->direction, 1);
 	
 	e->steps_to_go = steps_to_go;
 	e->move_progress = 0;

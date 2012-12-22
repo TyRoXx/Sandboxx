@@ -11,8 +11,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 if (MSVC)
-	add_definitions("/D_SCL_SECURE_NO_WARNINGS")
-	#list(APPEND CMAKE_C_FLAGS "/wd4996") #This function or variable may be unsafe.
+	add_definitions("/D_CRT_SECURE_NO_WARNINGS")
 endif()
 
 file(GLOB sources "*.h" "*.c")

@@ -243,8 +243,8 @@ static void draw_entities(
 	{
 		Entity const * const entity = world->entities + i;
 		draw_entity(
-			(ptrdiff_t)((float)(entity->x - camera->position.x + get_entity_offset(entity, Dir_East)) * tile_width + (float)Width / 2),
-			(ptrdiff_t)((float)(entity->y - camera->position.y + get_entity_offset(entity, Dir_South)) * tile_width + (float)Height / 2),
+			(ptrdiff_t)((float)(entity->position.x - camera->position.x + get_entity_offset(entity, Dir_East)) * tile_width + (float)Width / 2),
+			(ptrdiff_t)((float)(entity->position.y - camera->position.y + get_entity_offset(entity, Dir_South)) * tile_width + (float)Height / 2),
 			screen,
 			entity,
 			images);
@@ -326,8 +326,8 @@ static void center_camera(Camera *cam, Entity const *entity)
 	assert(cam);
 	assert(entity);
 
-	cam->position.x = (float)entity->x + get_entity_offset(entity, Dir_East);
-	cam->position.y = (float)entity->y + get_entity_offset(entity, Dir_South);
+	cam->position.x = (float)entity->position.x + get_entity_offset(entity, Dir_East);
+	cam->position.y = (float)entity->position.y + get_entity_offset(entity, Dir_South);
 }
 
 enum
