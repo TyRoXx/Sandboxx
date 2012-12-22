@@ -1,5 +1,7 @@
 #include "sdl_frontend.h"
 #include "avatar_controller.h"
+#include "camera.h"
+#include "image_manager.h"
 #include "base/game.h"
 #include "base/vector2f.h"
 #include "base/minmax.h"
@@ -15,43 +17,6 @@ enum
 {
 	Width = 640, Height = 480
 };
-
-typedef struct Camera
-{
-	Vector2f position;
-}
-Camera;
-
-typedef struct ImageManager
-{
-	SDL_Surface **images;
-	size_t image_count;
-}
-ImageManager;
-
-static int ImageManager_init(ImageManager *im, size_t image_count)
-{
-	assert(im);
-
-	im->images = calloc(image_count, sizeof(*im->images));
-	if (im->images)
-	{
-		im->image_count = image_count;
-		return 1;
-	}
-	return 0;
-}
-
-static void ImageManager_free(ImageManager *im)
-{
-	size_t i;
-	for (i = 0; i < im->image_count; ++i)
-	{
-		SDL_Surface * const s = im->images[i];
-		SDL_FreeSurface(s);
-	}
-	free(im->images);
-}
 
 typedef struct SDLFrontend
 {
