@@ -55,6 +55,11 @@ static void SDLFrontend_destroy(Frontend *front)
 	SDLFrontend * const sdl_front = (SDLFrontend *)front;
 	assert(sdl_front);
 
+	if (sdl_front->state_view)
+	{
+		sdl_front->state_view->type->destroy(sdl_front->state_view);
+	}
+
 	ImageManager_free(&sdl_front->images);
 	free(front);
 
@@ -69,6 +74,8 @@ static void SDLFrontend_main_loop(Frontend *front)
 	Game * const game = sdl_front->game;
 	int is_running = 1;
 	unsigned last_time = SDL_GetTicks();
+
+	assert(sdl_front->state_view);
 
 	while (is_running)
 	{
@@ -112,7 +119,6 @@ static void SDLFrontend_main_loop(Frontend *front)
 		Game_update(game, (current_time - last_time));
 		last_time = current_time;
 
-		assert(sdl_front->state_view);
 		sdl_front->state_view->type->update(sdl_front->state_view);
 
 		SDL_FillRect(screen, 0, 0);
