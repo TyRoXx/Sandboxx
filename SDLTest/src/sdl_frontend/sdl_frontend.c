@@ -68,6 +68,8 @@ static void SDLFrontend_destroy(Frontend *front)
 	SDLFrontend * const sdl_front = (SDLFrontend *)front;
 	assert(sdl_front);
 
+	Camera_free(&sdl_front->camera);
+
 	AvatarController_free(&sdl_front->avatar_controller);
 
 	ImageManager_free(&sdl_front->images);
@@ -89,27 +91,6 @@ static void draw_entity(
 	dest.x = (Sint16)px;
 	dest.y = (Sint16)py;
 	SDL_BlitSurface(image, 0, screen, &dest);
-}
-
-static float get_move_offset(Direction move_dir, float progress, Direction dir)
-{
-	long const diff = labs(move_dir - dir);
-	switch (diff)
-	{
-	case 0: return progress - 1;
-	case 2: return -progress + 1;
-	default: return 0;
-	}
-}
-
-static float get_entity_offset(Entity const *e, Direction dir)
-{
-	float offset = 0;
-	if (e->steps_to_go > 0)
-	{
-		offset += get_move_offset(e->direction, e->move_progress, dir);
-	}
-	return offset;
 }
 
 static void draw_entities(
@@ -208,15 +189,6 @@ static void draw_tile_layers(
 	}
 }
 
-static void center_camera(Camera *cam, Entity const *entity)
-{
-	assert(cam);
-	assert(entity);
-
-	cam->position.x = (float)entity->position.x + get_entity_offset(entity, Dir_East);
-	cam->position.y = (float)entity->position.y + get_entity_offset(entity, Dir_South);
-}
-
 enum
 {
 	TileWidth = 32
@@ -295,7 +267,7 @@ static void SDLFrontend_main_loop(Frontend *front)
 
 		if (game->avatar)
 		{
-			center_camera(&sdl_front->camera, game->avatar);
+			Camera_focus_on(&sdl_front->camera, game->avatar);
 		}
 
 		draw_tile_layers(
@@ -419,6 +391,11 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 	}
 
 	if (!AvatarController_init(&front->avatar_controller, game))
+	{
+		return 0;
+	}
+
+	if (!Camera_init(&front->camera))
 	{
 		return 0;
 	}
