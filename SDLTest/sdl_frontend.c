@@ -292,8 +292,8 @@ static void draw_tile_layers(
 
 	ptrdiff_t visible_begin_idx = (ptrdiff_t)(camera->position.x - (float)Width  / (float)tile_width / 2.0f);
 	ptrdiff_t visible_begin_idy = (ptrdiff_t)(camera->position.y - (float)Height / (float)tile_width / 2.0f);
-	ptrdiff_t visible_end_idx   = (ptrdiff_t)(camera->position.x + (float)Width  / (float)tile_width / 2.0f + 0.5f);
-	ptrdiff_t visible_end_idy   = (ptrdiff_t)(camera->position.y + (float)Height / (float)tile_width / 2.0f + 0.5f);
+	ptrdiff_t visible_end_idx   = (ptrdiff_t)(camera->position.x + (float)Width  / (float)tile_width / 2.0f + 1.0f);
+	ptrdiff_t visible_end_idy   = (ptrdiff_t)(camera->position.y + (float)Height / (float)tile_width / 2.0f + 1.0f);
 
 	visible_begin_idx = max_ptrdiff_t(visible_begin_idx, 0);
 	visible_begin_idy = max_ptrdiff_t(visible_begin_idy, 0);
