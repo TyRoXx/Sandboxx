@@ -2,6 +2,7 @@
 #include "base/entity.h"
 #include <assert.h>
 #include <math.h>
+#include <stdlib.h>
 
 
 int Camera_init(Camera *cam)
@@ -29,7 +30,9 @@ void Camera_focus_on(Camera *cam, struct Entity const *target)
 
 float get_move_offset(Direction move_dir, float progress, Direction dir)
 {
-	long const diff = labs(move_dir - dir);
+	int const diff = abs((int)move_dir - (int)dir);
+	assert(diff >= 0);
+	assert(diff <= 3);
 	switch (diff)
 	{
 	case 0: return progress - 1;

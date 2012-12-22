@@ -10,7 +10,10 @@ int Game_init(Game *g)
 
 void Game_free(Game *g)
 {
-	g->state->definition->destroy(g->state);
+	if (g->state)
+	{
+		g->state->definition->destroy(g->state);
+	}
 }
 
 int Game_update(Game *g, unsigned delta)

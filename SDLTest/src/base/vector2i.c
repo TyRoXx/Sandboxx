@@ -3,7 +3,9 @@
 
 Vector2i Vector2i_new(ptrdiff_t x, ptrdiff_t y)
 {
-	Vector2i const result = {x, y};
+	Vector2i result;
+	result.x = x;
+	result.y = y;
 	return result;
 }
 

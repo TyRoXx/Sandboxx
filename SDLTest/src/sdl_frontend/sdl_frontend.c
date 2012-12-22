@@ -112,8 +112,8 @@ static void draw_entities(
 	{
 		Entity const * const entity = world->entities + i;
 		draw_entity(
-			(ptrdiff_t)((float)(entity->position.x - camera->position.x + get_entity_offset(entity, Dir_East)) * tile_width + (float)Width / 2),
-			(ptrdiff_t)((float)(entity->position.y - camera->position.y + get_entity_offset(entity, Dir_South)) * tile_width + (float)Height / 2),
+			(ptrdiff_t)(((float)entity->position.x - camera->position.x + get_entity_offset(entity, Dir_East )) * (float)tile_width) + Width  / 2,
+			(ptrdiff_t)(((float)entity->position.y - camera->position.y + get_entity_offset(entity, Dir_South)) * (float)tile_width) + Height / 2,
 			screen,
 			entity,
 			images);

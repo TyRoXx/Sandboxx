@@ -98,6 +98,8 @@ static GameState *AdventureState_create(Game *game)
 	{
 		return 0;
 	}
+
+	(void)game;
 	
 	{
 		TileGrid demo_tiles;
