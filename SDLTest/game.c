@@ -59,7 +59,6 @@ static int add_demo_entities(World *w)
 	Appearance a;
 	Entity e;
 
-	a.radius = 1;
 	a.tile_set_id = 4;
 
 	if (!Entity_init(&e, 3, 4, a, 1.7f, w))

@@ -10,7 +10,6 @@ struct World;
 
 typedef struct Appearance
 {
-	size_t radius;
 	size_t tile_set_id;
 }
 Appearance;
