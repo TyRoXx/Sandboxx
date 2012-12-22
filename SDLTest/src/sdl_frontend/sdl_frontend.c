@@ -1,4 +1,5 @@
 #include "sdl_frontend.h"
+#include "avatar_controller.h"
 #include "base/game.h"
 #include "base/vector2f.h"
 #include "base/minmax.h"
@@ -50,82 +51,6 @@ static void ImageManager_free(ImageManager *im)
 		SDL_FreeSurface(s);
 	}
 	free(im->images);
-}
-
-typedef struct AvatarController
-{
-	Game *game;
-	int is_direction_key_down[4];
-}
-AvatarController;
-
-static int AvatarController_init(AvatarController *a, Game *g)
-{
-	a->game = g;
-	memset(a->is_direction_key_down, 0, sizeof(a->is_direction_key_down));
-	return 1;
-}
-
-static void AvatarController_free(AvatarController *a)
-{
-	(void)a;
-}
-
-static void AvatarController_handle_input(AvatarController *a, Direction dir, int is_down)
-{
-	Entity * const avatar = a->game->avatar;
-	if (!avatar)
-	{
-		return;
-	}
-
-	if (is_down)
-	{
-		a->is_direction_key_down[dir] = 1;
-		if (avatar->steps_to_go == 0)
-		{
-			avatar->direction = dir;
-			Entity_move(avatar, (size_t)-1);
-		}
-	}
-	else
-	{
-		int * const previous = &a->is_direction_key_down[dir];
-		if (*previous)
-		{
-			*previous = 0;
-
-			if ((avatar->direction == dir) &&
-				(avatar->steps_to_go > 0))
-			{
-				Entity_stop(avatar);
-			}
-		}
-	}
-}
-
-static void AvatarController_update(AvatarController *a)
-{
-	Entity * const avatar = a->game->avatar;
-	if (!avatar)
-	{
-		return;
-	}
-
-	if (avatar->steps_to_go == 0)
-	{
-		int input_dir = 0;
-		while ((input_dir < 4) &&
-			!a->is_direction_key_down[input_dir])
-		{
-			++input_dir;
-		}
-		if (input_dir < 4)
-		{
-			avatar->direction = (Direction)input_dir;
-			Entity_move(avatar, (size_t)-1);
-		}
-	}
 }
 
 typedef struct SDLFrontend
