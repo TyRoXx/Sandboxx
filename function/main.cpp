@@ -44,8 +44,8 @@ int main()
 	assert(j == j);
 
 	exp::function<int(int), exp::throw_on_empty_call, exp::small_functor_storage> k;
-//	k = [j](int a) { return j(a); };
-//	assert(j(2) == 3);
+	k = [j](int a) { return j(a); };
+	assert(j(2) == 3);
 
 	std::cout << "sizeof(f) == " << sizeof(f) << '\n';
 	std::cout << "sizeof(j) == " << sizeof(j) << '\n';
