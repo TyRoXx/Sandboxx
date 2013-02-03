@@ -1,6 +1,5 @@
 #include "function.hpp"
 #include <iostream>
-#include <cassert>
 
 int main()
 {

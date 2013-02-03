@@ -5,6 +5,7 @@
 #include <type_traits>
 #include <memory>
 #include <stdexcept>
+#include <cassert>
 
 
 namespace exp
@@ -121,6 +122,11 @@ namespace exp
 				return m_impl->call(args...);
 			}
 
+			void swap(ptr_to_polymorphic_storage &other)
+			{
+				m_impl.swap(other.m_impl);
+			}
+
 		private:
 
 			std::unique_ptr<holder_base<R, Args...>> m_impl;
@@ -134,7 +140,7 @@ namespace exp
 	template <class Signature, class EmptyCallPolicy, template <class R, class ...Args> class StoragePolicy>
 	struct function;
 
-	template <class R, class ...Args, class EmptyCallPolicy, template <class R, class ...Args> class StoragePolicy>
+	template <class R, class ...Args, class EmptyCallPolicy, template <class R2, class ...Args2> class StoragePolicy>
 	struct function<R (Args...), EmptyCallPolicy, StoragePolicy>
 		: private EmptyCallPolicy
 		, private StoragePolicy<R, Args...>
@@ -154,7 +160,7 @@ namespace exp
 		}
 
 		function(function const &other)
-			: storage_policy(other)
+			: storage_policy(static_cast<storage_policy const &>(other))
 		{
 		}
 
