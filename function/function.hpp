@@ -152,27 +152,27 @@ namespace exp
 
 			virtual R call(void const *storage, Args ...args) const final
 			{
-				F const &functor = *reinterpret_cast<F const *>(storage);
+				F const &functor = *static_cast<F const *>(storage);
 				return functor(args...);
 			}
 
 			virtual void destroy(void *storage) const final
 			{
-				F &functor = *reinterpret_cast<F *>(storage);
+				F &functor = *static_cast<F *>(storage);
 				functor.~F();
 			}
 
 			virtual void uninitialized_copy(void *dest, void const *source) const final
 			{
-				F * const dest_functor = reinterpret_cast<F *>(dest);
-				F const &source_functor = *reinterpret_cast<F const *>(source);
+				F * const dest_functor = static_cast<F *>(dest);
+				F const &source_functor = *static_cast<F const *>(source);
 				new (dest_functor) F(source_functor);
 			}
 
 			static functor_type_base<R, Args...> const &store(void *storage, F const &functor)
 			{
 				static flat_functor_type const instance;
-				F * const destination = reinterpret_cast<F *>(storage);
+				F * const destination = static_cast<F *>(storage);
 				new (destination) F(functor);
 				return instance;
 			}
@@ -187,27 +187,27 @@ namespace exp
 
 			virtual R call(void const *storage, Args ...args) const final
 			{
-				auto &ptr = *reinterpret_cast<functor_ptr const *>(storage);
+				auto &ptr = *static_cast<functor_ptr const *>(storage);
 				return (*ptr)(args...);
 			}
 
 			virtual void destroy(void *storage) const final
 			{
-				auto &ptr = *reinterpret_cast<functor_ptr *>(storage);
+				auto &ptr = *static_cast<functor_ptr *>(storage);
 				ptr.~functor_ptr();
 			}
 
 			virtual void uninitialized_copy(void *dest, void const *source) const final
 			{
-				auto * const dest_ptr = reinterpret_cast<functor_ptr *>(dest);
-				auto &source_ptr = *reinterpret_cast<functor_ptr const *>(source);
+				auto * const dest_ptr = static_cast<functor_ptr *>(dest);
+				auto &source_ptr = *static_cast<functor_ptr const *>(source);
 				new (dest_ptr) functor_ptr(new F(*source_ptr));
 			}
 
 			static functor_type_base<R, Args...> const &store(void *storage, F const &functor)
 			{
 				static indirect_functor_type const instance;
-				auto * const ptr = reinterpret_cast<functor_ptr *>(storage);
+				auto * const ptr = static_cast<functor_ptr *>(storage);
 				new (ptr) functor_ptr(new F(functor));
 				return instance;
 			}
