@@ -37,6 +37,41 @@ namespace exp
 				return R{};
 			}
 		};
+
+		template <class R, class ...Args>
+		struct holder_base
+		{
+			virtual ~holder_base()
+			{
+			}
+
+			virtual R call(Args ...) const = 0;
+			virtual std::unique_ptr<holder_base> clone() const = 0;
+		};
+
+		template <class F, class R, class ...Args>
+		struct holder : holder_base<R, Args...>
+		{
+			template <class G>
+			explicit holder(G &&functor)
+				: m_functor(std::forward<G>(functor))
+			{
+			}
+
+			virtual R call(Args ...args) const override
+			{
+				return m_functor(std::forward<Args>(args)...);
+			}
+
+			virtual std::unique_ptr<holder_base<R, Args...>> clone() const override
+			{
+				return std::unique_ptr<holder_base<R, Args...>>{new holder{m_functor}};
+			}
+
+		private:
+
+			F const m_functor;
+		};
 	}
 
 	using detail::throw_on_empty_call;
@@ -53,21 +88,60 @@ namespace exp
 		}
 
 		template <class F>
-		function(F &&functor)
-			: m_impl(new holder<typename std::remove_reference<F>::type>(
-						 std::forward<F>(functor)))
+		function(F const &functor)
+			: m_impl(new detail::holder<typename std::remove_reference<F>::type, R, Args...>(
+						 functor))
+		{
+		}
+
+		function(function const &other)
+		{
+			if (other.m_impl)
+			{
+				m_impl = other.m_impl->clone();
+			}
+		}
+
+		function(function &&other)
+			: m_impl(std::move(other.m_impl))
 		{
 		}
 
 		template <class F>
-		function &operator = (F &&functor)
+		function &operator = (F const &functor)
 		{
-			function(std::forward<F>(functor)).swap(*this);
+			function(functor).swap(*this);
+			return *this;
+		}
+
+		function &operator = (function const &other)
+		{
+			if (this != &other)
+			{
+				if (other.m_impl)
+				{
+					m_impl = other.m_impl->clone();
+				}
+				else
+				{
+					m_impl.reset();
+				}
+			}
+			return *this;
+		}
+
+		function &operator = (function &&other)
+		{
+			swap(other);
 			return *this;
 		}
 
 		void swap(function &other)
 		{
+			if (this == &other)
+			{
+				return;
+			}
 			m_impl.swap(other.m_impl);
 		}
 
@@ -85,39 +159,27 @@ namespace exp
 			return !!m_impl;
 		}
 
+		friend bool operator == (function const &left, function const &right)
+		{
+			return (left.m_impl == right.m_impl);
+		}
+
+		friend bool operator < (function const &left, function const &right)
+		{
+			return (left.m_impl < right.m_impl);
+		}
+
 	private:
 
-		struct holder_base
-		{
-			virtual ~holder_base()
-			{
-
-			}
-
-			virtual R call(Args ...) const = 0;
-		};
-
-		template <class F>
-		struct holder : holder_base
-		{
-			template <class G>
-			explicit holder(G &&functor)
-				: m_functor(std::forward<G>(functor))
-			{
-			}
-
-			virtual R call(Args ...args) const override
-			{
-				return m_functor(std::forward<Args>(args)...);
-			}
-
-		private:
-
-			F const m_functor;
-		};
-
-		std::unique_ptr<holder_base> m_impl;
+		std::unique_ptr<detail::holder_base<R, Args...>> m_impl;
 	};
+
+
+	template <class ...T>
+	void swap(function<T...> &left, function<T...> &right)
+	{
+		left.swap(right);
+	}
 }
 
 
