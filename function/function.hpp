@@ -33,7 +33,7 @@ namespace exp
 		struct default_value_on_empty_call
 		{
 			template <class R>
-			R on_empty_call() const
+			R on_empty_call() const noexcept(noexcept(R{}))
 			{
 				return R{};
 			}
@@ -59,12 +59,12 @@ namespace exp
 			{
 			}
 
-			virtual R call(Args ...args) const override
+			virtual R call(Args ...args) const final
 			{
 				return m_functor(std::forward<Args>(args)...);
 			}
 
-			virtual std::unique_ptr<holder_base<R, Args...>> clone() const override
+			virtual std::unique_ptr<holder_base<R, Args...>> clone() const final
 			{
 				return std::unique_ptr<holder_base<R, Args...>>{new holder{m_functor}};
 			}
@@ -78,11 +78,11 @@ namespace exp
 		template <class R, class ...Args>
 		struct ptr_to_polymorphic_storage
 		{
-			ptr_to_polymorphic_storage()
+			ptr_to_polymorphic_storage() noexcept
 			{
 			}
 
-			ptr_to_polymorphic_storage(ptr_to_polymorphic_storage &&other)
+			ptr_to_polymorphic_storage(ptr_to_polymorphic_storage &&other) noexcept
 				: m_impl(std::move(other.m_impl))
 			{
 			}
@@ -101,17 +101,17 @@ namespace exp
 			{
 			}
 
-			bool empty() const
+			bool empty() const noexcept
 			{
 				return !m_impl;
 			}
 
-			bool equals(ptr_to_polymorphic_storage const &other) const
+			bool equals(ptr_to_polymorphic_storage const &other) const noexcept
 			{
 				return (m_impl == other.m_impl);
 			}
 
-			bool less(ptr_to_polymorphic_storage const &other) const
+			bool less(ptr_to_polymorphic_storage const &other) const noexcept
 			{
 				return (m_impl < other.m_impl);
 			}
@@ -122,7 +122,7 @@ namespace exp
 				return m_impl->call(args...);
 			}
 
-			void swap(ptr_to_polymorphic_storage &other)
+			void swap(ptr_to_polymorphic_storage &other) noexcept
 			{
 				m_impl.swap(other.m_impl);
 			}
@@ -148,23 +148,23 @@ namespace exp
 		template <class F, class R, class ...Args>
 		struct flat_functor_type : functor_type_base<R, Args...>
 		{
-			flat_functor_type()
+			flat_functor_type() noexcept
 			{
 			}
 
-			virtual R call(functor_storage const &storage, Args ...args) const override
+			virtual R call(functor_storage const &storage, Args ...args) const final
 			{
 				F const &functor = *reinterpret_cast<F const *>(&storage);
 				return functor(args...);
 			}
 
-			virtual void destroy(functor_storage &storage) const override
+			virtual void destroy(functor_storage &storage) const final
 			{
 				F &functor = *reinterpret_cast<F *>(&storage);
 				functor.~F();
 			}
 
-			virtual void uninitialized_copy(functor_storage &dest, functor_storage const &source) const override
+			virtual void uninitialized_copy(functor_storage &dest, functor_storage const &source) const final
 			{
 				F * const dest_functor = reinterpret_cast<F *>(&dest);
 				F const &source_functor = *reinterpret_cast<F const *>(&source);
@@ -183,23 +183,23 @@ namespace exp
 		template <class F, class R, class ...Args>
 		struct indirect_functor_type : functor_type_base<R, Args...>
 		{
-			indirect_functor_type()
+			indirect_functor_type() noexcept
 			{
 			}
 
-			virtual R call(functor_storage const &storage, Args ...args) const override
+			virtual R call(functor_storage const &storage, Args ...args) const final
 			{
 				auto &ptr = *reinterpret_cast<functor_ptr const *>(&storage);
 				return (*ptr)(args...);
 			}
 
-			virtual void destroy(functor_storage &storage) const override
+			virtual void destroy(functor_storage &storage) const final
 			{
 				auto &ptr = *reinterpret_cast<functor_ptr *>(&storage);
 				ptr.~functor_ptr();
 			}
 
-			virtual void uninitialized_copy(functor_storage &dest, functor_storage const &source) const override
+			virtual void uninitialized_copy(functor_storage &dest, functor_storage const &source) const final
 			{
 				auto * const dest_ptr = reinterpret_cast<functor_ptr *>(&dest);
 				auto &source_ptr = *reinterpret_cast<functor_ptr const *>(&source);
@@ -235,12 +235,12 @@ namespace exp
 		template <class R, class ...Args>
 		struct small_functor_storage
 		{
-			small_functor_storage()
+			small_functor_storage() noexcept
 				: m_type(nullptr)
 			{
 			}
 
-			small_functor_storage(small_functor_storage &&other)
+			small_functor_storage(small_functor_storage &&other) noexcept
 			{
 				swap(other);
 			}
@@ -261,7 +261,7 @@ namespace exp
 			{
 			}
 
-			~small_functor_storage()
+			~small_functor_storage() noexcept
 			{
 				if (m_type)
 				{
@@ -269,12 +269,12 @@ namespace exp
 				}
 			}
 
-			bool empty() const
+			bool empty() const noexcept
 			{
 				return !m_type;
 			}
 
-			bool equals(small_functor_storage const &other) const
+			bool equals(small_functor_storage const &other) const noexcept
 			{
 				if (this == &other)
 				{
@@ -294,7 +294,7 @@ namespace exp
 				return m_type->call(m_storage, args...);
 			}
 
-			void swap(small_functor_storage &other)
+			void swap(small_functor_storage &other) noexcept
 			{
 				std::swap(m_storage, other.m_storage);
 				std::swap(m_type, other.m_type);
@@ -325,7 +325,7 @@ namespace exp
 		typedef StoragePolicy<R, Args...> storage_policy;
 
 
-		function()
+		function() noexcept
 		{
 		}
 
@@ -340,7 +340,7 @@ namespace exp
 		{
 		}
 
-		function(function &&other)
+		function(function &&other) noexcept
 			: storage_policy(std::move(static_cast<storage_policy &&>(other)))
 		{
 		}
@@ -361,13 +361,13 @@ namespace exp
 			return *this;
 		}
 
-		function &operator = (function &&other)
+		function &operator = (function &&other) noexcept
 		{
 			swap(other);
 			return *this;
 		}
 
-		void swap(function &other)
+		void swap(function &other) noexcept
 		{
 			if (this == &other)
 			{
@@ -385,17 +385,17 @@ namespace exp
 			return storage_policy::call(args...);
 		}
 
-		bool empty() const
+		bool empty() const noexcept
 		{
 			return storage_policy::empty();
 		}
 
-		explicit operator bool () const
+		explicit operator bool () const noexcept
 		{
 			return !empty();
 		}
 
-		friend bool operator == (function const &left, function const &right)
+		friend bool operator == (function const &left, function const &right) noexcept
 		{
 			return left.equals(right);
 		}
@@ -403,7 +403,7 @@ namespace exp
 
 
 	template <class ...T>
-	void swap(function<T...> &left, function<T...> &right)
+	void swap(function<T...> &left, function<T...> &right) noexcept
 	{
 		left.swap(right);
 	}
