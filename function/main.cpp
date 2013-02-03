@@ -11,7 +11,6 @@ int main()
 	assert(!f);
 	f("");
 	assert(f == f);
-	assert(!(f < f));
 	f = f;
 	assert(!f);
 	f = std::move(f);
@@ -39,13 +38,16 @@ int main()
 	exp::function<int(int), exp::throw_on_empty_call, exp::small_functor_storage> j;
 	assert(!j);
 	assert(j == j);
-	assert(!(j < j));
 	j = [](int a) { return a + 1; };
 	assert(j(2) == 3);
 	assert(j);
 	assert(j == j);
-	assert(!(j < j));
+
+	exp::function<int(int), exp::throw_on_empty_call, exp::small_functor_storage> k;
+//	k = [j](int a) { return j(a); };
+//	assert(j(2) == 3);
 
 	std::cout << "sizeof(f) == " << sizeof(f) << '\n';
 	std::cout << "sizeof(j) == " << sizeof(j) << '\n';
+	std::cout << "sizeof(k) == " << sizeof(k) << '\n';
 }

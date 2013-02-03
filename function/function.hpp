@@ -142,7 +142,6 @@ namespace exp
 		{
 			virtual R call(functor_storage const &storage, Args ...args) const = 0;
 			virtual void destroy(functor_storage &storage) const = 0;
-			virtual int compare(functor_storage const &left, functor_storage const &right) const = 0;
 			virtual void uninitialized_copy(functor_storage &dest, functor_storage const &source) const = 0;
 		};
 
@@ -163,21 +162,6 @@ namespace exp
 			{
 				F &functor = *reinterpret_cast<F *>(&storage);
 				functor.~F();
-			}
-
-			virtual int compare(functor_storage const &left, functor_storage const &right) const override
-			{
-				F const &left_functor = *reinterpret_cast<F const *>(&left);
-				F const &right_functor = *reinterpret_cast<F const *>(&right);
-				if (left_functor < right_functor)
-				{
-					return -1;
-				}
-				else if (left_functor > right_functor)
-				{
-					return 1;
-				}
-				return 0;
 			}
 
 			virtual void uninitialized_copy(functor_storage &dest, functor_storage const &source) const override
@@ -253,22 +237,16 @@ namespace exp
 
 			bool equals(small_functor_storage const &other) const
 			{
-				if (m_type == other.m_type)
+				if (this == &other)
 				{
-					return !m_type ||
-							m_type->compare(m_storage, other.m_storage) == 0;
+					return true;
+				}
+				if (!m_type &&
+					!other.m_type)
+				{
+					return true;
 				}
 				return false;
-			}
-
-			bool less(small_functor_storage const &other) const
-			{
-				if (m_type &&
-					m_type == other.m_type)
-				{
-					return m_type->compare(m_storage, other.m_storage) < 0;
-				}
-				return (m_type < other.m_type);
 			}
 
 			R call(Args ...args) const
@@ -381,11 +359,6 @@ namespace exp
 		friend bool operator == (function const &left, function const &right)
 		{
 			return left.equals(right);
-		}
-
-		friend bool operator < (function const &left, function const &right)
-		{
-			return left.less(right);
 		}
 	};
 
