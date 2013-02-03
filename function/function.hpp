@@ -181,6 +181,45 @@ namespace exp
 		};
 
 		template <class F, class R, class ...Args>
+		struct indirect_functor_type : functor_type_base<R, Args...>
+		{
+			indirect_functor_type()
+			{
+			}
+
+			virtual R call(functor_storage const &storage, Args ...args) const override
+			{
+				auto &ptr = *reinterpret_cast<functor_ptr const *>(&storage);
+				return (*ptr)(args...);
+			}
+
+			virtual void destroy(functor_storage &storage) const override
+			{
+				auto &ptr = *reinterpret_cast<functor_ptr *>(&storage);
+				ptr.~functor_ptr();
+			}
+
+			virtual void uninitialized_copy(functor_storage &dest, functor_storage const &source) const override
+			{
+				auto * const dest_ptr = reinterpret_cast<functor_ptr *>(&dest);
+				auto &source_ptr = *reinterpret_cast<functor_ptr const *>(&source);
+				new (dest_ptr) functor_ptr(new F(*source_ptr));
+			}
+
+			static functor_type_base<R, Args...> const &store(functor_storage &storage, F const &functor)
+			{
+				static indirect_functor_type const instance;
+				auto * const ptr = reinterpret_cast<functor_ptr *>(&storage);
+				new (ptr) functor_ptr(new F(functor));
+				return instance;
+			}
+
+		private:
+
+			typedef std::unique_ptr<F> functor_ptr;
+		};
+
+		template <class F, class R, class ...Args>
 		functor_type_base<R, Args...> const &store_functor(functor_storage &storage, F const &functor)
 		{
 			if (sizeof(F) <= functor_storage_size)
@@ -189,7 +228,7 @@ namespace exp
 			}
 			else
 			{
-				throw std::runtime_error("Not implemented");
+				return indirect_functor_type<F, R, Args...>::store(storage, functor);
 			}
 		}
 
