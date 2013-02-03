@@ -72,38 +72,94 @@ namespace exp
 
 			F const m_functor;
 		};
+
+
+		template <class R, class ...Args>
+		struct ptr_to_polymorphic_storage
+		{
+			ptr_to_polymorphic_storage()
+			{
+			}
+
+			ptr_to_polymorphic_storage(ptr_to_polymorphic_storage &&other)
+				: m_impl(std::move(other.m_impl))
+			{
+			}
+
+			ptr_to_polymorphic_storage(ptr_to_polymorphic_storage const &other)
+			{
+				if (other.m_impl)
+				{
+					m_impl = other.m_impl->clone();
+				}
+			}
+
+			template <class F>
+			ptr_to_polymorphic_storage(F const &functor)
+				: m_impl(new holder<F, R, Args...>(functor))
+			{
+			}
+
+			bool empty() const
+			{
+				return !m_impl;
+			}
+
+			bool equals(ptr_to_polymorphic_storage const &other) const
+			{
+				return (m_impl == other.m_impl);
+			}
+
+			bool less(ptr_to_polymorphic_storage const &other) const
+			{
+				return (m_impl < other.m_impl);
+			}
+
+			R call(Args ...args) const
+			{
+				assert(m_impl);
+				return m_impl->call(args...);
+			}
+
+		private:
+
+			std::unique_ptr<holder_base<R, Args...>> m_impl;
+		};
 	}
 
 	using detail::throw_on_empty_call;
 	using detail::default_value_on_empty_call;
+	using detail::ptr_to_polymorphic_storage;
 
-	template <class Signature, class EmptyCallPolicy>
+	template <class Signature, class EmptyCallPolicy, template <class R, class ...Args> class StoragePolicy>
 	struct function;
 
-	template <class R, class ...Args, class EmptyCallPolicy>
-	struct function<R (Args...), EmptyCallPolicy> : private EmptyCallPolicy
+	template <class R, class ...Args, class EmptyCallPolicy, template <class R, class ...Args> class StoragePolicy>
+	struct function<R (Args...), EmptyCallPolicy, StoragePolicy>
+		: private EmptyCallPolicy
+		, private StoragePolicy<R, Args...>
 	{
+		typedef EmptyCallPolicy empty_call_policy;
+		typedef StoragePolicy<R, Args...> storage_policy;
+
+
 		function()
 		{
 		}
 
 		template <class F>
 		function(F const &functor)
-			: m_impl(new detail::holder<F, R, Args...>(
-						 functor))
+			: storage_policy(functor)
 		{
 		}
 
 		function(function const &other)
+			: storage_policy(other)
 		{
-			if (other.m_impl)
-			{
-				m_impl = other.m_impl->clone();
-			}
 		}
 
 		function(function &&other)
-			: m_impl(std::move(other.m_impl))
+			: storage_policy(std::move(static_cast<storage_policy &&>(other)))
 		{
 		}
 
@@ -118,14 +174,7 @@ namespace exp
 		{
 			if (this != &other)
 			{
-				if (other.m_impl)
-				{
-					m_impl = other.m_impl->clone();
-				}
-				else
-				{
-					m_impl.reset();
-				}
+				function(other).swap(*this);
 			}
 			return *this;
 		}
@@ -142,41 +191,37 @@ namespace exp
 			{
 				return;
 			}
-			m_impl.swap(other.m_impl);
+			storage_policy::swap(other);
 		}
 
 		R operator ()(Args ...args) const
 		{
-			if (!m_impl)
+			if (empty())
 			{
-				return this->EmptyCallPolicy::template on_empty_call<R>();
+				return this->template on_empty_call<R>();
 			}
-			return m_impl->call(std::forward<Args>(args)...);
+			return storage_policy::call(args...);
 		}
 
 		bool empty() const
 		{
-			return !m_impl;
+			return storage_policy::empty();
 		}
 
 		explicit operator bool () const
 		{
-			return !!m_impl;
+			return !empty();
 		}
 
 		friend bool operator == (function const &left, function const &right)
 		{
-			return (left.m_impl == right.m_impl);
+			return left.equals(right);
 		}
 
 		friend bool operator < (function const &left, function const &right)
 		{
-			return (left.m_impl < right.m_impl);
+			return left.less(right);
 		}
-
-	private:
-
-		std::unique_ptr<detail::holder_base<R, Args...>> m_impl;
 	};
 
 

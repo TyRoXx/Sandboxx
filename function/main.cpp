@@ -4,7 +4,11 @@
 
 int main()
 {
-	exp::function<bool (std::string const &), exp::default_value_on_empty_call> f;
+	exp::function<
+		bool (std::string const &),
+		exp::default_value_on_empty_call,
+		exp::ptr_to_polymorphic_storage> f;
+
 	assert(!f);
 	f("");
 	assert(f == f);
