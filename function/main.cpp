@@ -35,4 +35,17 @@ int main()
 	assert(f == f);
 	decltype(h) i = [](std::string const &) -> bool { return {}; };
 	f("Hello, world!");
+
+	exp::function<int(int), exp::throw_on_empty_call, exp::small_functor_storage> j;
+	assert(!j);
+	assert(j == j);
+	assert(!(j < j));
+	j = [](int a) { return a + 1; };
+	assert(j(2) == 3);
+	assert(j);
+	assert(j == j);
+	assert(!(j < j));
+
+	std::cout << "sizeof(f) == " << sizeof(f) << '\n';
+	std::cout << "sizeof(j) == " << sizeof(j) << '\n';
 }
