@@ -12,7 +12,7 @@ namespace exp
 	struct bad_function : std::runtime_error
 	{
 		bad_function()
-			: std::runtime_error("Bad function call")
+			: std::runtime_error("Call on empty exp::function")
 		{
 
 		}
@@ -89,7 +89,7 @@ namespace exp
 
 		template <class F>
 		function(F const &functor)
-			: m_impl(new detail::holder<typename std::remove_reference<F>::type, R, Args...>(
+			: m_impl(new detail::holder<F, R, Args...>(
 						 functor))
 		{
 		}
@@ -152,6 +152,11 @@ namespace exp
 				return this->template on_empty_call<R>();
 			}
 			return m_impl->call(std::forward<Args>(args)...);
+		}
+
+		bool empty() const
+		{
+			return !m_impl;
 		}
 
 		explicit operator bool () const
