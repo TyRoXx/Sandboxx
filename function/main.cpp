@@ -6,7 +6,7 @@ int main()
 	exp::function<
 		bool (std::string const &),
 		exp::default_value_on_empty_call,
-		exp::ptr_to_polymorphic_storage> f;
+		exp::ptr_to_polymorphic_storage<bool (std::string const &)>> f;
 
 	assert(!f);
 	f("");
@@ -35,7 +35,7 @@ int main()
 	decltype(h) i = [](std::string const &) -> bool { return {}; };
 	f("Hello, world!");
 
-	exp::function<int(int), exp::throw_on_empty_call, exp::small_functor_storage> j;
+	exp::function<int (int), exp::throw_on_empty_call, exp::small_functor_storage<32, int (int)>> j;
 	assert(!j);
 	assert(j == j);
 	j = [](int a) { return a + 1; };
@@ -43,7 +43,7 @@ int main()
 	assert(j);
 	assert(j == j);
 
-	exp::function<int(int), exp::throw_on_empty_call, exp::small_functor_storage> k;
+	exp::function<int(int), exp::throw_on_empty_call, exp::small_functor_storage<0, int (int)>> k;
 	k = [j](int a) { return j(a); };
 	assert(j(2) == 3);
 

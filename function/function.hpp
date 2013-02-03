@@ -75,7 +75,10 @@ namespace exp
 
 
 		template <class R, class ...Args>
-		struct ptr_to_polymorphic_storage
+		struct ptr_to_polymorphic_storage;
+
+		template <class R, class ...Args>
+		struct ptr_to_polymorphic_storage<R (Args...)>
 		{
 			ptr_to_polymorphic_storage() noexcept
 			{
@@ -227,9 +230,16 @@ namespace exp
 			}
 		}
 
-		template <class R, class ...Args>
-		struct small_functor_storage
+		template <std::size_t Size, class R, class ...Args>
+		struct small_functor_storage;
+
+		template <std::size_t Size, class R, class ...Args>
+		struct small_functor_storage<Size, R (Args...)>
 		{
+			static constexpr std::size_t min_size = sizeof(std::unique_ptr<char>);
+			static constexpr std::size_t size = (Size < min_size) ? min_size : Size;
+
+
 			small_functor_storage() noexcept
 				: m_type(nullptr)
 			{
@@ -253,7 +263,7 @@ namespace exp
 			template <class F>
 			small_functor_storage(F const &functor)
 				: m_storage()
-				, m_type(&store_functor<F, R, Args...>(&m_storage, sizeof(m_storage), functor))
+				, m_type(&store_functor<F, R, Args...>(&m_storage, size, functor))
 			{
 			}
 
@@ -298,7 +308,7 @@ namespace exp
 
 		private:
 
-			std::aligned_storage<32>::type m_storage;
+			typename std::aligned_storage<size>::type m_storage;
 			functor_type_base<R, Args...> const *m_type;
 		};
 	}
@@ -309,16 +319,16 @@ namespace exp
 	using detail::small_functor_storage;
 
 
-	template <class Signature, class EmptyCallPolicy, template <class R, class ...Args> class StoragePolicy>
+	template <class Signature, class EmptyCallPolicy, class StoragePolicy>
 	struct function;
 
-	template <class R, class ...Args, class EmptyCallPolicy, template <class R2, class ...Args2> class StoragePolicy>
+	template <class R, class ...Args, class EmptyCallPolicy, class StoragePolicy>
 	struct function<R (Args...), EmptyCallPolicy, StoragePolicy>
 		: private EmptyCallPolicy
-		, private StoragePolicy<R, Args...>
+		, private StoragePolicy
 	{
 		typedef EmptyCallPolicy empty_call_policy;
-		typedef StoragePolicy<R, Args...> storage_policy;
+		typedef StoragePolicy storage_policy;
 
 
 		function() noexcept
