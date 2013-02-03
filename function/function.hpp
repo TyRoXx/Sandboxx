@@ -132,16 +132,12 @@ namespace exp
 		};
 
 
-		constexpr size_t functor_storage_size = 32;
-		typedef std::aligned_storage<functor_storage_size>::type functor_storage;
-
-
 		template <class R, class ...Args>
 		struct functor_type_base
 		{
-			virtual R call(functor_storage const &storage, Args ...args) const = 0;
-			virtual void destroy(functor_storage &storage) const = 0;
-			virtual void uninitialized_copy(functor_storage &dest, functor_storage const &source) const = 0;
+			virtual R call(void const *storage, Args ...args) const = 0;
+			virtual void destroy(void *storage) const = 0;
+			virtual void uninitialized_copy(void *dest, void const *source) const = 0;
 		};
 
 		template <class F, class R, class ...Args>
@@ -151,29 +147,29 @@ namespace exp
 			{
 			}
 
-			virtual R call(functor_storage const &storage, Args ...args) const final
+			virtual R call(void const *storage, Args ...args) const final
 			{
-				F const &functor = *reinterpret_cast<F const *>(&storage);
+				F const &functor = *reinterpret_cast<F const *>(storage);
 				return functor(args...);
 			}
 
-			virtual void destroy(functor_storage &storage) const final
+			virtual void destroy(void *storage) const final
 			{
-				F &functor = *reinterpret_cast<F *>(&storage);
+				F &functor = *reinterpret_cast<F *>(storage);
 				functor.~F();
 			}
 
-			virtual void uninitialized_copy(functor_storage &dest, functor_storage const &source) const final
+			virtual void uninitialized_copy(void *dest, void const *source) const final
 			{
-				F * const dest_functor = reinterpret_cast<F *>(&dest);
-				F const &source_functor = *reinterpret_cast<F const *>(&source);
+				F * const dest_functor = reinterpret_cast<F *>(dest);
+				F const &source_functor = *reinterpret_cast<F const *>(source);
 				new (dest_functor) F(source_functor);
 			}
 
-			static functor_type_base<R, Args...> const &store(functor_storage &storage, F const &functor)
+			static functor_type_base<R, Args...> const &store(void *storage, F const &functor)
 			{
 				static flat_functor_type const instance;
-				F * const destination = reinterpret_cast<F *>(&storage);
+				F * const destination = reinterpret_cast<F *>(storage);
 				new (destination) F(functor);
 				return instance;
 			}
@@ -186,29 +182,29 @@ namespace exp
 			{
 			}
 
-			virtual R call(functor_storage const &storage, Args ...args) const final
+			virtual R call(void const *storage, Args ...args) const final
 			{
-				auto &ptr = *reinterpret_cast<functor_ptr const *>(&storage);
+				auto &ptr = *reinterpret_cast<functor_ptr const *>(storage);
 				return (*ptr)(args...);
 			}
 
-			virtual void destroy(functor_storage &storage) const final
+			virtual void destroy(void *storage) const final
 			{
-				auto &ptr = *reinterpret_cast<functor_ptr *>(&storage);
+				auto &ptr = *reinterpret_cast<functor_ptr *>(storage);
 				ptr.~functor_ptr();
 			}
 
-			virtual void uninitialized_copy(functor_storage &dest, functor_storage const &source) const final
+			virtual void uninitialized_copy(void *dest, void const *source) const final
 			{
-				auto * const dest_ptr = reinterpret_cast<functor_ptr *>(&dest);
-				auto &source_ptr = *reinterpret_cast<functor_ptr const *>(&source);
+				auto * const dest_ptr = reinterpret_cast<functor_ptr *>(dest);
+				auto &source_ptr = *reinterpret_cast<functor_ptr const *>(source);
 				new (dest_ptr) functor_ptr(new F(*source_ptr));
 			}
 
-			static functor_type_base<R, Args...> const &store(functor_storage &storage, F const &functor)
+			static functor_type_base<R, Args...> const &store(void *storage, F const &functor)
 			{
 				static indirect_functor_type const instance;
-				auto * const ptr = reinterpret_cast<functor_ptr *>(&storage);
+				auto * const ptr = reinterpret_cast<functor_ptr *>(storage);
 				new (ptr) functor_ptr(new F(functor));
 				return instance;
 			}
@@ -219,9 +215,9 @@ namespace exp
 		};
 
 		template <class F, class R, class ...Args>
-		functor_type_base<R, Args...> const &store_functor(functor_storage &storage, F const &functor)
+		functor_type_base<R, Args...> const &store_functor(void *storage, std::size_t storage_size, F const &functor)
 		{
-			if (sizeof(F) <= functor_storage_size)
+			if (sizeof(F) <= storage_size)
 			{
 				return flat_functor_type<F, R, Args...>::store(storage, functor);
 			}
@@ -250,14 +246,14 @@ namespace exp
 			{
 				if (m_type)
 				{
-					m_type->uninitialized_copy(m_storage, other.m_storage);
+					m_type->uninitialized_copy(&m_storage, &other.m_storage);
 				}
 			}
 
 			template <class F>
 			small_functor_storage(F const &functor)
 				: m_storage()
-				, m_type(&store_functor<F, R, Args...>(m_storage, functor))
+				, m_type(&store_functor<F, R, Args...>(&m_storage, sizeof(m_storage), functor))
 			{
 			}
 
@@ -265,7 +261,7 @@ namespace exp
 			{
 				if (m_type)
 				{
-					m_type->destroy(m_storage);
+					m_type->destroy(&m_storage);
 				}
 			}
 
@@ -291,7 +287,7 @@ namespace exp
 			R call(Args ...args) const
 			{
 				assert(m_type);
-				return m_type->call(m_storage, args...);
+				return m_type->call(&m_storage, args...);
 			}
 
 			void swap(small_functor_storage &other) noexcept
@@ -302,7 +298,7 @@ namespace exp
 
 		private:
 
-			functor_storage m_storage;
+			std::aligned_storage<32>::type m_storage;
 			functor_type_base<R, Args...> const *m_type;
 		};
 	}
