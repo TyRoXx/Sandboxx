@@ -77,11 +77,11 @@ namespace exp
 	using detail::throw_on_empty_call;
 	using detail::default_value_on_empty_call;
 
-	template <class Signature, class ...Options>
+	template <class Signature, class EmptyCallPolicy>
 	struct function;
 
-	template <class R, class ...Args, class ...Options>
-	struct function<R (Args...), Options...> : private Options...
+	template <class R, class ...Args, class EmptyCallPolicy>
+	struct function<R (Args...), EmptyCallPolicy> : private EmptyCallPolicy
 	{
 		function()
 		{
@@ -149,7 +149,7 @@ namespace exp
 		{
 			if (!m_impl)
 			{
-				return this->template on_empty_call<R>();
+				return this->EmptyCallPolicy::template on_empty_call<R>();
 			}
 			return m_impl->call(std::forward<Args>(args)...);
 		}
