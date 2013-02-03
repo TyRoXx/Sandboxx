@@ -15,7 +15,6 @@ namespace exp
 		bad_function()
 			: std::runtime_error("Call on empty exp::function")
 		{
-
 		}
 	};
 
@@ -42,7 +41,7 @@ namespace exp
 		template <class R, class ...Args>
 		struct holder_base
 		{
-			virtual ~holder_base()
+			virtual ~holder_base() noexcept
 			{
 			}
 
@@ -241,6 +240,7 @@ namespace exp
 			}
 
 			small_functor_storage(small_functor_storage &&other) noexcept
+				: m_type(nullptr)
 			{
 				swap(other);
 			}
@@ -380,7 +380,7 @@ namespace exp
 		{
 			if (empty())
 			{
-				return this->template on_empty_call<R>();
+				return empty_call_policy::template on_empty_call<R>();
 			}
 			return storage_policy::call(args...);
 		}
