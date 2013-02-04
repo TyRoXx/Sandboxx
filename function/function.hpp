@@ -113,11 +113,6 @@ namespace exp
 				return (m_impl == other.m_impl);
 			}
 
-			bool less(ptr_to_polymorphic_storage const &other) const noexcept
-			{
-				return (m_impl < other.m_impl);
-			}
-
 			R call(Args ...args) const
 			{
 				assert(m_impl);
