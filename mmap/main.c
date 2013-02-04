@@ -113,6 +113,11 @@ static test_result test_mmap(char const *file_name)
 		return result;
 	}
 
+	if (madvise(content, (size_t)file_info.st_size, MADV_SEQUENTIAL) != 0)
+	{
+		fprintf(stderr, "Could not set mmap advise\n");
+	}
+
 	result.sum = xor_range(content, ((char *)content) + file_info.st_size);
 
 	munmap(content, (size_t)file_info.st_size);
