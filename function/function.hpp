@@ -199,10 +199,12 @@ namespace exp
 				new (dest_ptr) functor_ptr(new F(*source_ptr));
 			}
 
-			static functor_type_base<R, Args...> const &store(void *storage, F const &functor)
+			static functor_type_base<R, Args...> const &store(void *storage, std::size_t storage_size, F const &functor)
 			{
+				assert(storage_size >= sizeof(functor_ptr));
 				static indirect_functor_type const instance;
-				auto * const ptr = static_cast<functor_ptr *>(storage);
+				auto * const ptr = static_cast<functor_ptr *>(storage); //TODO std::align
+				assert(ptr != nullptr);
 				new (ptr) functor_ptr(new F(functor));
 				return instance;
 			}
@@ -215,13 +217,14 @@ namespace exp
 		template <class F, class R, class ...Args>
 		functor_type_base<R, Args...> const &store_functor(void *storage, std::size_t storage_size, F const &functor)
 		{
-			if (sizeof(F) <= storage_size)
+			//if (std::align(sizeof(functor), alignof(functor), storage, storage_size))
+			if (storage_size >= sizeof(functor))
 			{
 				return flat_functor_type<F, R, Args...>::store(storage, functor);
 			}
 			else
 			{
-				return indirect_functor_type<F, R, Args...>::store(storage, functor);
+				return indirect_functor_type<F, R, Args...>::store(storage, storage_size, functor);
 			}
 		}
 
