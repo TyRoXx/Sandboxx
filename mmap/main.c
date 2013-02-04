@@ -7,13 +7,38 @@
 #include <string.h>
 #include <assert.h>
 
-static char xor_range(char const *begin, char const *end)
+static char xor_size_t(size_t value)
 {
 	char result = 0;
+	char *begin = (char *)&value;
+	char * const end = (begin + sizeof(value));
 	for (; begin != end; ++begin)
 	{
 		result ^= *begin;
 	}
+	return result;
+}
+
+static char xor_range(size_t const *begin, size_t size)
+{
+	size_t xored = 0;
+	size_t const * const size_end = begin + (size / sizeof(*begin));
+	size_t const rest = (size % sizeof(*begin));
+	char result;
+	size_t i;
+
+	for (; begin != size_end; ++begin)
+	{
+		xored ^= *begin;
+	}
+
+	result = xor_size_t(xored);
+
+	for (i = 0; i < rest; ++i)
+	{
+		result ^= ((char const *)begin)[i];
+	}
+
 	return result;
 }
 
@@ -37,13 +62,13 @@ static test_result test_fread(char const *file_name)
 
 	for (;;)
 	{
-		char buffer[8192];
-		size_t const r = fread(buffer, 1, sizeof(buffer), file);
+		size_t buffer[8192 / sizeof(size_t)];
+		size_t const r = fread((char *)&buffer, 1, sizeof(buffer), file);
 		if (r == 0)
 		{
 			break;
 		}
-		result.sum ^= xor_range(buffer, buffer + r);
+		result.sum ^= xor_range(buffer, r);
 	}
 
 	fclose(file);
@@ -64,13 +89,13 @@ static test_result test_read(char const *file_name)
 
 	for (;;)
 	{
-		char buffer[8192];
-		ssize_t const r = read(file, buffer, sizeof(buffer));
+		size_t buffer[8192 / sizeof(size_t)];
+		ssize_t const r = read(file, (char *)&buffer, sizeof(buffer));
 		if (r <= 0)
 		{
 			break;
 		}
-		result.sum ^= xor_range(buffer, buffer + r);
+		result.sum ^= xor_range(buffer, (size_t)r);
 	}
 
 	close(file);
@@ -118,7 +143,7 @@ static test_result test_mmap(char const *file_name)
 		fprintf(stderr, "Could not set mmap advise\n");
 	}
 
-	result.sum = xor_range(content, ((char *)content) + file_info.st_size);
+	result.sum = xor_range(content, (size_t)file_info.st_size);
 
 	munmap(content, (size_t)file_info.st_size);
 	close(file);
