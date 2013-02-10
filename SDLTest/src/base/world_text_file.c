@@ -23,7 +23,6 @@ static int scan_size_t(FILE *in, size_t *value)
 static int load_world_from_text_v1(struct World *world, struct TileKind const *tile_kinds, size_t tile_kind_count, FILE *in, FILE *error_out)
 {
 	size_t width, height;
-	size_t y;
 
 	assert(world);
 	assert(tile_kinds);
@@ -31,7 +30,7 @@ static int load_world_from_text_v1(struct World *world, struct TileKind const *t
 	assert(error_out);
 
 	if (!scan_size_t(in, &width) ||
-	    !scan_size_t(in, &height))
+		!scan_size_t(in, &height))
 	{
 		fprintf(error_out, "Invalid map size\n");
 		return 0;
@@ -43,30 +42,33 @@ static int load_world_from_text_v1(struct World *world, struct TileKind const *t
 		return 0;
 	}
 
-	for (y = 0; y < height; ++y)
 	{
-		size_t x;
-		for (x = 0; x < width; ++x)
+		size_t y;
+		for (y = 0; y < height; ++y)
 		{
-			size_t i;
-			for (i = 0; i < TILE_LAYER_COUNT; ++i)
+			size_t x;
+			for (x = 0; x < width; ++x)
 			{
-				size_t tile_kind_id;
-				if (!scan_size_t(in, &tile_kind_id))
+				size_t i;
+				for (i = 0; i < TILE_LAYER_COUNT; ++i)
 				{
-					fprintf(stderr, "Expected tile kind id\n");
-					goto fail;
-				}
-
-				if (tile_kind_id < UINT_MAX)
-				{
-					if (tile_kind_id >= tile_kind_count)
+					size_t tile_kind_id;
+					if (!scan_size_t(in, &tile_kind_id))
 					{
-						fprintf(stderr, "Invalid tile kind id %u\n", (unsigned)tile_kind_id);
+						fprintf(stderr, "Expected tile kind id\n");
 						goto fail;
 					}
 
-					TileGrid_get(&world->tiles, x, y)->layers[i] = tile_kinds + tile_kind_id;
+					if (tile_kind_id < UINT_MAX)
+					{
+						if (tile_kind_id >= tile_kind_count)
+						{
+							fprintf(stderr, "Invalid tile kind id %u\n", (unsigned)tile_kind_id);
+							goto fail;
+						}
+
+						TileGrid_get(&world->tiles, x, y)->layers[i] = tile_kinds + tile_kind_id;
+					}
 				}
 			}
 		}
@@ -184,7 +186,7 @@ static void save_entity_to_text(Entity const *entity, FILE *out)
 	fprintf(out, "%d %d\n",	(int)entity->position.x, (int)entity->position.y);
 	fprintf(out, "%d\n", (int)entity->direction);
 	fprintf(out, "%u\n", (unsigned)entity->appearance.tile_set_id);
-	
+
 	fputs("\n", out);
 }
 
