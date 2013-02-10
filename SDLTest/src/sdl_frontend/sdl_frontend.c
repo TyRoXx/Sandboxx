@@ -169,7 +169,7 @@ static int init_image_manager(ImageManager *images, SDL_PixelFormat *format)
 		{
 			return 0;
 		}
-		images->images[i] = image;
+		PtrVector_set(&images->images, i, image);
 	}
 
 	return 1;
@@ -229,7 +229,7 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 	{
 		goto fail_3;
 	}
-	
+
 	assert(!game->on_enter_state.function);
 	game->on_enter_state.function = on_enter_game_state;
 	game->on_enter_state.user_data = front;

@@ -3,13 +3,12 @@
 
 
 #include "SDL.h"
-#include <stddef.h>
+#include "base/ptr_vector.h"
 
 
 typedef struct ImageManager
 {
-	SDL_Surface **images;
-	size_t image_count;
+	PtrVector images;
 }
 ImageManager;
 

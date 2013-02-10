@@ -31,7 +31,7 @@ static void draw_entity(
 	Entity const *entity,
 	ImageManager const *images)
 {
-	SDL_Surface * const image = images->images[entity->appearance.tile_set_id];
+	SDL_Surface * const image = PtrVector_get(&images->images, entity->appearance.tile_set_id);
 	SDL_Rect dest;
 	dest.x = (Sint16)pixel_pos.x;
 	dest.y = (Sint16)pixel_pos.y;
@@ -81,7 +81,7 @@ static void draw_layered_tile(
 		TileKind const * const layer = tile->layers[i];
 		if (layer)
 		{
-			SDL_Surface * const image = images->images[layer->image_id];
+			SDL_Surface * const image = PtrVector_get(&images->images, layer->image_id);
 			SDL_Rect dest;
 			dest.x = (Sint16)pixel_pos.x;
 			dest.y = (Sint16)pixel_pos.y;

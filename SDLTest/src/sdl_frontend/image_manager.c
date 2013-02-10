@@ -6,22 +6,20 @@ int ImageManager_init(ImageManager *im, size_t image_count)
 {
 	assert(im);
 
-	im->images = calloc(image_count, sizeof(*im->images));
-	if (im->images)
-	{
-		im->image_count = image_count;
-		return 1;
-	}
-	return 0;
+	PtrVector_init(&im->images);
+	return PtrVector_resize(&im->images, image_count);
+}
+
+static void free_image(void *image, void *user)
+{
+	(void)user;
+	SDL_FreeSurface(image);
 }
 
 void ImageManager_free(ImageManager *im)
 {
-	size_t i;
-	for (i = 0; i < im->image_count; ++i)
-	{
-		SDL_Surface * const s = im->images[i];
-		SDL_FreeSurface(s);
-	}
-	free(im->images);
+	for_each_ptr(PtrVector_begin(&im->images),
+				 PtrVector_end(&im->images),
+				 free_image, 0);
+	PtrVector_free(&im->images);
 }

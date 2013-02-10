@@ -7,10 +7,10 @@ find_package(SDL_ttf REQUIRED)
 include_directories(${SDL_INCLUDE_DIR} ${SDLTTF_INCLUDE_DIR})
 
 if (UNIX OR MINGW)
-	set(CMAKE_C_FLAGS "-Wall -Wextra -Wconversion -Wshadow -pedantic -g")
+	set(CMAKE_C_FLAGS "-Wall -Wextra -Wconversion -Wshadow -Werror -pedantic -g")
 endif()
 
-if (CMAKE_COMPILER_IS_GNUCXX)
+if (CMAKE_COMPILER_IS_GNUCC)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ansi")
 endif()
 
