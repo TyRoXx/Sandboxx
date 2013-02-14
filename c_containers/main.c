@@ -12,12 +12,12 @@
 
 #define ENSURE(x) { const int ensure_success_variable = !!(x); assert(ensure_success_variable); }
 
-typedef long long key_t;
+typedef long long map_key;
 typedef char value_t;
 
 static hash_t hash(const void *key, void *user_data)
 {
-	key_t original;
+	map_key original;
 	memcpy(&original, key, sizeof(original));
 	return (hash_t)(original * 1337);
 }
@@ -27,7 +27,7 @@ static void print_map(hash_map *map)
 	hash_map_iterator i = hash_map_iterate(map);
 	while (hash_map_iterator_next(&i))
 	{
-		key_t key;
+		map_key key;
 		value_t value;
 		memcpy(&key, hash_map_iterator_key(&i), sizeof(key));
 		memcpy(&value, hash_map_iterator_value(&i), sizeof(value));
@@ -40,7 +40,7 @@ static void print_set(hash_set *set)
 	hash_set_iterator i = hash_set_iterate(set);
 	while (hash_set_iterator_next(&i))
 	{
-		key_t key;
+		map_key key;
 		memcpy(&key, hash_set_iterator_key(&i), sizeof(key));
 		printf("%d\n", (int)key);
 	}
@@ -51,11 +51,11 @@ static void test_hash_map()
 	size_t j;
 
 	hash_map map;
-	hash_map_create(&map, sizeof(key_t), sizeof(value_t), hash, 0);
+	hash_map_create(&map, sizeof(map_key), sizeof(value_t), hash, 0);
 
 	for (j = 0; j < 3; ++j)
 	{
-		key_t key = 0;
+		map_key key = 0;
 		value_t value = 'A';
 
 		hash_map_clear(&map);
@@ -88,11 +88,11 @@ static void test_hash_set()
 	size_t j;
 
 	hash_set set;
-	hash_set_create(&set, sizeof(key_t), hash, 0);
+	hash_set_create(&set, sizeof(map_key), hash, 0);
 
 	for (j = 0; j < 3; ++j)
 	{
-		key_t key = 0;
+		map_key key = 0;
 
 		hash_set_clear(&set);
 
@@ -239,11 +239,11 @@ static int compare_uchar(const void *left, const void *right, void *user)
 
 static void test_tree_map()
 {
-	typedef unsigned char key_t;
+	typedef unsigned char map_key;
 	typedef double value_t;
 
 	size_t j;
-	key_t key;
+	map_key key;
 	value_t value;
 	void *found;
 	tree_map map;
