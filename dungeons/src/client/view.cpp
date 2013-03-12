@@ -1,23 +1,21 @@
-#include "client.hpp"
-#include "sdlpp/sdlpp.hpp"
+#include "view.hpp"
 
 
 namespace dungeons
 {
-}
-
-int main(int argc, char **argv)
-{
-	sdlpp::window window(sdlpp::vector2u(800, 600), true);
-	window.set_caption("dungeons");
-
-	bool is_running = true;
-	while (is_running)
+	view::view()
+		: m_window(sdlpp::vector2u(800, 600), true)
 	{
+		m_window.set_caption("dungeons");
+	}
+
+	bool view::tick()
+	{
+		bool is_running = true;
 		boost::optional<SDL_Event> ev;
 		for (;;)
 		{
-			ev = window.poll_event();
+			ev = m_window.poll_event();
 			if (!ev)
 			{
 				break;
@@ -45,10 +43,9 @@ int main(int argc, char **argv)
 			}
 		}
 
-		window.screen().fill(0xff00ff);
+		m_window.screen().fill(0xff00ff);
 
-		window.flip();
-
-		sdlpp::delay(16);
+		m_window.flip();
+		return is_running;
 	}
 }
