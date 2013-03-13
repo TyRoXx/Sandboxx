@@ -14,17 +14,12 @@ namespace dungeons
 	{
 		explicit screen(view &view);
 		virtual ~screen();
-		void suspend();
-		void resume();
+		view &get_view() const;
 		virtual void on_event(SDL_Event const &event);
 
 	private:
 
 		view &m_view;
-
-
-		virtual void on_suspend();
-		virtual void on_resume();
 	};
 }
 

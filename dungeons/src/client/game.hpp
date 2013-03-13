@@ -2,13 +2,15 @@
 #define GAME_HPP
 
 
-#include "view.hpp"
+#include "sdl_display/view.hpp"
+#include "client_logic/world.hpp"
 
 
 namespace dungeons
 {
 	struct game
 	{
+		explicit game();
 		void run();
 
 	private:

@@ -20,5 +20,7 @@ include_directories(".")
 
 add_subdirectory(shared)
 add_subdirectory(sdlpp)
+add_subdirectory(client_logic)
+add_subdirectory(sdl_display)
 add_subdirectory(client)
 add_subdirectory(server)
