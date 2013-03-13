@@ -102,6 +102,15 @@ namespace sdlpp
 		check_sdl_result(SDL_BlitSurface(&source, source_area, m_handle, dest_area));
 	}
 
+	vector2u surface::get_size() const
+	{
+		SDL_Rect area;
+		SDL_GetClipRect(m_handle, &area);
+		assert(area.x == 0);
+		assert(area.y == 0);
+		return {area.w, area.h};
+	}
+
 
 	surface load_bitmap_file(char const *file_name)
 	{

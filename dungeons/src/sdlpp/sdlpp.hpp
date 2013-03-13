@@ -69,6 +69,7 @@ namespace sdlpp
 		void fill(std::uint32_t color, SDL_Rect &area);
 		void fill(std::uint32_t color);
 		void blit(SDL_Rect *dest_area, SDL_Surface &source, SDL_Rect *source_area);
+		vector2u get_size() const;
 
 	private:
 

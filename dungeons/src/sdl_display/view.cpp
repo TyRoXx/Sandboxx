@@ -24,9 +24,12 @@ namespace dungeons
 			handle_event(*ev);
 		}
 
-		m_window.screen().fill(0xff00ff);
+		if (m_screen)
+		{
+			m_screen->render(m_window.screen());
+			m_window.flip();
+		}
 
-		m_window.flip();
 		return m_is_running;
 	}
 

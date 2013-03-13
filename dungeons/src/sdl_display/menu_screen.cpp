@@ -23,4 +23,9 @@ namespace dungeons
 			break;
 		}
 	}
+
+	void menu_screen::render(sdlpp::surface &canvas) const
+	{
+		canvas.fill(0xff00ff);
+	}
 }

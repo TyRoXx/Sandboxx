@@ -11,6 +11,7 @@ namespace dungeons
 	{
 		explicit menu_screen(view &view);
 		virtual void on_event(SDL_Event const &event);
+		virtual void render(sdlpp::surface &canvas) const;
 
 	private:
 	};

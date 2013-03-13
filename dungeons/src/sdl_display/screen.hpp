@@ -2,7 +2,7 @@
 #define SCREEN_HPP
 
 
-#include "SDL/SDL.h"
+#include "sdlpp/sdlpp.hpp"
 
 
 namespace dungeons
@@ -16,6 +16,7 @@ namespace dungeons
 		virtual ~screen();
 		view &get_view() const;
 		virtual void on_event(SDL_Event const &event);
+		virtual void render(sdlpp::surface &canvas) const = 0;
 
 	private:
 
