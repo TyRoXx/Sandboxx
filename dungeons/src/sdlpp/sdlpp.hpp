@@ -17,12 +17,50 @@ namespace sdlpp
 	{
 		std::array<T, N> elements;
 
+		vector()
+		{
+			elements.fill(T{0});
+		}
+
 		template <class ...Elements>
 		vector(Elements ...elements)
 			: elements{{elements...}}
 		{
 		}
 	};
+
+	template <class T, std::size_t N>
+	vector<T, N> &operator += (vector<T, N> &left, vector<T, N> const &right)
+	{
+		for (std::size_t i = 0; i < N; ++i)
+		{
+			left.elements[i] += right.elements[i];
+		}
+		return left;
+	}
+
+	template <class T, std::size_t N>
+	vector<T, N> &operator -= (vector<T, N> &left, vector<T, N> const &right)
+	{
+		return left += (-right);
+	}
+
+	template <class T, std::size_t N>
+	vector<T, N> operator - (vector<T, N> const &v)
+	{
+		return vector<T, N>() -= v;
+	}
+
+	template <class To, class From, std::size_t N>
+	vector<To, N> vector_cast(vector<From, N> const &from)
+	{
+		vector<To, N> to;
+		for (std::size_t i = 0; i < N; ++i)
+		{
+			to.elements[i] = static_cast<To>(from.elements[i]);
+		}
+		return to;
+	}
 
 	typedef vector<unsigned, 2> vector2u;
 

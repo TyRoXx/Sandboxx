@@ -1,4 +1,5 @@
 #include "camera.hpp"
+#include "world_tile_set.hpp"
 
 
 namespace dungeons
@@ -13,7 +14,10 @@ namespace dungeons
 		m_position = position;
 	}
 
-	void camera::render_world(world const &world, sdlpp::surface &canvas) const
+	void camera::render_world(
+			world const &world,
+			sdlpp::surface &canvas
+			) const
 	{
 		//TODO implement
 	}
