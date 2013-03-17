@@ -124,8 +124,18 @@ namespace sdlpp
 
 	surface load_bitmap_memory(char const *data, std::size_t length)
 	{
+		typedef int sdl_size;
+
+		sdl_size const narrowed_length = static_cast<sdl_size>(length);
+
+		if (static_cast<std::size_t>(narrowed_length) != length)
+		{
+			throw std::runtime_error(
+						"sdlpp::load_bitmap_memory: Length is too large for SDL");
+		}
+
 		SDL_Surface * const loaded =
-				SDL_LoadBMP_RW(SDL_RWFromConstMem(data, length), true);
+				SDL_LoadBMP_RW(SDL_RWFromConstMem(data, narrowed_length), true);
 		if (!loaded)
 		{
 			throw sdl_error();
