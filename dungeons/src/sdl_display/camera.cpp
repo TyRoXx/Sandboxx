@@ -4,6 +4,11 @@
 
 namespace dungeons
 {
+	camera::camera(world_tile_set const &tile_set)
+		: m_tile_set(tile_set)
+	{
+	}
+
 	camera_position const &camera::get_position() const
 	{
 		return m_position;

@@ -1,10 +1,14 @@
 #include "world_screen.hpp"
+#include "resources.hpp"
 
 
 namespace dungeons
 {
-	world_screen::world_screen(view &view)
+	world_screen::world_screen(view &view,
+							   std::shared_ptr<resources> resources)
 		: screen(view)
+		, m_resources(std::move(resources))
+		, m_camera(m_resources->world)
 	{
 	}
 

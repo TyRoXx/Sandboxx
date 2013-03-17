@@ -11,6 +11,9 @@ namespace dungeons
 	struct world_tile_set
 	{
 		std::vector<sdlpp::surface> environment;
+
+
+		explicit world_tile_set(std::vector<std::string> const &environment_files);
 	};
 }
 

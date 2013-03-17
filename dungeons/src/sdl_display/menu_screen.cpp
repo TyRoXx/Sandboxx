@@ -1,5 +1,6 @@
 #include "menu_screen.hpp"
 #include "view.hpp"
+#include "resources.hpp"
 #include "world_screen.hpp"
 #include "shared/shared.hpp"
 
@@ -16,7 +17,9 @@ namespace dungeons
 		switch (event.type)
 		{
 		case SDL_KEYDOWN:
-			get_view().switch_screen(make_unique<world_screen>(get_view()));
+			get_view().switch_screen(make_unique<world_screen>(
+										 get_view(),
+										 std::make_shared<resources>()));
 			return;
 
 		default:
