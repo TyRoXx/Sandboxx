@@ -18,7 +18,10 @@ Appearance;
 
 typedef enum Direction
 {
-	Dir_North, Dir_West, Dir_South, Dir_East
+	Dir_North,
+	Dir_West,
+	Dir_South,
+	Dir_East
 }
 Direction;
 
