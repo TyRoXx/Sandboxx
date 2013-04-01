@@ -13,7 +13,7 @@ typedef struct Camera
 Camera;
 
 
-int Camera_init(Camera *cam);
+Bool Camera_init(Camera *cam);
 void Camera_free(Camera *cam);
 void Camera_focus_on(Camera *cam, struct Entity const *target);
 

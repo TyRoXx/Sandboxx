@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 
-int Camera_init(Camera *cam)
+Bool Camera_init(Camera *cam)
 {
 	assert(cam);
 	cam->position = Vector2f_zero;

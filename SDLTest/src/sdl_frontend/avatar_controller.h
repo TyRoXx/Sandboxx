@@ -16,7 +16,7 @@ typedef struct AvatarController
 AvatarController;
 
 
-int AvatarController_init(AvatarController *a, struct Entity *avatar);
+Bool AvatarController_init(AvatarController *a, struct Entity *avatar);
 void AvatarController_free(AvatarController *a);
 void AvatarController_handle_input(AvatarController *a, Direction dir, int is_down);
 void AvatarController_update(AvatarController *a);

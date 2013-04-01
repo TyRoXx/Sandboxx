@@ -12,7 +12,7 @@ typedef struct ImageManager
 }
 ImageManager;
 
-int ImageManager_init(ImageManager *im, size_t image_count);
+Bool ImageManager_init(ImageManager *im, size_t image_count);
 void ImageManager_free(ImageManager *im);
 
 

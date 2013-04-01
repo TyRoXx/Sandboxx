@@ -4,7 +4,7 @@
 #include <string.h>
 
 
-int AvatarController_init(AvatarController *a, struct Entity *avatar)
+Bool AvatarController_init(AvatarController *a, struct Entity *avatar)
 {
 	assert(a);
 	assert(avatar);

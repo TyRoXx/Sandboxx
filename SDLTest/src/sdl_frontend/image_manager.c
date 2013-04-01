@@ -2,7 +2,7 @@
 #include <assert.h>
 
 
-int ImageManager_init(ImageManager *im, size_t image_count)
+Bool ImageManager_init(ImageManager *im, size_t image_count)
 {
 	assert(im);
 
