@@ -4,16 +4,26 @@
 #include <assert.h>
 
 
-Bool Animation_init(Animation *a, size_t frame_count)
+Bool AnimationSide_init(AnimationSide *a, size_t frame_count)
 {
 	a->frames = malloc(frame_count * sizeof(AnimationFrame));
 	a->frame_count = frame_count;
 	return (a->frames != NULL);
 }
 
-void Animation_free(Animation *a)
+void AnimationSide_free(AnimationSide *a)
 {
 	free(a->frames);
+}
+
+
+void Animation_free(Animation *a)
+{
+	size_t i;
+	for (i = 0; i < 4; ++i)
+	{
+		AnimationSide_free(&a->sides[i]);
+	}
 }
 
 
@@ -25,6 +35,39 @@ void Appearance_free(Appearance *appearance)
 	{
 		Animation_free(appearance->animations + i);
 	}
+}
+
+static Bool init_static_animation(Animation *anim,
+								  TextureRef texture)
+{
+	Bool result = True;
+	size_t i;
+	for (i = 0; i < 4; ++i)
+	{
+		AnimationSide * const side = &anim->sides[i];
+		AnimationFrame *frame;
+
+		if (!AnimationSide_init(side, 1))
+		{
+			result = False;
+			break;
+		}
+
+		frame = side->frames;
+		frame->duration = 0;
+		frame->texture = texture;
+	}
+
+	if (!result)
+	{
+		size_t c;
+		for (c = i, i = 0; i < c; ++i)
+		{
+			AnimationSide_free(&anim->sides[i]);
+		}
+	}
+
+	return result;
 }
 
 static Bool add_static_appearance(
@@ -44,18 +87,12 @@ static Bool add_static_appearance(
 
 	for (i = 0, c = (size_t)Anim_COUNT; i < c; ++i)
 	{
-		Animation *anim = appearance.animations + i;
-		AnimationFrame *frame;
-
-		if (!Animation_init(anim, 1))
+		Animation * const anim = appearance.animations + i;
+		if (!init_static_animation(anim, TextureRef_full(surface)))
 		{
 			result = False;
 			break;
 		}
-
-		frame = anim->frames + 0;
-		frame->duration = 0;
-		frame->texture = TextureRef_full(surface);
 	}
 
 	if (!result)

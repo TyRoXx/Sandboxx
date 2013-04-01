@@ -28,9 +28,11 @@ AdventureStateView;
 static void draw_animation(
 	Vector2i pixel_pos,
 	SDL_Surface *screen,
-	Animation const *animation)
+	Animation const *animation,
+	Direction direction)
 {
-	AnimationFrame const *current_frame = animation->frames;
+	AnimationSide const *side = &animation->sides[direction];
+	AnimationFrame const *current_frame = side->frames + 0;
 	SDL_Surface *image = current_frame->texture.surface;
 	SDL_Rect dest;
 	dest.x = (Sint16)pixel_pos.x;
@@ -42,7 +44,8 @@ static void draw_appearance(
 	Vector2i pixel_pos,
 	SDL_Surface *screen,
 	AppearanceId appearance_id,
-	AppearanceManager const *appearances)
+	AppearanceManager const *appearances,
+	Direction direction)
 {
 	Appearance const * const appearance = AppearanceManager_get(
 				appearances, appearance_id);
@@ -56,7 +59,7 @@ static void draw_appearance(
 	animation = &appearance->animations[Anim_Idle];
 	assert(animation);
 
-	draw_animation(pixel_pos, screen, animation);
+	draw_animation(pixel_pos, screen, animation, direction);
 }
 
 static void draw_entities(
@@ -83,7 +86,8 @@ static void draw_entities(
 			pixel_pos,
 			screen,
 			entity->appearance,
-			appearances);
+			appearances,
+			entity->direction);
 	}
 }
 
@@ -102,7 +106,11 @@ static void draw_layered_tile(
 		TileKind const * const layer = tile->layers[i];
 		if (layer)
 		{
-			draw_appearance(pixel_pos, screen, layer->image_id, appearances);
+			draw_appearance(pixel_pos,
+							screen,
+							layer->image_id,
+							appearances,
+							Dir_North);
 		}
 	}
 }

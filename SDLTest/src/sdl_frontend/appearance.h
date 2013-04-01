@@ -27,15 +27,25 @@ typedef struct AnimationFrame
 }
 AnimationFrame;
 
-typedef struct Animation
+typedef struct AnimationSide
 {
 	AnimationFrame *frames;
 	size_t frame_count;
 }
+AnimationSide;
+
+Bool AnimationSide_init(AnimationSide *a, size_t frame_count);
+void AnimationSide_free(AnimationSide *a);
+
+
+typedef struct Animation
+{
+	AnimationSide sides[4];
+}
 Animation;
 
-Bool Animation_init(Animation *a, size_t frame_count);
 void Animation_free(Animation *a);
+
 
 typedef struct Appearance
 {
