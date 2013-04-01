@@ -59,10 +59,10 @@ static void init_demo_grid(TileGrid *g)
 
 static int add_demo_entities(World *w)
 {
-	Appearance a;
+	AppearanceId a;
 	Entity e;
 
-	a.tile_set_id = 4;
+	a = 0;
 
 	if (!Entity_init(&e, Vector2i_new(3, 4), a, 1.7f, w))
 	{
@@ -100,7 +100,7 @@ static GameState *AdventureState_create(Game *game)
 	}
 
 	(void)game;
-	
+
 	{
 		TileGrid demo_tiles;
 

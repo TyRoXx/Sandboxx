@@ -33,7 +33,7 @@ static int is_possible_step(
 Bool Entity_init(
 	Entity *e,
 	Vector2i position,
-	Appearance appearance,
+	AppearanceId appearance,
 	float max_velocity,
 	struct World *world
 	)

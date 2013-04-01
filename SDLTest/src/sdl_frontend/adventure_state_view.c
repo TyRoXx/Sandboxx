@@ -31,7 +31,8 @@ static void draw_entity(
 	Entity const *entity,
 	ImageManager const *images)
 {
-	SDL_Surface * const image = PtrVector_get(&images->images, entity->appearance.tile_set_id);
+	SDL_Surface * const image = PtrVector_get(&images->images,
+											  entity->appearance);
 	SDL_Rect dest;
 	dest.x = (Sint16)pixel_pos.x;
 	dest.y = (Sint16)pixel_pos.y;

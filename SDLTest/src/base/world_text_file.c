@@ -93,10 +93,10 @@ static Bool load_world_from_text_v1(struct World *world, struct TileKind const *
 		{
 			int x, y;
 			int direction;
-			Appearance app;
+			AppearanceId app;
 
 			if (fscanf(in, "%d%d%d", &x, &y, &direction) != 3 ||
-				!scan_size_t(in, &app.tile_set_id))
+				!scan_size_t(in, &app))
 			{
 				goto fail;
 			}
@@ -185,7 +185,7 @@ static void save_entity_to_text(Entity const *entity, FILE *out)
 
 	fprintf(out, "%d %d\n",	(int)entity->position.x, (int)entity->position.y);
 	fprintf(out, "%d\n", (int)entity->direction);
-	fprintf(out, "%u\n", (unsigned)entity->appearance.tile_set_id);
+	fprintf(out, "%u\n", (unsigned)entity->appearance);
 
 	fputs("\n", out);
 }

@@ -9,11 +9,7 @@
 struct World;
 
 
-typedef struct Appearance
-{
-	size_t tile_set_id;
-}
-Appearance;
+typedef size_t AppearanceId;
 
 
 typedef enum Direction
@@ -30,7 +26,7 @@ typedef struct Entity
 {
 	Vector2i position;
 	Direction direction;
-	Appearance appearance;
+	AppearanceId appearance;
 	float max_velocity;
 	size_t steps_to_go;
 	float move_progress;
@@ -42,7 +38,7 @@ Entity;
 Bool Entity_init(
 	Entity *e,
 	Vector2i position,
-	Appearance appearance,
+	AppearanceId appearance,
 	float max_velocity,
 	struct World *world
 	);
