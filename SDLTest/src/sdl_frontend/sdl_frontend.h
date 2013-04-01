@@ -3,7 +3,7 @@
 
 
 #include "frontend/frontend.h"
-#include "image_manager.h"
+#include "data.h"
 
 
 struct Game;
@@ -15,7 +15,7 @@ typedef struct SDLFrontend
 	Frontend base;
 	struct Game *game;
 	SDL_Surface *screen;
-	ImageManager images;
+	Data data;
 	struct GameStateView *state_view;
 }
 SDLFrontend;

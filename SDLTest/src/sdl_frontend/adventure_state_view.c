@@ -209,7 +209,7 @@ static void AdventureStateView_draw(GameStateView *view)
 		screen,
 		&adv_view->state->world.tiles,
 		TileWidth,
-		&adv_view->front->images,
+		&adv_view->front->data.images,
 		0,
 		2
 		);
@@ -219,7 +219,7 @@ static void AdventureStateView_draw(GameStateView *view)
 		screen,
 		&adv_view->state->world,
 		TileWidth,
-		&adv_view->front->images
+		&adv_view->front->data.images
 		);
 
 	assert(TILE_LAYER_COUNT == 3);
@@ -228,7 +228,7 @@ static void AdventureStateView_draw(GameStateView *view)
 		screen,
 		&adv_view->state->world.tiles,
 		TileWidth,
-		&adv_view->front->images,
+		&adv_view->front->data.images,
 		2,
 		3
 		);
