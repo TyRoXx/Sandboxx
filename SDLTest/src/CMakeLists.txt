@@ -21,5 +21,6 @@ endif()
 include_directories(".")
 
 add_subdirectory(base)
+add_subdirectory(frontend)
 add_subdirectory(sdl_frontend)
 add_subdirectory(game)

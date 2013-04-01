@@ -2,7 +2,7 @@
 #define SDL_FRONTEND_H
 
 
-#include "base/frontend.h"
+#include "frontend/frontend.h"
 #include "image_manager.h"
 
 
