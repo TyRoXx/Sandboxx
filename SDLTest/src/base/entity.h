@@ -21,6 +21,8 @@ typedef enum Direction
 }
 Direction;
 
+#define DIR_COUNT 4
+
 
 typedef struct Entity
 {

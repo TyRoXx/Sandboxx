@@ -40,7 +40,7 @@ void AnimationSide_free(AnimationSide *a);
 
 typedef struct Animation
 {
-	AnimationSide sides[4];
+	AnimationSide sides[DIR_COUNT];
 }
 Animation;
 

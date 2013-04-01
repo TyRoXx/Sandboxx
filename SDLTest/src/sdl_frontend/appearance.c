@@ -20,7 +20,7 @@ void AnimationSide_free(AnimationSide *a)
 void Animation_free(Animation *a)
 {
 	size_t i;
-	for (i = 0; i < 4; ++i)
+	for (i = 0; i < DIR_COUNT; ++i)
 	{
 		AnimationSide_free(&a->sides[i]);
 	}
@@ -42,7 +42,7 @@ static Bool init_static_animation(Animation *anim,
 {
 	Bool result = True;
 	size_t i;
-	for (i = 0; i < 4; ++i)
+	for (i = 0; i < DIR_COUNT; ++i)
 	{
 		AnimationSide * const side = &anim->sides[i];
 		AnimationFrame *frame;
