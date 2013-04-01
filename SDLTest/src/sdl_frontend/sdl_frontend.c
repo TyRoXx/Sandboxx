@@ -15,7 +15,8 @@ enum
 
 static SDL_Color const AlphaKey = {255, 0, 255, 0};
 
-static SDL_Surface *load_bmp_texture(char const *file_name, SDL_PixelFormat *format)
+static SDL_Surface *load_bmp_texture(char const *file_name,
+									 SDL_PixelFormat *format)
 {
 	SDL_Surface * const bitmap = SDL_LoadBMP(file_name);
 	SDL_Surface * converted;
@@ -40,7 +41,7 @@ static SDL_Surface *load_bmp_texture(char const *file_name, SDL_PixelFormat *for
 	if (SDL_SetColorKey(
 			converted,
 			SDL_SRCCOLORKEY,
-			SDL_MapRGB(converted->format,	AlphaKey.r,	AlphaKey.g,	AlphaKey.b)) < 0)
+			SDL_MapRGB(converted->format, AlphaKey.r, AlphaKey.g, AlphaKey.b)) < 0)
 	{
 		SDL_FreeSurface(converted);
 		return 0;
@@ -216,7 +217,8 @@ Frontend *SDLFrontEnd_create(struct Game *game)
 
 	front->base.type = &SDLFrontendType;
 	front->game = game;
-	front->screen = SDL_SetVideoMode(Width, Height, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+	front->screen = SDL_SetVideoMode(Width, Height, 32,
+									 SDL_HWSURFACE | SDL_DOUBLEBUF);
 	front->state_view = 0;
 
 	if (!front->screen)
