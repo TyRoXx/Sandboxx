@@ -22,7 +22,7 @@ typedef struct Game
 Game;
 
 
-int Game_init(Game *g);
+Bool Game_init(Game *g);
 void Game_free(Game *g);
 int Game_update(Game *g, unsigned delta);
 int Game_enter_state(Game *g, GameStateDefinition const *state);

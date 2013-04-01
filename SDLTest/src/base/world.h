@@ -4,6 +4,7 @@
 
 #include "entity.h"
 #include "tile_grid.h"
+#include "bool.h"
 
 
 typedef struct World
@@ -15,11 +16,11 @@ typedef struct World
 World;
 
 
-int World_init(World *w, TileGrid const *tiles);
+Bool World_init(World *w, TileGrid const *tiles);
 void World_free(World *w);
 void World_update(World *w, unsigned delta);
-int World_add_entity(World *w, Entity const *entity);
-int World_is_walkable(
+Bool World_add_entity(World *w, Entity const *entity);
+Bool World_is_walkable(
 	World const *world,
 	Vector2i const *position);
 

@@ -9,7 +9,7 @@
 static char const * const VersionLine_1 = "World_v1\n";
 
 
-static int scan_size_t(FILE *in, size_t *value)
+static Bool scan_size_t(FILE *in, size_t *value)
 {
 	unsigned buf_value;
 	if (fscanf(in, "%u", &buf_value) > 0)
@@ -20,7 +20,7 @@ static int scan_size_t(FILE *in, size_t *value)
 	return 0;
 }
 
-static int load_world_from_text_v1(struct World *world, struct TileKind const *tile_kinds, size_t tile_kind_count, FILE *in, FILE *error_out)
+static Bool load_world_from_text_v1(struct World *world, struct TileKind const *tile_kinds, size_t tile_kind_count, FILE *in, FILE *error_out)
 {
 	size_t width, height;
 
@@ -123,7 +123,7 @@ fail:
 	return 0;
 }
 
-int load_world_from_text(struct World *world, struct TileKind const *tile_kinds, size_t tile_kind_count, FILE *in, FILE *error_out)
+Bool load_world_from_text(struct World *world, struct TileKind const *tile_kinds, size_t tile_kind_count, FILE *in, FILE *error_out)
 {
 	char version[32];
 

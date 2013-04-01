@@ -3,7 +3,7 @@
 #include <assert.h>
 
 
-int World_init(World *w, TileGrid const *tiles)
+Bool World_init(World *w, TileGrid const *tiles)
 {
 	assert(w);
 	assert(tiles);
@@ -11,7 +11,7 @@ int World_init(World *w, TileGrid const *tiles)
 	w->entities = 0;
 	w->entity_count = 0;
 	w->tiles = *tiles;
-	return 1;
+	return True;
 }
 
 void World_free(World *w)
@@ -34,7 +34,7 @@ void World_update(World *w, unsigned delta)
 	}
 }
 
-int World_add_entity(World *w, Entity const *entity)
+Bool World_add_entity(World *w, Entity const *entity)
 {
 	size_t const new_count = w->entity_count + 1;
 	Entity * const new_entities = realloc(w->entities,
@@ -49,7 +49,7 @@ int World_add_entity(World *w, Entity const *entity)
 	return 1;
 }
 
-static int is_entity_on(
+static Bool is_entity_on(
 	World const *world,
 	Vector2i const *position)
 {
@@ -70,7 +70,7 @@ static int is_entity_on(
 	return 0;
 }
 
-static int is_walkable_tile(
+static Bool is_walkable_tile(
 	TileGrid const *tiles,
 	Vector2i const *position)
 {
@@ -87,7 +87,7 @@ static int is_walkable_tile(
 		);
 }
 
-int World_is_walkable(
+Bool World_is_walkable(
 	World const *world,
 	Vector2i const *position)
 {

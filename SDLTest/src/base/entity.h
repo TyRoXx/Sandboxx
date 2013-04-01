@@ -3,6 +3,7 @@
 
 
 #include "vector2i.h"
+#include "bool.h"
 
 
 struct World;
@@ -35,7 +36,7 @@ typedef struct Entity
 Entity;
 
 
-int Entity_init(
+Bool Entity_init(
 	Entity *e,
 	Vector2i position,
 	Appearance appearance,
@@ -44,7 +45,7 @@ int Entity_init(
 	);
 void Entity_free(Entity *e);
 void Entity_update(Entity *e, unsigned delta);
-int Entity_move(Entity *e, size_t steps_to_go);
+Bool Entity_move(Entity *e, size_t steps_to_go);
 void Entity_stop(Entity *e);
 
 

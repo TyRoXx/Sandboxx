@@ -3,7 +3,7 @@
 #include <assert.h>
 
 
-int LayeredTile_is_walkable(LayeredTile const *tile)
+Bool LayeredTile_is_walkable(LayeredTile const *tile)
 {
 	size_t i;
 	for (i = 0; i < TILE_LAYER_COUNT; ++i)
@@ -26,7 +26,7 @@ int LayeredTile_is_walkable(LayeredTile const *tile)
 }
 
 
-int TileGrid_init(TileGrid *g, size_t width, size_t height)
+Bool TileGrid_init(TileGrid *g, size_t width, size_t height)
 {
 	assert(g);
 	g->tiles = calloc(width * height, sizeof(*g->tiles));

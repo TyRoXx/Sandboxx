@@ -12,12 +12,12 @@ void PtrVector_free(PtrVector *v)
 	Vector_free(&v->content);
 }
 
-int PtrVector_resize(PtrVector *v, size_t size)
+Bool PtrVector_resize(PtrVector *v, size_t size)
 {
 	return Vector_resize(&v->content, size * sizeof(void *));
 }
 
-int PtrVector_push_back(PtrVector *v, void *element)
+Bool PtrVector_push_back(PtrVector *v, void *element)
 {
 	return Vector_push_back(&v->content, &element, sizeof(element));
 }

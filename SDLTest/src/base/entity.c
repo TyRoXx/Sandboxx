@@ -30,12 +30,12 @@ static int is_possible_step(
 }
 
 
-int Entity_init(
+Bool Entity_init(
 	Entity *e,
 	Vector2i position,
 	Appearance appearance,
 	float max_velocity,
-    struct World *world
+	struct World *world
 	)
 {
 	e->position = position;
@@ -89,7 +89,7 @@ void Entity_stop(Entity *e)
 	e->steps_to_go = 1;
 }
 
-int Entity_move(Entity *e, size_t steps_to_go)
+Bool Entity_move(Entity *e, size_t steps_to_go)
 {
 	if (e->steps_to_go > 0)
 	{
@@ -102,7 +102,7 @@ int Entity_move(Entity *e, size_t steps_to_go)
 	}
 
 	add_direction_vector(&e->position, e->direction, 1);
-	
+
 	e->steps_to_go = steps_to_go;
 	e->move_progress = 0;
 	return 1;

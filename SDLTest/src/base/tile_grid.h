@@ -2,6 +2,7 @@
 #define TILE_GRID_H
 
 
+#include "bool.h"
 #include <stddef.h>
 
 
@@ -20,7 +21,7 @@ typedef struct LayeredTile
 }
 LayeredTile;
 
-int LayeredTile_is_walkable(LayeredTile const *tile);
+Bool LayeredTile_is_walkable(LayeredTile const *tile);
 
 
 typedef struct TileGrid
@@ -30,7 +31,7 @@ typedef struct TileGrid
 }
 TileGrid;
 
-int TileGrid_init(TileGrid *g, size_t width, size_t height);
+Bool TileGrid_init(TileGrid *g, size_t width, size_t height);
 void TileGrid_free(TileGrid *g);
 LayeredTile *TileGrid_get(TileGrid const *g, size_t x, size_t y);
 

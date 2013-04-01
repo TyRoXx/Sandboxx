@@ -1,7 +1,7 @@
 #include "game.h"
 
 
-int Game_init(Game *g)
+Bool Game_init(Game *g)
 {
 	g->state = 0;
 	g->on_enter_state.function = 0;

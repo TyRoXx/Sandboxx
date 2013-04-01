@@ -14,7 +14,7 @@ void Vector_free(Vector *v)
 	free(v->data);
 }
 
-int Vector_push_back(Vector *v, void const *element, size_t size)
+Bool Vector_push_back(Vector *v, void const *element, size_t size)
 {
 	if (!Vector_reserve(v, v->capacity + size))
 	{
@@ -35,7 +35,7 @@ char *Vector_data(Vector const *v)
 	return v->data;
 }
 
-int Vector_reserve(Vector *v, size_t capacity)
+Bool Vector_reserve(Vector *v, size_t capacity)
 {
 	char *new_data;
 
@@ -57,7 +57,7 @@ int Vector_reserve(Vector *v, size_t capacity)
 	return 1;
 }
 
-int Vector_resize(Vector *v, size_t size)
+Bool Vector_resize(Vector *v, size_t size)
 {
 	size_t const old_size = v->size;
 	if (Vector_reserve(v, size))
