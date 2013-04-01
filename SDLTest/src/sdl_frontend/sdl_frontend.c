@@ -137,14 +137,14 @@ static FrontendType const SDLFrontendType =
 static char const * const WindowTitle = "SDL Test";
 static char const * const ImageFileNames[] =
 {
-	"sprites/grass_32.bmp",
-	"sprites/dirt_32.bmp",
-	"sprites/n_grass_s_dirt_32.bmp",
-	"sprites/n_dirt_s_grass_32.bmp",
-	"sprites/fence_32.bmp",
-	"sprites/nw_dirt_on_grass_32.bmp",
-	"sprites/w_dirt_e_grass_32.bmp",
-	"sprites/sw_dirt_on_grass_32.bmp",
+	"data/sprites/grass_32.bmp",
+	"data/sprites/dirt_32.bmp",
+	"data/sprites/n_grass_s_dirt_32.bmp",
+	"data/sprites/n_dirt_s_grass_32.bmp",
+	"data/sprites/fence_32.bmp",
+	"data/sprites/nw_dirt_on_grass_32.bmp",
+	"data/sprites/w_dirt_e_grass_32.bmp",
+	"data/sprites/sw_dirt_on_grass_32.bmp",
 };
 
 static int init_image_manager(ImageManager *images, SDL_PixelFormat *format)
