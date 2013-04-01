@@ -14,6 +14,11 @@ void Vector_free(Vector *v)
 	free(v->data);
 }
 
+char *Vector_release(Vector *v)
+{
+	return v->data;
+}
+
 Bool Vector_push_back(Vector *v, void const *element, size_t size)
 {
 	if (!Vector_reserve(v, v->capacity + size))
@@ -67,4 +72,14 @@ Bool Vector_resize(Vector *v, size_t size)
 		return 1;
 	}
 	return 0;
+}
+
+char *Vector_begin(Vector *v)
+{
+	return Vector_data(v);
+}
+
+char *Vector_end(Vector *v)
+{
+	return Vector_data(v) + Vector_size(v);
 }

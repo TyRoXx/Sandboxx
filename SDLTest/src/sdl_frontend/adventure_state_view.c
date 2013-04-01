@@ -25,18 +25,38 @@ typedef struct AdventureStateView
 AdventureStateView;
 
 
-static void draw_entity(
+static void draw_animation(
 	Vector2i pixel_pos,
 	SDL_Surface *screen,
-	Entity const *entity,
-	ImageManager const *images)
+	Animation const *animation)
 {
-	SDL_Surface * const image = PtrVector_get(&images->images,
-											  entity->appearance);
+	AnimationFrame const *current_frame = animation->frames;
+	SDL_Surface *image = current_frame->texture.surface;
 	SDL_Rect dest;
 	dest.x = (Sint16)pixel_pos.x;
 	dest.y = (Sint16)pixel_pos.y;
 	SDL_BlitSurface(image, 0, screen, &dest);
+}
+
+static void draw_appearance(
+	Vector2i pixel_pos,
+	SDL_Surface *screen,
+	AppearanceId appearance_id,
+	AppearanceManager const *appearances)
+{
+	Appearance const * const appearance = AppearanceManager_get(
+				appearances, appearance_id);
+	Animation const *animation;
+
+	if (!appearance)
+	{
+		return;
+	}
+
+	animation = &appearance->animations[Anim_Idle];
+	assert(animation);
+
+	draw_animation(pixel_pos, screen, animation);
 }
 
 static void draw_entities(
@@ -44,14 +64,14 @@ static void draw_entities(
 	SDL_Surface *screen,
 	World const *world,
 	size_t tile_width,
-	ImageManager const *images)
+	AppearanceManager const *appearances)
 {
 	size_t i;
 
 	assert(world);
 	assert(camera);
 	assert(screen);
-	assert(images);
+	assert(appearances);
 
 	for (i = 0; i < world->entity_count; ++i)
 	{
@@ -59,11 +79,11 @@ static void draw_entities(
 		Vector2i pixel_pos;
 		pixel_pos.x = (ptrdiff_t)(((float)entity->position.x - camera->position.x + get_entity_offset(entity, Dir_East )) * (float)tile_width) + Width  / 2;
 		pixel_pos.y = (ptrdiff_t)(((float)entity->position.y - camera->position.y + get_entity_offset(entity, Dir_South)) * (float)tile_width) + Height / 2;
-		draw_entity(
+		draw_appearance(
 			pixel_pos,
 			screen,
-			entity,
-			images);
+			entity->appearance,
+			appearances);
 	}
 }
 
@@ -71,7 +91,7 @@ static void draw_layered_tile(
 	Vector2i pixel_pos,
 	SDL_Surface *screen,
 	LayeredTile const *tile,
-	ImageManager const *images,
+	AppearanceManager const *appearances,
 	size_t layer_begin,
 	size_t layer_end
 )
@@ -82,26 +102,19 @@ static void draw_layered_tile(
 		TileKind const * const layer = tile->layers[i];
 		if (layer)
 		{
-			SDL_Surface * const image = PtrVector_get(&images->images, layer->image_id);
-			SDL_Rect dest;
-			dest.x = (Sint16)pixel_pos.x;
-			dest.y = (Sint16)pixel_pos.y;
-			/*Other elements of dest are ignored by SDL_BlitSurface.*/
-			/*dest is not reused because SDL_BlitSurface may modify it.*/
-
-			SDL_BlitSurface(image, 0, screen, &dest);
+			draw_appearance(pixel_pos, screen, layer->image_id, appearances);
 		}
 	}
 }
 
 static void draw_tile_layers(
-		Camera const *camera,
-		SDL_Surface *screen,
-		TileGrid const *tiles,
-		size_t tile_width,
-		ImageManager const *images,
-		size_t layer_begin,
-		size_t layer_end)
+	Camera const *camera,
+	SDL_Surface *screen,
+	TileGrid const *tiles,
+	size_t tile_width,
+	AppearanceManager const *appearances,
+	size_t layer_begin,
+	size_t layer_end)
 {
 	ptrdiff_t y;
 
@@ -132,7 +145,7 @@ static void draw_tile_layers(
 				pixel_pos,
 				screen,
 				tile,
-				images,
+				appearances,
 				layer_begin,
 				layer_end
 				);
@@ -204,12 +217,15 @@ static void AdventureStateView_draw(GameStateView *view)
 		Camera_focus_on(&adv_view->camera, adv_view->state->avatar);
 	}
 
+	assert(TILE_LAYER_COUNT == 3);
+
+	/*draw layers 0 and 1*/
 	draw_tile_layers(
 		&adv_view->camera,
 		screen,
 		&adv_view->state->world.tiles,
 		TileWidth,
-		&adv_view->front->data.images,
+		&adv_view->front->data.appearances,
 		0,
 		2
 		);
@@ -219,16 +235,16 @@ static void AdventureStateView_draw(GameStateView *view)
 		screen,
 		&adv_view->state->world,
 		TileWidth,
-		&adv_view->front->data.images
+		&adv_view->front->data.appearances
 		);
 
-	assert(TILE_LAYER_COUNT == 3);
+	/*draw layer 2*/
 	draw_tile_layers(
 		&adv_view->camera,
 		screen,
 		&adv_view->state->world.tiles,
 		TileWidth,
-		&adv_view->front->data.images,
+		&adv_view->front->data.appearances,
 		2,
 		3
 		);

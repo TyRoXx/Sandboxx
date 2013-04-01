@@ -3,11 +3,13 @@
 
 
 #include "image_manager.h"
+#include "appearance.h"
 
 
 typedef struct Data
 {
 	ImageManager images;
+	AppearanceManager appearances;
 }
 Data;
 

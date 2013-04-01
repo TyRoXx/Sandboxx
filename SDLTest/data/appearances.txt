@@ -1,0 +1,8 @@
+0 STATIC grass_32.bmp
+1 STATIC dirt_32.bmp
+2 STATIC n_grass_s_dirt_32.bmp
+3 STATIC n_dirt_s_grass_32.bmp
+4 STATIC fence_32.bmp
+5 STATIC nw_dirt_on_grass_32.bmp
+6 STATIC w_dirt_e_grass_32.bmp
+7 STATIC sw_dirt_on_grass_32.bmp

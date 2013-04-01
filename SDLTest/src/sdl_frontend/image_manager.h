@@ -3,17 +3,33 @@
 
 
 #include "SDL.h"
-#include "base/ptr_vector.h"
+#include "base/vector.h"
+
+
+typedef struct Image
+{
+	char *name;
+	SDL_Surface *surface;
+}
+Image;
+
+void Image_init(Image *im, char *name, SDL_Surface *surface);
+void Image_free(Image *im);
 
 
 typedef struct ImageManager
 {
-	PtrVector images;
+	char *directory;
+	SDL_PixelFormat *format;
+	Vector images;
 }
 ImageManager;
 
-Bool ImageManager_init(ImageManager *im, size_t image_count);
+void ImageManager_init(ImageManager *im,
+					   char *directory,
+					   SDL_PixelFormat *format);
 void ImageManager_free(ImageManager *im);
+SDL_Surface *ImageManager_get(ImageManager *im, char const *name);
 
 
 #endif

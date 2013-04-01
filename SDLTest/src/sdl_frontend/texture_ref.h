@@ -12,5 +12,7 @@ typedef struct TextureRef
 }
 TextureRef;
 
+TextureRef TextureRef_full(SDL_Surface *surface);
+
 
 #endif
