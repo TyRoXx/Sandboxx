@@ -3,17 +3,6 @@
 #include <assert.h>
 
 
-Bool World_init(World *w, TileGrid const *tiles)
-{
-	assert(w);
-	assert(tiles);
-
-	w->entities = 0;
-	w->entity_count = 0;
-	w->tiles = *tiles;
-	return True;
-}
-
 void World_free(World *w)
 {
 	size_t i;

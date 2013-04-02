@@ -16,7 +16,6 @@ typedef struct World
 World;
 
 
-Bool World_init(World *w, TileGrid const *tiles);
 void World_free(World *w);
 void World_update(World *w, unsigned delta);
 Bool World_add_entity(World *w, Entity const *entity);
