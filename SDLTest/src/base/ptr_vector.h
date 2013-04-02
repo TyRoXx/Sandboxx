@@ -23,10 +23,4 @@ void **PtrVector_begin(PtrVector const *v);
 void **PtrVector_end(PtrVector const *v);
 
 
-void for_each_ptr(
-	void **begin,
-	void **end,
-	void (*function)(void *element, void *user),
-	void *user);
-
 #endif

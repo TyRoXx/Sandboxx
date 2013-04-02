@@ -48,16 +48,3 @@ void **PtrVector_end(PtrVector const *v)
 {
 	return PtrVector_begin(v) + PtrVector_size(v);
 }
-
-
-void for_each_ptr(
-	void **begin,
-	void **end,
-	void (*function)(void *element, void *user),
-	void *user)
-{
-	for (; begin != end; ++begin)
-	{
-		function(*begin, user);
-	}
-}
