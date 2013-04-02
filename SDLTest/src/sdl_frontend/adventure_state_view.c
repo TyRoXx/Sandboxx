@@ -29,15 +29,16 @@ static void draw_animation(
 	Vector2i pixel_pos,
 	SDL_Surface *screen,
 	Animation const *animation,
+	SDL_Surface *image,
 	Direction direction)
 {
 	AnimationSide const *side = &animation->sides[direction];
-	AnimationFrame const *current_frame = side->frames + 0;
-	SDL_Surface *image = current_frame->texture.surface;
+	AnimationFrame * const current_frame = side->frames + 0;
+	SDL_Rect * const source = &current_frame->section;
 	SDL_Rect dest;
 	dest.x = (Sint16)pixel_pos.x;
 	dest.y = (Sint16)pixel_pos.y;
-	SDL_BlitSurface(image, 0, screen, &dest);
+	SDL_BlitSurface(image, source, screen, &dest);
 }
 
 static void draw_appearance(
@@ -56,10 +57,10 @@ static void draw_appearance(
 		return;
 	}
 
-	animation = &appearance->animations[Anim_Idle];
+	animation = &appearance->layout->animations[Anim_Idle];
 	assert(animation);
 
-	draw_animation(pixel_pos, screen, animation, direction);
+	draw_animation(pixel_pos, screen, animation, appearance->image, direction);
 }
 
 static void draw_entities(

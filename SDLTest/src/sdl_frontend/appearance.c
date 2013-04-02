@@ -27,35 +27,50 @@ void Animation_free(Animation *a)
 }
 
 
-void Appearance_free(Appearance *appearance)
+void AppearanceLayout_free(AppearanceLayout *a)
 {
 	size_t i;
 
 	for (i = 0; i < (size_t)Anim_COUNT; ++i)
 	{
-		Animation_free(appearance->animations + i);
+		Animation_free(a->animations + i);
 	}
 }
 
-static Bool init_static_animation(Animation *anim,
-								  TextureRef texture)
+
+void Appearance_init(Appearance *appearance,
+					 SDL_Surface *image,
+					 AppearanceLayout const *layout)
+{
+	appearance->image = image;
+	appearance->layout = layout;
+}
+
+void Appearance_free(Appearance *appearance)
+{
+	(void)appearance;
+}
+
+
+int const tile_size = 32;
+
+static Bool init_animation(
+		Animation *anim,
+		Vector2i offset,
+		Bool (*init_side)(AnimationSide *, Vector2i))
 {
 	Bool result = True;
 	size_t i;
 	for (i = 0; i < DIR_COUNT; ++i)
 	{
 		AnimationSide * const side = &anim->sides[i];
-		AnimationFrame *frame;
-
-		if (!AnimationSide_init(side, 1))
+		if (!init_side(side, offset))
 		{
 			result = False;
 			break;
 		}
 
-		frame = side->frames;
-		frame->duration = 0;
-		frame->texture = texture;
+		offset.y += tile_size;
 	}
 
 	if (!result)
@@ -70,47 +85,121 @@ static Bool init_static_animation(Animation *anim,
 	return result;
 }
 
-static Bool add_static_appearance(
-	AppearanceManager *a,
-	ImageManager *images,
-	char const *image_name)
+static Bool init_layout(AppearanceLayout *layout,
+						Bool (*init_side)(AnimationSide *, Vector2i))
 {
-	SDL_Surface * const surface = ImageManager_get(images, image_name);
-	Appearance appearance;
-	size_t i, c;
 	Bool result = True;
-
-	if (!surface)
-	{
-		return False;
-	}
+	size_t i, c;
+	Vector2i offset;
+	offset.x = 0;
+	offset.y = 0;
 
 	for (i = 0, c = (size_t)Anim_COUNT; i < c; ++i)
 	{
-		Animation * const anim = appearance.animations + i;
-		if (!init_static_animation(anim, TextureRef_full(surface)))
+		Animation * const anim = layout->animations + i;
+
+		if (!init_animation(anim, offset, init_side))
 		{
 			result = False;
 			break;
 		}
+
+		offset.y += (ptrdiff_t)(DIR_COUNT * tile_size);
 	}
 
 	if (!result)
 	{
 		for (c = i, i = 0; i < c; ++i)
 		{
-			Animation_free(appearance.animations + i);
+			Animation_free(layout->animations + i);
 		}
 		return False;
 	}
 
-	if (!Vector_push_back(&a->appearances, &appearance, sizeof(appearance)))
+	return True;
+}
+
+static Bool init_dynamic_side_1(AnimationSide *side,
+								Vector2i offset)
+{
+	size_t const frame_count = 3;
+	size_t j;
+
+	if (!AnimationSide_init(side, frame_count))
 	{
-		Appearance_free(&appearance);
 		return False;
 	}
 
+	for (j = 0; j < frame_count; ++j)
+	{
+		AnimationFrame * const frame = side->frames + j;
+		SDL_Rect section;
+		section.x = (Sint16)offset.x;
+		section.y = (Sint16)offset.y;
+		section.w = (Uint16)tile_size;
+		section.h = (Uint16)tile_size;
+		frame->duration = 200;
+		frame->section = section;
+
+		offset.x += tile_size;
+	}
+
 	return True;
+}
+
+static Bool init_static_side(AnimationSide *side,
+							 Vector2i offset)
+{
+	SDL_Rect section;
+
+	(void)offset;
+
+	if (!AnimationSide_init(side, 1))
+	{
+		return False;
+	}
+
+	section.x = (Sint16)0;
+	section.y = (Sint16)0;
+	section.w = (Uint16)tile_size;
+	section.h = (Uint16)tile_size;
+
+	side->frames->duration = 0;
+	side->frames->section = section;
+	return True;
+}
+
+static Bool init_dynamic_layout_1(AppearanceLayout *layout)
+{
+	return init_layout(layout, &init_dynamic_side_1);
+}
+
+static Bool init_static_layout(AppearanceLayout *layout)
+{
+	return init_layout(layout, &init_static_side);
+}
+
+static Bool add_appearance(AppearanceManager *a,
+						   ImageManager *images,
+						   char const *image_name,
+						   AppearanceLayout const *layout)
+{
+	SDL_Surface *image;
+	Appearance appearance;
+
+	image = ImageManager_get(images, image_name);
+	if (!image)
+	{
+		return False;
+	}
+
+	Appearance_init(&appearance, image, layout);
+	if (Vector_push_back(&a->appearances, &appearance, sizeof(appearance)))
+	{
+		return True;
+	}
+	Appearance_free(&appearance);
+	return False;
 }
 
 static Bool load_appearances_file(AppearanceManager *a,
@@ -139,7 +228,22 @@ static Bool load_appearances_file(AppearanceManager *a,
 				return False;
 			}
 
-			if (!add_static_appearance(a, images, image_name))
+			if (!add_appearance(a, images, image_name, &a->static_layout))
+			{
+				return False;
+			}
+		}
+		else if (!strcmp("DYNAMIC_1", type))
+		{
+			char image_name[1024];
+			if (fscanf(file, " %1023s", image_name) != 1)
+			{
+				fprintf(stderr, "Dynamic appearance 1 image name expected\n");
+				return False;
+			}
+
+			/*TODO*/
+			if (!add_appearance(a, images, image_name, &a->dynamic_layout_1))
 			{
 				return False;
 			}
@@ -147,6 +251,7 @@ static Bool load_appearances_file(AppearanceManager *a,
 		else
 		{
 			fprintf(stderr, "Unknown appearance type\n");
+			return False;
 		}
 
 		++expected_index;
@@ -155,35 +260,53 @@ static Bool load_appearances_file(AppearanceManager *a,
 	return True;
 }
 
-Bool AppearanceManager_init(AppearanceManager *a,
-							FILE *file,
-							ImageManager *images)
-{
-	Vector_init(&a->appearances);
-
-	if (load_appearances_file(a, file, images))
-	{
-		return True;
-	}
-
-	AppearanceManager_free(a);
-	return False;
-}
-
 static void free_appearance(void *appearance, void *user)
 {
 	(void)user;
 	Appearance_free(appearance);
 }
 
-void AppearanceManager_free(AppearanceManager *a)
+static void free_appearances(Vector *appearances)
 {
-	for_each(Vector_begin(&a->appearances),
-			 Vector_end(&a->appearances),
+	for_each(Vector_begin(appearances),
+			 Vector_end(appearances),
 			 sizeof(Appearance),
 			 free_appearance,
 			 NULL);
-	Vector_free(&a->appearances);
+	Vector_free(appearances);
+}
+
+Bool AppearanceManager_init(AppearanceManager *a,
+							FILE *file,
+							ImageManager *images)
+{
+	if (init_static_layout(&a->static_layout))
+	{
+		if (init_dynamic_layout_1(&a->dynamic_layout_1))
+		{
+			Vector_init(&a->appearances);
+
+			if (load_appearances_file(a, file, images))
+			{
+				return True;
+			}
+
+			free_appearances(&a->appearances);
+			AppearanceLayout_free(&a->dynamic_layout_1);
+		}
+
+		AppearanceLayout_free(&a->static_layout);
+	}
+
+	AppearanceManager_free(a);
+	return False;
+}
+
+void AppearanceManager_free(AppearanceManager *a)
+{
+	free_appearances(&a->appearances);
+	AppearanceLayout_free(&a->dynamic_layout_1);
+	AppearanceLayout_free(&a->static_layout);
 }
 
 Appearance const *AppearanceManager_get(AppearanceManager const *a,

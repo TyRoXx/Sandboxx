@@ -22,8 +22,8 @@ AnimationType;
 
 typedef struct AnimationFrame
 {
+	SDL_Rect section;
 	unsigned duration;
-	TextureRef texture;
 }
 AnimationFrame;
 
@@ -47,16 +47,32 @@ Animation;
 void Animation_free(Animation *a);
 
 
-typedef struct Appearance
+typedef struct AppearanceLayout
 {
 	Animation animations[Anim_COUNT];
 }
+AppearanceLayout;
+
+
+void AppearanceLayout_free(AppearanceLayout *a);
+
+
+typedef struct Appearance
+{
+	SDL_Surface *image;
+	AppearanceLayout const *layout;
+}
 Appearance;
 
+void Appearance_init(Appearance *appearance,
+					 SDL_Surface *image,
+					 AppearanceLayout const *layout);
 void Appearance_free(Appearance *appearance);
 
 typedef struct AppearanceManager
 {
+	AppearanceLayout static_layout;
+	AppearanceLayout dynamic_layout_1;
 	Vector appearances;
 }
 AppearanceManager;
