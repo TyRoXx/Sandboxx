@@ -81,8 +81,8 @@ static void draw_entities(
 	{
 		Entity const * const entity = world->entities + i;
 		Vector2i pixel_pos;
-		pixel_pos.x = (ptrdiff_t)(((float)entity->position.x - camera->position.x + get_entity_offset(entity, Dir_East )) * (float)tile_width) + Width  / 2;
-		pixel_pos.y = (ptrdiff_t)(((float)entity->position.y - camera->position.y + get_entity_offset(entity, Dir_South)) * (float)tile_width) + Height / 2;
+		pixel_pos.x = (int)(((float)entity->position.x - camera->position.x + get_entity_offset(entity, Dir_East )) * (float)tile_width) + Width  / 2;
+		pixel_pos.y = (int)(((float)entity->position.y - camera->position.y + get_entity_offset(entity, Dir_South)) * (float)tile_width) + Height / 2;
 		draw_appearance(
 			pixel_pos,
 			screen,
@@ -125,12 +125,12 @@ static void draw_tile_layers(
 	size_t layer_begin,
 	size_t layer_end)
 {
-	ptrdiff_t y;
+	int y;
 
-	ptrdiff_t visible_begin_idx = (ptrdiff_t)(camera->position.x - (float)Width  / (float)tile_width / 2.0f);
-	ptrdiff_t visible_begin_idy = (ptrdiff_t)(camera->position.y - (float)Height / (float)tile_width / 2.0f);
-	ptrdiff_t visible_end_idx   = (ptrdiff_t)(camera->position.x + (float)Width  / (float)tile_width / 2.0f + 1.0f);
-	ptrdiff_t visible_end_idy   = (ptrdiff_t)(camera->position.y + (float)Height / (float)tile_width / 2.0f + 1.0f);
+	int visible_begin_idx = (int)(camera->position.x - (float)Width  / (float)tile_width / 2.0f);
+	int visible_begin_idy = (int)(camera->position.y - (float)Height / (float)tile_width / 2.0f);
+	int visible_end_idx   = (int)(camera->position.x + (float)Width  / (float)tile_width / 2.0f + 1.0f);
+	int visible_end_idy   = (int)(camera->position.y + (float)Height / (float)tile_width / 2.0f + 1.0f);
 
 	visible_begin_idx = max_ptrdiff_t(visible_begin_idx, 0);
 	visible_begin_idy = max_ptrdiff_t(visible_begin_idy, 0);
@@ -139,7 +139,7 @@ static void draw_tile_layers(
 
 	for (y = visible_begin_idy; y < visible_end_idy; ++y)
 	{
-		ptrdiff_t x;
+		int x;
 		for (x = visible_begin_idx; x < visible_end_idx; ++x)
 		{
 			LayeredTile const * const tile = TileGrid_get(tiles, (size_t)x, (size_t)y);
@@ -147,8 +147,8 @@ static void draw_tile_layers(
 
 			assert(tile);
 
-			pixel_pos.x = (ptrdiff_t)((float)tile_width * ((float)x - camera->position.x) + Width  / 2.0f);
-			pixel_pos.y = (ptrdiff_t)((float)tile_width * ((float)y - camera->position.y) + Height / 2.0f);
+			pixel_pos.x = (int)((float)tile_width * ((float)x - camera->position.x) + Width  / 2.0f);
+			pixel_pos.y = (int)((float)tile_width * ((float)y - camera->position.y) + Height / 2.0f);
 
 			draw_layered_tile(
 				pixel_pos,
