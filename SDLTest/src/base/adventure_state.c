@@ -51,7 +51,7 @@ static GameState *AdventureState_create(Game *game)
 	(void)game;
 
 	{
-		char const * const world_file_name = "world.txt";
+		char const * const world_file_name = "data/world.txt";
 		World * const world = &adv_state->world;
 
 		if (load_world(world_file_name, world))
