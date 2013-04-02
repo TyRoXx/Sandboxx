@@ -29,25 +29,35 @@ typedef struct Entity
 	Vector2i position;
 	Direction direction;
 	AppearanceId appearance;
-	float max_velocity;
-	size_t steps_to_go;
-	float move_progress;
 	struct World *world;
 }
 Entity;
-
 
 Bool Entity_init(
 	Entity *e,
 	Vector2i position,
 	AppearanceId appearance,
-	float max_velocity,
 	struct World *world
 	);
 void Entity_free(Entity *e);
-void Entity_update(Entity *e, unsigned delta);
-Bool Entity_move(Entity *e, size_t steps_to_go);
-void Entity_stop(Entity *e);
+
+
+typedef struct Mover
+{
+	Entity body;
+	float max_velocity;
+	size_t steps_to_go;
+	float move_progress;
+}
+Mover;
+
+void Mover_init(Mover *m,
+				float max_velocity,
+				Entity body);
+void Mover_free(Mover *m);
+Bool Mover_move(Mover *m, size_t steps_to_go);
+void Mover_stop(Mover *m);
+void Mover_update(Mover *m, unsigned delta);
 
 
 #endif

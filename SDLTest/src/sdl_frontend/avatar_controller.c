@@ -4,7 +4,7 @@
 #include <string.h>
 
 
-Bool AvatarController_init(AvatarController *a, struct Entity *avatar)
+Bool AvatarController_init(AvatarController *a, struct Mover *avatar)
 {
 	assert(a);
 	assert(avatar);
@@ -18,9 +18,11 @@ void AvatarController_free(AvatarController *a)
 	(void)a;
 }
 
-void AvatarController_handle_input(AvatarController *a, Direction dir, int is_down)
+void AvatarController_handle_input(AvatarController *a,
+								   Direction dir,
+								   int is_down)
 {
-	Entity * const avatar = a->avatar;
+	Mover * const avatar = a->avatar;
 	if (!avatar)
 	{
 		return;
@@ -31,8 +33,8 @@ void AvatarController_handle_input(AvatarController *a, Direction dir, int is_do
 		a->is_direction_key_down[dir] = 1;
 		if (avatar->steps_to_go == 0)
 		{
-			avatar->direction = dir;
-			Entity_move(avatar, (size_t)-1);
+			avatar->body.direction = dir;
+			Mover_move(avatar, (size_t)-1);
 		}
 	}
 	else
@@ -42,10 +44,10 @@ void AvatarController_handle_input(AvatarController *a, Direction dir, int is_do
 		{
 			*previous = 0;
 
-			if ((avatar->direction == dir) &&
+			if ((avatar->body.direction == dir) &&
 				(avatar->steps_to_go > 0))
 			{
-				Entity_stop(avatar);
+				Mover_stop(avatar);
 			}
 		}
 	}
@@ -53,7 +55,7 @@ void AvatarController_handle_input(AvatarController *a, Direction dir, int is_do
 
 void AvatarController_update(AvatarController *a)
 {
-	Entity * const avatar = a->avatar;
+	Mover * const avatar = a->avatar;
 	if (!avatar)
 	{
 		return;
@@ -69,8 +71,8 @@ void AvatarController_update(AvatarController *a)
 		}
 		if (input_dir < 4)
 		{
-			avatar->direction = (Direction)input_dir;
-			Entity_move(avatar, (size_t)-1);
+			avatar->body.direction = (Direction)input_dir;
+			Mover_move(avatar, (size_t)-1);
 		}
 	}
 }

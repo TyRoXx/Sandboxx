@@ -35,6 +35,11 @@ size_t Vector_size(Vector const *v)
 	return v->size;
 }
 
+Bool Vector_empty(Vector const *v)
+{
+	return v->size == 0;
+}
+
 char *Vector_data(Vector const *v)
 {
 	return v->data;
@@ -74,12 +79,12 @@ Bool Vector_resize(Vector *v, size_t size)
 	return 0;
 }
 
-char *Vector_begin(Vector *v)
+char *Vector_begin(Vector const *v)
 {
 	return Vector_data(v);
 }
 
-char *Vector_end(Vector *v)
+char *Vector_end(Vector const *v)
 {
 	return Vector_data(v) + Vector_size(v);
 }

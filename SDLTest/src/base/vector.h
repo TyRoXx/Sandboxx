@@ -20,11 +20,12 @@ void Vector_free(Vector *v);
 char *Vector_release(Vector *v);
 Bool Vector_push_back(Vector *v, void const *element, size_t size);
 size_t Vector_size(Vector const *v);
+Bool Vector_empty(Vector const *v);
 char *Vector_data(Vector const *v);
 Bool Vector_reserve(Vector *v, size_t capacity);
 Bool Vector_resize(Vector *v, size_t size);
-char *Vector_begin(Vector *v);
-char *Vector_end(Vector *v);
+char *Vector_begin(Vector const *v);
+char *Vector_end(Vector const *v);
 
 
 #endif

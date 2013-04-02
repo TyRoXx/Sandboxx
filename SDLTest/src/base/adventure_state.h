@@ -10,7 +10,7 @@ typedef struct AdventureState
 {
 	GameState base;
 	World world;
-	Entity *avatar;
+	Mover *avatar;
 }
 AdventureState;
 

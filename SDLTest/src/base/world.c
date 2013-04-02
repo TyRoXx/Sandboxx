@@ -1,62 +1,58 @@
 #include "world.h"
+#include "algorithm.h"
 #include <stdlib.h>
 #include <assert.h>
 
 
 void World_free(World *w)
 {
-	size_t i;
-	for (i = 0; i < w->entity_count; ++i)
-	{
-		Entity_free(w->entities + i);
-	}
-	free(w->entities);
+	free_movers(&w->movers);
 	TileGrid_free(&w->tiles);
+}
+
+static void update_mover(void *element, void *user)
+{
+	unsigned const delta = *(unsigned *)user;
+	(void)user;
+	Mover_update(element, delta);
 }
 
 void World_update(World *w, unsigned delta)
 {
-	size_t i;
-	for (i = 0; i < w->entity_count; ++i)
-	{
-		Entity_update(w->entities + i, delta);
-	}
+	for_each(Vector_begin(&w->movers),
+			 Vector_end(&w->movers),
+			 sizeof(Mover),
+			 update_mover,
+			 &delta);
 }
 
-Bool World_add_entity(World *w, Entity const *entity)
+Bool World_add_mover(World *w, Mover mover)
 {
-	size_t const new_count = w->entity_count + 1;
-	Entity * const new_entities = realloc(w->entities,
-		new_count * sizeof(*new_entities));
-	if (!new_entities)
-	{
-		return 0;
-	}
-	new_entities[new_count - 1] = *entity;
-	w->entities = new_entities;
-	w->entity_count = new_count;
-	return 1;
+	return Vector_push_back(&w->movers, &mover, sizeof(mover));
+}
+
+static Bool is_mover_on_position(void *element, void *user)
+{
+	Mover const * const mover = element;
+	Vector2i const * const position = user;
+	return Vector2i_equal(position, &mover->body.position);
 }
 
 static Bool is_entity_on(
 	World const *world,
 	Vector2i const *position)
 {
-	size_t i;
+	void *match;
+	void * const end = Vector_end(&world->movers);
+
 	assert(world);
 
-	for (i = 0; i < world->entity_count; ++i)
-	{
-		Entity const * const e = world->entities + i;
-		assert(e);
-
-		if (Vector2i_equal(position, &e->position))
-		{
-			return 1;
-		}
-	}
-
-	return 0;
+	match = find(Vector_begin(&world->movers),
+				 end,
+				 sizeof(Mover),
+				 is_mover_on_position,
+				 (void *)position);
+	return (match != end);
 }
 
 static Bool is_walkable_tile(
@@ -83,4 +79,21 @@ Bool World_is_walkable(
 	return
 		is_walkable_tile(&world->tiles, position) &&
 		!is_entity_on(world, position);
+}
+
+
+static void free_mover(void *element, void *user)
+{
+	(void)user;
+	Mover_free(element);
+}
+
+void free_movers(Vector *movers)
+{
+	for_each(Vector_begin(movers),
+			 Vector_end(movers),
+			 sizeof(Mover),
+			 free_mover,
+			 NULL);
+	Vector_free(movers);
 }

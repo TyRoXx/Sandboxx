@@ -27,7 +27,7 @@ void Vector2i_scale(Vector2i *dest, ptrdiff_t scalar)
 	dest->y *= scalar;
 }
 
-int Vector2i_equal(Vector2i const *first, Vector2i const *second)
+Bool Vector2i_equal(Vector2i const *first, Vector2i const *second)
 {
 	return
 		(first->x == second->x) &&

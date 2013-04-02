@@ -56,9 +56,14 @@ static GameState *AdventureState_create(Game *game)
 
 		if (load_world(world_file_name, world))
 		{
-			/*if there is an entity, choose the first one as the avatar*/
-			adv_state->avatar = adv_state->world.entities;
-			return (GameState *)adv_state;
+			/*if there is a mover, choose the first one as the avatar*/
+			if (!Vector_empty(&world->movers))
+			{
+				adv_state->avatar = (Mover *)Vector_begin(&world->movers);
+				return (GameState *)adv_state;
+			}
+
+			World_free(world);
 		}
 
 		return NULL;

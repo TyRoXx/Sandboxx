@@ -1,5 +1,6 @@
 #include "world_text_file.h"
 #include "world.h"
+#include "algorithm.h"
 #include <assert.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -56,7 +57,7 @@ static Bool load_world_from_text_v1(struct World *world, struct TileKind const *
 					if (!scan_size_t(in, &tile_kind_id))
 					{
 						fprintf(stderr, "Expected tile kind id\n");
-						goto fail;
+						goto fail_1;
 					}
 
 					if (tile_kind_id < UINT_MAX)
@@ -64,7 +65,7 @@ static Bool load_world_from_text_v1(struct World *world, struct TileKind const *
 						if (tile_kind_id >= tile_kind_count)
 						{
 							fprintf(stderr, "Invalid tile kind id %u\n", (unsigned)tile_kind_id);
-							goto fail;
+							goto fail_1;
 						}
 
 						TileGrid_get(&world->tiles, x, y)->layers[i] = tile_kinds + tile_kind_id;
@@ -75,50 +76,51 @@ static Bool load_world_from_text_v1(struct World *world, struct TileKind const *
 	}
 
 	{
-		Entity *entities;
 		size_t entity_count;
 		size_t i;
 		if (!scan_size_t(in, &entity_count))
 		{
-			goto fail;
+			goto fail_1;
 		}
 
-		entities = malloc(entity_count * sizeof(*entities));
-		if (!entities)
-		{
-			goto fail;
-		}
+		Vector_init(&world->movers);
 
 		for (i = 0; i < entity_count; ++i)
 		{
 			int x, y;
 			int direction;
 			AppearanceId app;
+			Entity entity;
+			Mover mover;
 
 			if (fscanf(in, "%d%d%d", &x, &y, &direction) != 3 ||
 				!scan_size_t(in, &app))
 			{
-				goto fail;
+				goto fail_0;
 			}
 
-			if (!Entity_init(entities + i, Vector2i_new(x, y), app, 1.7f, world))
+			if (Entity_init(&entity, Vector2i_new(x, y), app, world))
 			{
-				while (i--)
-				{
-					Entity_free(entities + i);
-				}
-				free(entities);
-				goto fail;
-			}
-		}
+				Mover_init(&mover, 1.7f, entity);
 
-		world->entities = entities;
-		world->entity_count = entity_count;
+				if (Vector_push_back(&world->movers, &mover, sizeof(mover)))
+				{
+					continue;
+				}
+
+				Mover_free(&mover);
+			}
+
+			goto fail_0;
+		}
 	}
 
 	return 1;
 
-fail:
+fail_0:
+	free_movers(&world->movers);
+
+fail_1:
 	TileGrid_free(&world->tiles);
 	return 0;
 }
@@ -178,28 +180,31 @@ static void save_tiles_to_text(TileGrid const *tiles, struct TileKind const *til
 	}
 }
 
-static void save_entity_to_text(Entity const *entity, FILE *out)
+static void save_entity_to_text(void *element, void *user)
 {
-	assert(entity);
+	Mover const * const mover = element;
+	FILE * const out = user;
+
+	assert(mover);
 	assert(out);
 
-	fprintf(out, "%d %d\n",	(int)entity->position.x, (int)entity->position.y);
-	fprintf(out, "%d\n", (int)entity->direction);
-	fprintf(out, "%u\n", (unsigned)entity->appearance);
+	fprintf(out, "%d %d\n",	(int)mover->body.position.x, (int)mover->body.position.y);
+	fprintf(out, "%d\n", (int)mover->body.direction);
+	fprintf(out, "%u\n", (unsigned)mover->body.appearance);
 
 	fputs("\n", out);
 }
 
 static void save_entities_to_text(struct World const *world, FILE *out)
 {
-	size_t i;
+	fprintf(out, "%u\n\n", (unsigned)Vector_size(&world->movers));
 
-	fprintf(out, "%u\n\n", (unsigned)world->entity_count);
-
-	for (i = 0; i < world->entity_count; ++i)
-	{
-		save_entity_to_text(world->entities + i, out);
-	}
+	for_each(Vector_begin(&world->movers),
+			 Vector_end(&world->movers),
+			 sizeof(Mover),
+			 save_entity_to_text,
+			 out
+			 );
 }
 
 void save_world_to_text(struct World const *world, struct TileKind const *tile_kinds, FILE *out)

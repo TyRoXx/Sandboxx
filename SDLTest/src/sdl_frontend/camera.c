@@ -17,13 +17,13 @@ void Camera_free(Camera *cam)
 	(void)cam;
 }
 
-void Camera_focus_on(Camera *cam, struct Entity const *target)
+void Camera_focus_on(Camera *cam, struct Mover const *target)
 {
 	assert(cam);
 	assert(target);
 
-	cam->position.x = (float)target->position.x + get_entity_offset(target, Dir_East);
-	cam->position.y = (float)target->position.y + get_entity_offset(target, Dir_South);
+	cam->position.x = (float)target->body.position.x + get_mover_offset(target, Dir_East);
+	cam->position.y = (float)target->body.position.y + get_mover_offset(target, Dir_South);
 }
 
 
@@ -40,7 +40,7 @@ float get_move_offset(Direction move_dir, float progress, Direction dir)
 	}
 }
 
-float get_entity_offset(Entity const *e, Direction dir)
+float get_mover_offset(Mover const *e, Direction dir)
 {
 	float offset = 0;
 
@@ -48,7 +48,7 @@ float get_entity_offset(Entity const *e, Direction dir)
 
 	if (e->steps_to_go > 0)
 	{
-		offset += get_move_offset(e->direction, e->move_progress, dir);
+		offset += get_move_offset(e->body.direction, e->move_progress, dir);
 	}
 	return offset;
 }

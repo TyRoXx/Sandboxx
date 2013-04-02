@@ -34,15 +34,12 @@ Bool Entity_init(
 	Entity *e,
 	Vector2i position,
 	AppearanceId appearance,
-	float max_velocity,
 	struct World *world
 	)
 {
 	e->position = position;
 	e->direction = Dir_South;
 	e->appearance = appearance;
-	e->max_velocity = max_velocity;
-	e->steps_to_go = 0;
 	e->world = world;
 	return 1;
 }
@@ -52,58 +49,74 @@ void Entity_free(Entity *e)
 	(void)e;
 }
 
-void Entity_update(Entity *e, unsigned delta)
+
+void Mover_init(Mover *m,
+				float max_velocity,
+				Entity body)
 {
-	if (e->steps_to_go > 0)
+	m->max_velocity = max_velocity;
+	m->body = body;
+	m->move_progress = 0;
+	m->steps_to_go = 0;
+}
+
+void Mover_free(Mover *m)
+{
+	Entity_free(&m->body);
+}
+
+Bool Mover_move(Mover *m, size_t steps_to_go)
+{
+	if (m->steps_to_go > 0)
 	{
-		e->move_progress += e->max_velocity * (float)delta / 1000.0f;
-		while (e->move_progress >= 1)
+		return 0;
+	}
+
+	if (!is_possible_step(&m->body, m->body.direction))
+	{
+		return 0;
+	}
+
+	add_direction_vector(&m->body.position, m->body.direction, 1);
+
+	m->steps_to_go = steps_to_go;
+	m->move_progress = 0;
+	return 1;
+}
+
+void Mover_stop(Mover *m)
+{
+	assert(m);
+	assert(m->steps_to_go > 0);
+
+	m->steps_to_go = 1;
+}
+
+void Mover_update(Mover *m, unsigned delta)
+{
+	if (m->steps_to_go > 0)
+	{
+		m->move_progress += m->max_velocity * (float)delta / 1000.0f;
+		while (m->move_progress >= 1)
 		{
-			if (e->steps_to_go != (size_t)-1)
+			if (m->steps_to_go != (size_t)-1)
 			{
-				--(e->steps_to_go);
-				if (e->steps_to_go == 0)
+				--(m->steps_to_go);
+				if (m->steps_to_go == 0)
 				{
 					break;
 				}
 			}
 
-			if (!is_possible_step(e, e->direction))
+			if (!is_possible_step(&m->body, m->body.direction))
 			{
-				e->steps_to_go = 0;
+				m->steps_to_go = 0;
 				break;
 			}
 
-			add_direction_vector(&e->position, e->direction, 1);
+			add_direction_vector(&m->body.position, m->body.direction, 1);
 
-			e->move_progress -= 1;
+			m->move_progress -= 1;
 		}
 	}
-}
-
-void Entity_stop(Entity *e)
-{
-	assert(e);
-	assert(e->steps_to_go > 0);
-
-	e->steps_to_go = 1;
-}
-
-Bool Entity_move(Entity *e, size_t steps_to_go)
-{
-	if (e->steps_to_go > 0)
-	{
-		return 0;
-	}
-
-	if (!is_possible_step(e, e->direction))
-	{
-		return 0;
-	}
-
-	add_direction_vector(&e->position, e->direction, 1);
-
-	e->steps_to_go = steps_to_go;
-	e->move_progress = 0;
-	return 1;
 }

@@ -70,25 +70,25 @@ static void draw_entities(
 	size_t tile_width,
 	AppearanceManager const *appearances)
 {
-	size_t i;
+	Mover *begin = (Mover *)Vector_begin(&world->movers);
+	Mover * const end = (Mover *)Vector_end(&world->movers);
 
 	assert(world);
 	assert(camera);
 	assert(screen);
 	assert(appearances);
 
-	for (i = 0; i < world->entity_count; ++i)
+	for (; begin != end; ++begin)
 	{
-		Entity const * const entity = world->entities + i;
 		Vector2i pixel_pos;
-		pixel_pos.x = (int)(((float)entity->position.x - camera->position.x + get_entity_offset(entity, Dir_East )) * (float)tile_width) + Width  / 2;
-		pixel_pos.y = (int)(((float)entity->position.y - camera->position.y + get_entity_offset(entity, Dir_South)) * (float)tile_width) + Height / 2;
+		pixel_pos.x = (int)(((float)begin->body.position.x - camera->position.x + get_mover_offset(begin, Dir_East )) * (float)tile_width) + Width  / 2;
+		pixel_pos.y = (int)(((float)begin->body.position.y - camera->position.y + get_mover_offset(begin, Dir_South)) * (float)tile_width) + Height / 2;
 		draw_appearance(
 			pixel_pos,
 			screen,
-			entity->appearance,
+			begin->body.appearance,
 			appearances,
-			entity->direction);
+			begin->body.direction);
 	}
 }
 
