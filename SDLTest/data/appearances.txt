@@ -6,4 +6,4 @@
 5 STATIC nw_dirt_on_grass_32.bmp
 6 STATIC w_dirt_e_grass_32.bmp
 7 STATIC sw_dirt_on_grass_32.bmp
-8 DYNAMIC_1 grass_32.bmp
+8 DYNAMIC_1 dyn_test_0.bmp

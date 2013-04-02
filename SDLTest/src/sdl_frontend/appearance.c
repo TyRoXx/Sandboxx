@@ -52,25 +52,24 @@ void Appearance_free(Appearance *appearance)
 }
 
 
-int const tile_size = 32;
+unsigned const tile_size = 32;
 
 static Bool init_animation(
 		Animation *anim,
-		Vector2i offset,
-		Bool (*init_side)(AnimationSide *, Vector2i))
+		AnimationType anim_id,
+		Bool (*init_side)(AnimationSide *, AnimationType, Direction))
 {
 	Bool result = True;
 	size_t i;
+
 	for (i = 0; i < DIR_COUNT; ++i)
 	{
 		AnimationSide * const side = &anim->sides[i];
-		if (!init_side(side, offset))
+		if (!init_side(side, anim_id, (Direction)i))
 		{
 			result = False;
 			break;
 		}
-
-		offset.y += tile_size;
 	}
 
 	if (!result)
@@ -86,7 +85,7 @@ static Bool init_animation(
 }
 
 static Bool init_layout(AppearanceLayout *layout,
-						Bool (*init_side)(AnimationSide *, Vector2i))
+						Bool (*init_side)(AnimationSide *, AnimationType, Direction))
 {
 	Bool result = True;
 	size_t i, c;
@@ -98,7 +97,7 @@ static Bool init_layout(AppearanceLayout *layout,
 	{
 		Animation * const anim = layout->animations + i;
 
-		if (!init_animation(anim, offset, init_side))
+		if (!init_animation(anim, (AnimationType)i, init_side))
 		{
 			result = False;
 			break;
@@ -120,39 +119,43 @@ static Bool init_layout(AppearanceLayout *layout,
 }
 
 static Bool init_dynamic_side_1(AnimationSide *side,
-								Vector2i offset)
+								AnimationType anim_id,
+								Direction side_id)
 {
 	size_t const frame_count = 3;
 	size_t j;
+	SDL_Rect section;
 
 	if (!AnimationSide_init(side, frame_count))
 	{
 		return False;
 	}
 
+	section.x = 0;
+	section.y = (Sint16)(((unsigned)anim_id * DIR_COUNT + (unsigned)side_id) * tile_size);
+	section.w = (Uint16)tile_size;
+	section.h = (Uint16)tile_size;
+
 	for (j = 0; j < frame_count; ++j)
 	{
 		AnimationFrame * const frame = side->frames + j;
-		SDL_Rect section;
-		section.x = (Sint16)offset.x;
-		section.y = (Sint16)offset.y;
-		section.w = (Uint16)tile_size;
-		section.h = (Uint16)tile_size;
 		frame->duration = 200;
 		frame->section = section;
 
-		offset.x += tile_size;
+		section.x = (Sint16)((unsigned)section.x + tile_size);
 	}
 
 	return True;
 }
 
 static Bool init_static_side(AnimationSide *side,
-							 Vector2i offset)
+							 AnimationType anim_id,
+							 Direction side_id)
 {
 	SDL_Rect section;
 
-	(void)offset;
+	(void)anim_id;
+	(void)side_id;
 
 	if (!AnimationSide_init(side, 1))
 	{
