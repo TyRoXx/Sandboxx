@@ -157,15 +157,16 @@ namespace sm
 		enter(Args &&...args)
 		{
 			bool const next = !m_current_storage;
-			construct<Entered>(m_storages[next], std::forward<Args>(args)...);
-			destroy(m_storages[m_current_storage]);
+			construct<Entered>(m_storages[next],
+			                   std::forward<Args>(args)...);
+			destroy();
 			m_current_storage = next;
 			m_current_state = find<Entered, States...>::value;
 		}
 
 		~state_machine()
 		{
-			destroy(m_storages[m_current_storage]);
+			destroy();
 		}
 
 	private:
@@ -182,8 +183,9 @@ namespace sm
 					State(std::forward<Args>(args)...);
 		}
 
-		void destroy(state_storage &storage)
+		void destroy()
 		{
+			state_storage &storage = m_storages[m_current_storage];
 			nth_destructor<States...>()(m_current_state,
 			                            reinterpret_cast<char *>(&storage));
 		}
