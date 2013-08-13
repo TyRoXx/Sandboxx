@@ -103,7 +103,7 @@ namespace sm
 	template <>
 	struct nth_destructor<>
 	{
-		void operator ()(size_t n, char *object) const
+		void operator ()(size_t n, char *object) const noexcept
 		{
 			(void)n;
 			(void)object;
@@ -114,7 +114,7 @@ namespace sm
 	template <class Head, class ...Tail>
 	struct nth_destructor<Head, Tail...>
 	{
-		void operator ()(size_t n, char *object) const
+		void operator ()(size_t n, char *object) const noexcept
 		{
 			if (n == 0)
 			{
@@ -161,7 +161,7 @@ namespace sm
 			m_current_state = find<Entered, States...>::value;
 		}
 
-		~state_machine()
+		~state_machine() noexcept
 		{
 			destroy();
 		}
@@ -180,7 +180,7 @@ namespace sm
 					State(std::forward<Args>(args)...);
 		}
 
-		void destroy()
+		void destroy() noexcept
 		{
 			state_storage &storage = m_storages[m_current_storage];
 			nth_destructor<States...>()(m_current_state,
