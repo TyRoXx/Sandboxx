@@ -85,6 +85,14 @@ namespace sm
 	template <class ...States>
 	struct state_machine
 	{
+		typedef typename std::aligned_storage<
+		    largest_sizeof<States...>::value,
+		    largest_alignof<States...>::value
+		>::type state_storage;
+		typedef std::array<state_storage, 2> storages;
+		typedef void (*destructor)(void *);
+
+
 		template <class State, class ...Args>
 		state_machine(state<State>, Args &&...args)
 			: m_current_dtor(&destroy_impl<State>)
@@ -111,14 +119,6 @@ namespace sm
 		}
 
 	private:
-
-		typedef typename std::aligned_storage<
-		    largest_sizeof<States...>::value,
-		    largest_alignof<States...>::value
-		>::type state_storage;
-		typedef std::array<state_storage, 2> storages;
-		typedef void (*destructor)(void *);
-
 
 		storages m_storages;
 		destructor m_current_dtor;

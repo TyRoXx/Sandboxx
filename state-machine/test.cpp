@@ -20,6 +20,9 @@ struct A
 	}
 };
 
+#define STR2(x) #x
+#define STR(x) STR2(x)
+
 int main()
 {
 	{
@@ -29,15 +32,21 @@ int main()
 		m.enter<A<0>>();
 	}
 
-	std::cout << sizeof(sm::largest_sizeof<None>) << '\n';
-	std::cout << sizeof(sm::largest_sizeof<None, A<0>>) << '\n';
-	std::cout << sizeof(sm::largest_sizeof<None, size_t>) << '\n';
+#define PRINT_SIZEOF(what) std::cout << STR(what) << ' ' << sizeof what << '\n'
 
-	std::cout << sizeof(sm::largest_alignof<None>) << '\n';
-	std::cout << sizeof(sm::largest_alignof<None, A<0>>) << '\n';
-	std::cout << sizeof(sm::largest_alignof<None, size_t>) << '\n';
+	PRINT_SIZEOF((sm::state_machine<int>::state_storage));
+	PRINT_SIZEOF((sm::state_machine<int>::storages));
+	PRINT_SIZEOF((sm::state_machine<int>::destructor));
 
-	std::cout << sizeof(sm::state_machine<None>) << '\n';
-	std::cout << sizeof(sm::state_machine<None, A<0>>) << '\n';
-	std::cout << sizeof(sm::state_machine<None, A<0>, A<1>>) << '\n';
+	PRINT_SIZEOF((sm::largest_sizeof<None>));
+	PRINT_SIZEOF((sm::largest_sizeof<None, A<0>>));
+	PRINT_SIZEOF((sm::largest_sizeof<None, size_t>));
+
+	PRINT_SIZEOF((sm::largest_alignof<None>));
+	PRINT_SIZEOF((sm::largest_alignof<None, A<0>>));
+	PRINT_SIZEOF((sm::largest_alignof<None, size_t>));
+
+	PRINT_SIZEOF((sm::state_machine<None>));
+	PRINT_SIZEOF((sm::state_machine<None, A<0>>));
+	PRINT_SIZEOF((sm::state_machine<None, A<0>, A<1>>));
 }
