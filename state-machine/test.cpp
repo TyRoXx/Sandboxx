@@ -36,7 +36,6 @@ int main()
 
 	PRINT_SIZEOF((sm::state_machine<int>::state_storage));
 	PRINT_SIZEOF((sm::state_machine<int>::storages));
-	PRINT_SIZEOF((sm::state_machine<int>::destructor));
 
 	PRINT_SIZEOF((sm::largest_sizeof<None>));
 	PRINT_SIZEOF((sm::largest_sizeof<None, A<0>>));

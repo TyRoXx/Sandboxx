@@ -137,8 +137,6 @@ namespace sm
 		    largest_alignof<States...>::value
 		>::type state_storage;
 		typedef std::array<state_storage, 2> storages;
-		typedef void (*destructor)(void *);
-
 
 		template <class State, class ...Args>
 		state_machine(state<State>, Args &&...args)
