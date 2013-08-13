@@ -132,6 +132,8 @@ namespace sm
 	template <class ...States>
 	struct state_machine
 	{
+		static_assert(sizeof...(States) <= 256, "currently no more than 256 states are supported");
+
 		typedef typename std::aligned_storage<
 		    largest_sizeof<States...>::value,
 		    largest_alignof<States...>::value
