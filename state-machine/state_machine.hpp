@@ -3,11 +3,8 @@
 
 
 #include <array>
-
 #include <cassert>
-
-#include <boost/mpl/list.hpp>
-#include <boost/mpl/contains.hpp>
+#include <cstddef>
 
 
 namespace sm
