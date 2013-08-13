@@ -4,6 +4,8 @@
 
 #include <array>
 
+#include <cassert>
+
 #include <boost/mpl/list.hpp>
 #include <boost/mpl/contains.hpp>
 
@@ -82,6 +84,54 @@ namespace sm
 				contains<Element, Second, Tail...>::value;
 	};
 
+
+	template <class Element, class ...Set>
+	struct find;
+
+	template <class Element, class ...Tail>
+	struct find<Element, Element, Tail...> : std::integral_constant<size_t, 0>
+	{
+	};
+
+	template <class Element, class Head, class ...Tail>
+	struct find<Element, Head, Tail...>
+	    : std::integral_constant<size_t, 1 + find<Element, Tail...>::value>
+	{
+	};
+
+
+	template <class ...Types>
+	struct nth_destructor;
+
+	template <>
+	struct nth_destructor<>
+	{
+		void operator ()(size_t n, char *object) const
+		{
+			(void)n;
+			(void)object;
+			assert(false);
+		}
+	};
+
+	template <class Head, class ...Tail>
+	struct nth_destructor<Head, Tail...>
+	{
+		void operator ()(size_t n, char *object) const
+		{
+			if (n == 0)
+			{
+				Head * const destructible = reinterpret_cast<Head *>(object);
+				destructible->~Head();
+			}
+			else
+			{
+				nth_destructor<Tail...>()(n - 1, object);
+			}
+		}
+	};
+
+
 	template <class ...States>
 	struct state_machine
 	{
@@ -95,10 +145,10 @@ namespace sm
 
 		template <class State, class ...Args>
 		state_machine(state<State>, Args &&...args)
-			: m_current_dtor(&destroy_impl<State>)
-			, m_current(false)
+			: m_current_state(find<State, States...>::value)
+			, m_current_storage(false)
 		{
-			construct<State>(m_storages[m_current],
+			construct<State>(m_storages[m_current_storage],
 							 std::forward<Args>(args)...);
 		}
 
@@ -106,23 +156,23 @@ namespace sm
 		typename std::enable_if<contains<Entered, States...>::value, void>::type
 		enter(Args &&...args)
 		{
-			bool const next = !m_current;
+			bool const next = !m_current_storage;
 			construct<Entered>(m_storages[next], std::forward<Args>(args)...);
-			destroy(m_storages[m_current]);
-			m_current = next;
-			m_current_dtor = &destroy_impl<Entered>;
+			destroy(m_storages[m_current_storage]);
+			m_current_storage = next;
+			m_current_state = find<Entered, States...>::value;
 		}
 
 		~state_machine()
 		{
-			destroy(m_storages[m_current]);
+			destroy(m_storages[m_current_storage]);
 		}
 
 	private:
 
 		storages m_storages;
-		destructor m_current_dtor;
-		bool m_current;
+		unsigned char m_current_state;
+		bool m_current_storage;
 
 
 		template <class State, class ...Args>
@@ -134,7 +184,8 @@ namespace sm
 
 		void destroy(state_storage &storage)
 		{
-			m_current_dtor(&storage);
+			nth_destructor<States...>()(m_current_state,
+			                            reinterpret_cast<char *>(&storage));
 		}
 
 		template <class Destroyed>

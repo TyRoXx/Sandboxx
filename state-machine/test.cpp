@@ -49,4 +49,6 @@ int main()
 	PRINT_SIZEOF((sm::state_machine<None>));
 	PRINT_SIZEOF((sm::state_machine<None, A<0>>));
 	PRINT_SIZEOF((sm::state_machine<None, A<0>, A<1>>));
+	PRINT_SIZEOF((sm::state_machine<None, int>));
+	PRINT_SIZEOF((sm::state_machine<None, size_t>));
 }
