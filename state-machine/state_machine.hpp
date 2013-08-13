@@ -187,13 +187,6 @@ namespace sm
 			nth_destructor<States...>()(m_current_state,
 			                            reinterpret_cast<char *>(&storage));
 		}
-
-		template <class Destroyed>
-		static void destroy_impl(void *storage)
-		{
-			auto * const state = static_cast<Destroyed *>(storage);
-			state->~Destroyed();
-		}
 	};
 }
 
