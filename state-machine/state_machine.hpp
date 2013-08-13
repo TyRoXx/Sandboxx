@@ -30,6 +30,7 @@ namespace sm
 	{
 	};
 
+
 	template <class ...Types>
 	struct largest_sizeof;
 
@@ -43,6 +44,22 @@ namespace sm
 	{
 		static constexpr std::size_t value = sizeof(First);
 	};
+
+
+	template <class ...Types>
+	struct largest_alignof;
+
+	template <class First, class Second, class ...Tail>
+	struct largest_alignof<First, Second, Tail...> : max<alignof(First), (largest_sizeof<Second, Tail...>::value)>
+	{
+	};
+
+	template <class First>
+	struct largest_alignof<First>
+	{
+		static constexpr std::size_t value = alignof(First);
+	};
+
 
 	template <class State>
 	struct state
@@ -95,7 +112,10 @@ namespace sm
 
 	private:
 
-		typedef typename std::aligned_storage<largest_sizeof<States...>::value>::type state_storage;
+		typedef typename std::aligned_storage<
+		    largest_sizeof<States...>::value,
+		    largest_alignof<States...>::value
+		>::type state_storage;
 		typedef std::array<state_storage, 2> storages;
 		typedef void (*destructor)(void *);
 
