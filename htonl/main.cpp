@@ -53,11 +53,11 @@ void encode_big_endian_correct(std::ostream &out, Integer value)
 }
 
 
-template <class Unsigned>
-typename std::enable_if<std::is_unsigned<Unsigned>::value, void>::type
-encode_big_endian_compromise_impl(std::ostream &out, Unsigned value)
+template <class Integer>
+typename std::enable_if<std::is_integral<Integer>::value, void>::type
+encode_big_endian_compromise(std::ostream &out, Integer value)
 {
-	Unsigned buffer;
+	Integer buffer;
 	switch (sizeof(value))
 	{
 #if HTONL_DETECTED
@@ -73,22 +73,18 @@ encode_big_endian_compromise_impl(std::ostream &out, Unsigned value)
 	default:
 		{
 #if !BIG_ENDIAN_HOST_DETECTED
+			typedef typename std::make_unsigned<Integer>::type Unsigned;
+			Unsigned const shiftableValue = value;
 			unsigned char * const digits = reinterpret_cast<unsigned char *>(&buffer);
 			for (std::size_t i = 0; i < sizeof(buffer); ++i)
 			{
-				digits[i] = static_cast<unsigned char>(value >> ((sizeof(buffer) - i - 1) * CHAR_BIT));
+				digits[i] = static_cast<unsigned char>(shiftableValue >> ((sizeof(buffer) - i - 1) * CHAR_BIT));
 			}
 #endif
 			break;
 		}
 	}
 	out.write(reinterpret_cast<char *>(&buffer), sizeof(buffer));
-}
-
-template <class Integer>
-void encode_big_endian_compromise(std::ostream &out, Integer value)
-{
-	encode_big_endian_compromise_impl(out, static_cast<typename std::make_unsigned<Integer>::type>(value));
 }
 
 
