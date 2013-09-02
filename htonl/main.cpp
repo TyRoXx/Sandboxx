@@ -35,7 +35,9 @@ encode_big_endian_compromise(std::ostream &out, Integer value)
 			unsigned char * const digits = reinterpret_cast<unsigned char *>(&buffer);
 			for (std::size_t i = 0; i < sizeof(buffer); ++i)
 			{
-				digits[i] = static_cast<unsigned char>(shiftableValue >> ((sizeof(buffer) - i - 1) * CHAR_BIT));
+				digits[i] = static_cast<unsigned char>(
+				             shiftableValue >> ((sizeof(buffer) - i - 1) * CHAR_BIT)
+				            );
 			}
 #endif
 			break;
