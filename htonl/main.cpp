@@ -6,6 +6,9 @@
 #include <fstream>
 #include <cstdlib>
 
+#define BIG_ENDIAN_HOST_DETECTED 0
+
+#define HTONL_DETECTED 1
 #include <netinet/in.h>
 
 struct Object
@@ -49,6 +52,46 @@ void encode_big_endian_correct(std::ostream &out, Integer value)
 	encode_big_endian_correct_impl(out, static_cast<typename std::make_unsigned<Integer>::type>(value));
 }
 
+
+template <class Unsigned>
+typename std::enable_if<std::is_unsigned<Unsigned>::value, void>::type
+encode_big_endian_compromise_impl(std::ostream &out, Unsigned value)
+{
+	Unsigned buffer;
+	switch (sizeof(value))
+	{
+#if HTONL_DETECTED
+	case 2:
+		buffer = htons(value);
+		break;
+
+	case 4:
+		buffer = htonl(value);
+		break;
+#endif
+
+	default:
+		{
+#if !BIG_ENDIAN_HOST_DETECTED
+			unsigned char * const digits = reinterpret_cast<unsigned char *>(&buffer);
+			for (std::size_t i = 0; i < sizeof(buffer); ++i)
+			{
+				digits[i] = static_cast<unsigned char>(value >> ((sizeof(buffer) - i - 1) * CHAR_BIT));
+			}
+#endif
+			break;
+		}
+	}
+	out.write(reinterpret_cast<char *>(&buffer), sizeof(buffer));
+}
+
+template <class Integer>
+void encode_big_endian_compromise(std::ostream &out, Integer value)
+{
+	encode_big_endian_compromise_impl(out, static_cast<typename std::make_unsigned<Integer>::type>(value));
+}
+
+
 int main()
 {
 	std::ofstream file("out.bin", std::ios::binary);
@@ -60,7 +103,5 @@ int main()
 	o.i = std::rand();
 	encode_big_endian_correct(file, o.i);
 	encode_big_endian_wrong(file, o.i);
-
-	//Beide "funktionieren", aber nur eine Variante
-	//ist portabel und funktioniert für alle Integer-Größen.
+	encode_big_endian_compromise(file, o.i);
 }
