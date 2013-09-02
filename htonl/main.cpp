@@ -9,8 +9,18 @@
 #define HTONL_DETECTED 1
 #include <netinet/in.h>
 
+template <class T>
+struct is_non_bool_integral : std::is_integral<T>
+{
+};
+
+template <>
+struct is_non_bool_integral<bool> : std::false_type
+{
+};
+
 template <class Integer>
-typename std::enable_if<std::is_integral<Integer>::value, void>::type
+typename std::enable_if<is_non_bool_integral<typename std::decay<Integer>::type>::value, void>::type
 encode_big_endian_compromise(std::ostream &out, Integer value)
 {
 	Integer buffer;
