@@ -9,7 +9,6 @@
 #define HTONL_DETECTED 1
 #include <netinet/in.h>
 
-
 template <class Integer>
 typename std::enable_if<std::is_integral<Integer>::value, void>::type
 encode_big_endian_compromise(std::ostream &out, Integer value)
@@ -45,7 +44,6 @@ encode_big_endian_compromise(std::ostream &out, Integer value)
 	}
 	out.write(reinterpret_cast<char *>(&buffer), sizeof(buffer));
 }
-
 
 int main()
 {
