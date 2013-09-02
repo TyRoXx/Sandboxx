@@ -4,6 +4,7 @@
 #include <array>
 #include <climits>
 #include <fstream>
+#include <cstdlib>
 
 #include <netinet/in.h>
 
@@ -56,7 +57,7 @@ int main()
 		return 1;
 	}
 	Object o;
-	o.i = 0xAABB;
+	o.i = std::rand();
 	encode_big_endian_correct(file, o.i);
 	encode_big_endian_wrong(file, o.i);
 
