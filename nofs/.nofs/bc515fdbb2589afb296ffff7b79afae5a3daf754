@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
+#include <arpa/inet.h>
 
 namespace nofs
 {
@@ -19,11 +20,18 @@ namespace nofs
 		hash_state.process_block(begin, end);
 		unsigned digest[5];
 		hash_state.get_digest(digest);
+		std::transform(std::begin(digest), std::end(digest), std::begin(digest), [](unsigned e)
+		{
+			return htonl(e);
+		});
 		std::ostringstream fileNameBuffer;
-		fileNameBuffer.width(8);
+		fileNameBuffer.width(2);
 		fileNameBuffer.fill('0');
 		fileNameBuffer << std::hex;
-		std::copy(std::begin(digest), std::end(digest), std::ostream_iterator<unsigned>(fileNameBuffer));
+		std::copy(
+		            reinterpret_cast<unsigned char *>(&digest),
+		            reinterpret_cast<unsigned char *>(&digest) + sizeof(digest),
+		            std::ostream_iterator<unsigned>(fileNameBuffer));
 		const auto fullPath = cache / fileNameBuffer.str();
 		std::ofstream outFile(fullPath.string(), std::ios::binary);
 		if (!outFile)
@@ -38,12 +46,13 @@ int main(int argc, char **argv)
 {
 	namespace po = boost::program_options;
 
-	std::vector<std::string> added_files;
+	std::vector<std::string> added_files, cat_files;
 
 	po::options_description desc("nofs options");
 	desc.add_options()
 	    ("help", "produce help message")
 	    ("add", po::value(&added_files), "")
+	    ("cat", po::value(&cat_files), "")
 	;
 
 	po::variables_map vm;
@@ -62,5 +71,10 @@ int main(int argc, char **argv)
 		params.path = added_file;
 		boost::iostreams::stream<boost::iostreams::mapped_file_source> file((params));
 		nofs::add_file(".nofs", file->data(), file->data() + file->size());
+	}
+
+	for (const auto &cat_file : cat_files)
+	{
+
 	}
 }

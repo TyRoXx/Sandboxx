@@ -22,8 +22,10 @@ namespace nofs
 		std::ostringstream fileNameBuffer;
 		fileNameBuffer.width(8);
 		fileNameBuffer.fill('0');
-		fileNameBuffer << std::hex;
-		std::copy(std::begin(digest), std::end(digest), std::ostream_iterator<unsigned>(fileNameBuffer));
+		fileNameBuffer << std::hex << std::right;
+		std::copy(std::begin(digest),
+		          std::end(digest),
+		          std::ostream_iterator<unsigned>(fileNameBuffer));
 		const auto fullPath = cache / fileNameBuffer.str();
 		std::ofstream outFile(fullPath.string(), std::ios::binary);
 		if (!outFile)
