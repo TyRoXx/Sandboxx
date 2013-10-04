@@ -1,0 +1,39 @@
+$ nofs add --stdin
+
+$ nofs drop 01234567890abcdef
+Object 01234567890abcdef was dropped from the local cache.
+
+$ nofs remove 01234567890abcdef
+Object 01234567890abcdef was removed from the local cache.
+
+$ nofs cat 01234567890abcdef
+hallo
+
+$ nofs --remote 192.168.11.22 add --stdin
+
+$ nofs --remote 192.168.11.22 drop 01234567890abcdef
+
+$ nofs --remote 192.168.11.22 cat 01234567890abcdef
+
+
+$ nofs add "file.txt" [...]
+Adding file "file.txt"...
+The content of this file is new. Its hash is:
+01234567890abcdef
+
+$ nofs hash "file.txt" [...]
+01234567890abcdef
+
+$ nofs add "directory/"
+Adding contents of "directory/" recursively...
+The content of the directory is new. Its hash is:
+01234567890abcdef
+
+$ nofs checkout directory2/ 01234567890abcdef
+
+
+$ nofs mount directory3/ 01234567890abcdef
+
+$ nofs mount --writeable directory3/ 01234567890abcdef
+
+$ nofs umount directory3/
