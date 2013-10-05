@@ -28,16 +28,28 @@ Use WebDAV / Dropbox / S3 etc for storage
 
 Enable garbage collection for automatic deletion of unnecessary objects
 
-Encrypt private objects
+I want to transparently encrypt private objects
 
-Mount a NoFS directory in the traditional file system
+I want to mount a NoFS directory in the traditional file system
 
-Generate a ZIP archive from a NoFS directory
+I want to generate a (ZIP) archive from a NoFS directory
 
-Import a Git repository
+I want to import from a Git repository
 
 Fetch a Git repository regularly
 
 Provide a Git view
 
 Use version control with branches
+
+I want to have my favourite YouTube videos and new uploads from my subscriptions locally cached
+
+I want to integrate application specific caches like Firefox web cache with NoFS
+
+I want to stream audio and video
+
+I want to use portable mass storage for redundancy and transportation
+
+I want to use NoFS for backup
+
+I want to search for public files globally, quickly
