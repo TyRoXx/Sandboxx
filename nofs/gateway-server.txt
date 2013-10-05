@@ -1,0 +1,4 @@
+interface GatewayServer {
+	Optional<ContentID> fetchForeign(ContentID method, Any parameters)
+	Optional<Any> serveForeign(ContentID method, Any parameters)
+}

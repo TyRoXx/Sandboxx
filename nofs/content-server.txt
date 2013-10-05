@@ -1,0 +1,85 @@
+interface ContentServer {
+	bool exists(ContentID)
+	Optional<ContentLength> getLength(ContentID)
+	Optional<Vector<Byte>> get(ContentID)
+	Optional<Vector<Byte>> getSection(ContentID, ContentOffset from, ContentOffset to)
+	bool add(ContentID, Vector<Byte>)
+	void drop(ContentID)
+}
+
+abstract class ReadOnlyServer : ContentServer {
+	bool add(ContentID, Vector<Byte>)
+		return false
+
+	void drop(ContentID)
+		;
+}
+
+abstract class WriteOnlyServer : ContentServer {
+	bool exists(ContentID)
+		return false
+
+	Optional<ContentLength> getLength(ContentID)
+		return none
+
+	Optional<Vector<Byte>> get(ContentID)
+		return none
+
+	Optional<Vector<Byte>> getSection(ContentID, ContentOffset from, ContentOffset to)
+		return none
+}
+
+
+client to server
+================
+
+message Exists {
+	id : ContentID
+}
+
+message GetLength {
+	id : ContentID
+}
+
+message Get {
+	id : ContentID
+}
+
+message GetSection {
+	id : ContentID
+	from : ContentOffset
+	to : ContentOffset
+}
+
+message Add {
+	id : ContentID
+	content : Vector<Byte>
+}
+
+message Drop {
+	id : ContentID
+}
+
+
+server to client
+================
+
+message DoesExist {
+}
+
+message DoesNotExist {
+}
+
+message AddSuccess {
+}
+
+message AddFailure {
+}
+
+message Length {
+	length : ContentLength
+}
+
+message Content {
+	part : Vector<Byte>
+}

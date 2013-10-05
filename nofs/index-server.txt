@@ -1,0 +1,15 @@
+struct Extraction {
+	method : ContentID
+	parameters : Any
+}
+
+struct Difference {
+	method : ContentID
+	parameters : Any
+}
+
+interface IndexServer {
+	Set<Extraction> findExtractions(ContentID)
+	Optional<Difference> getDifference(ContentID old, ContentID new)
+	Optional<ContentID> detectFileType(ContentID)
+}

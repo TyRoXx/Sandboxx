@@ -1,0 +1,10 @@
+interface ExecutionHandle {
+	bool isRunning()
+	void waitForCompletion()
+	void send(Any message)
+	Any receive()
+}
+
+interface LogicServer {
+	Optional<ExecutionHandle> beginExecute(ContentID language, ContentID program, Any parameters)
+}

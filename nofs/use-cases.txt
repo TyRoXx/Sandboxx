@@ -1,0 +1,20 @@
+
+Transfer a single file F in the LAN between NoFS users
+- user A adds file F to NoFS
+- NoFS tells user A the content ID of F
+- user A tells user B the content ID of F
+- instances A and B discover each other in the LAN
+- user B asks her NoFS to check out the file F with the given ID
+- instance B broadcasts a request for the content ID of file F
+- instance A responds that it has file F
+- instance B downloads file F from instance A
+- instance B checks out file F for user B
+
+Add several files as an archive (ZIP, ISO, TAR etc)
+- the user adds the archive A to NoFS asking for deep inspection
+- NoFS guesses the file type as an archive because of a characteristic header
+- NoFS adds the files from the archive recursively
+- NoFS creates a directory object that describes the inner structure of the archive
+- NoFS adds the archive as a whole
+- NoFS tells the user about the directory and the archive being added
+- the user can immediately use the directory or contained file contents
