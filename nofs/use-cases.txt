@@ -1,4 +1,3 @@
-
 Transfer a single file F in the LAN between NoFS users
 - user A adds file F to NoFS
 - NoFS tells user A the content ID of F
@@ -18,3 +17,27 @@ Add several files as an archive (ZIP, ISO, TAR etc)
 - NoFS adds the archive as a whole
 - NoFS tells the user about the directory and the archive being added
 - the user can immediately use the directory or contained file contents
+
+Spread an object across several NoFS instances in the LAN
+- the user places her public key on every instance that she wants to keep a copy of each file
+- the user initiates synchronisation by broadcasting a signed message with content IDs to keep
+- instances that recognize her will try to retrieve and store all the requested files
+- instances will find each other in the LAN with some discovery mechanism
+
+Use WebDAV / Dropbox / S3 etc for storage
+
+Enable garbage collection for automatic deletion of unnecessary objects
+
+Encrypt private objects
+
+Mount a NoFS directory in the traditional file system
+
+Generate a ZIP archive from a NoFS directory
+
+Import a Git repository
+
+Fetch a Git repository regularly
+
+Provide a Git view
+
+Use version control with branches
