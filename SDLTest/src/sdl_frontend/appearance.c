@@ -237,10 +237,10 @@ Bool AppearanceManager_init(AppearanceManager *a)
 	return False;
 }
 
-static Bool parse_appearances_array(
-        AppearanceManager *a,
+static Bool parse_appearances(
         json_t *array,
-        struct ImageManager *images)
+        Bool (*on_appearance)(size_t, char const *, char const *, void *),
+        void *user)
 {
 	size_t i, c;
 	for (i = 0, c = json_array_size(array); i < c; ++i)
@@ -251,7 +251,6 @@ static Bool parse_appearances_array(
 		json_t const * file = json_object_get(element, "file");
 		char const *type_str;
 		char const *file_str;
-		AppearanceLayout const *layout = NULL;
 		if (!id || !type || !file)
 		{
 			fprintf(stderr, "Appearance entry %lu is incomplete\n", (unsigned long)i);
@@ -274,25 +273,40 @@ static Bool parse_appearances_array(
 			fprintf(stderr, "The file of appearance %lu is expected to be specified as a string\n", (unsigned long)i);
 			return False;
 		}
-		if (!strcmp("static", type_str))
-		{
-			layout = &a->static_layout;
-		}
-		else if (!strcmp("dynamic1", type_str))
-		{
-			layout = &a->dynamic_layout_1;
-		}
-		if (!layout)
-		{
-			fprintf(stderr, "Appearance %lu has unknown layout %s\n", (unsigned long)i, type_str);
-			return False;
-		}
-		if (!add_appearance(a, images, file_str, layout))
+		if (!on_appearance(i, type_str, file_str, user))
 		{
 			return False;
 		}
 	}
 	return True;
+}
+
+typedef struct parse_appearances_args
+{
+	AppearanceManager *a;
+	struct ImageManager *images;
+}
+parse_appearances_args;
+
+static Bool on_appearance(size_t index, char const *type, char const *file, void *user)
+{
+	parse_appearances_args const * const args = user;
+	AppearanceManager * const a = args->a;
+	AppearanceLayout const *layout = NULL;
+	if (!strcmp("static", type))
+	{
+		layout = &a->static_layout;
+	}
+	else if (!strcmp("dynamic1", type))
+	{
+		layout = &a->dynamic_layout_1;
+	}
+	if (!layout)
+	{
+		fprintf(stderr, "Appearance %lu has unknown layout %s\n", (unsigned long)index, type);
+		return False;
+	}
+	return add_appearance(args->a, args->images, file, layout);
 }
 
 Bool AppearanceManager_parse_file(
@@ -313,7 +327,10 @@ Bool AppearanceManager_parse_file(
 		Bool result;
 		if (json_is_array(root))
 		{
-			result = parse_appearances_array(a, root, images);
+			parse_appearances_args args;
+			args.a = a;
+			args.images = images;
+			result = parse_appearances(root, on_appearance, &args);
 		}
 		else
 		{
