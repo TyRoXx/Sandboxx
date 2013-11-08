@@ -9,7 +9,7 @@ if(MINGW)
 	target_link_libraries(game ${SDLMAIN_LIBRARY})
 endif()
 
-target_link_libraries(game ${SDLTTF_LIBRARY} ${SDL_LIBRARY})
+target_link_libraries(game ${SDLTTF_LIBRARY} ${SDL_LIBRARY} ${JANSSON_LIBRARY})
 
 if(UNIX)
 	target_link_libraries(game "-lm")

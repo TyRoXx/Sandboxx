@@ -80,6 +80,12 @@ AppearanceManager;
 Bool AppearanceManager_init(AppearanceManager *a,
 							FILE *file,
 							struct ImageManager *images);
+Bool AppearanceManager_init2(AppearanceManager *a);
+Bool AppearanceManager_parse_file_v2(
+        AppearanceManager *a,
+        char const *begin,
+        size_t length,
+        struct ImageManager *images);
 void AppearanceManager_free(AppearanceManager *a);
 Appearance const *AppearanceManager_get(AppearanceManager const *a,
 										AppearanceId id);

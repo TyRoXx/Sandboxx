@@ -2,6 +2,7 @@
 #include "image_manager.h"
 #include "base/algorithm.h"
 #include <assert.h>
+#include <jansson.h>
 
 
 Bool AnimationSide_init(AnimationSide *a, size_t frame_count)
@@ -283,26 +284,118 @@ Bool AppearanceManager_init(AppearanceManager *a,
 							FILE *file,
 							ImageManager *images)
 {
+	if (AppearanceManager_init2(a))
+	{
+		if (load_appearances_file(a, file, images))
+		{
+			return True;
+		}
+		AppearanceManager_free(a);
+	}
+	return False;
+}
+
+Bool AppearanceManager_init2(AppearanceManager *a)
+{
 	if (init_static_layout(&a->static_layout))
 	{
 		if (init_dynamic_layout_1(&a->dynamic_layout_1))
 		{
 			Vector_init(&a->appearances);
-
-			if (load_appearances_file(a, file, images))
-			{
-				return True;
-			}
-
-			free_appearances(&a->appearances);
-			AppearanceLayout_free(&a->dynamic_layout_1);
+			return True;
 		}
-
 		AppearanceLayout_free(&a->static_layout);
 	}
-
 	AppearanceManager_free(a);
 	return False;
+}
+
+static Bool parse_appearances_array(
+        AppearanceManager *a,
+        json_t *array,
+        struct ImageManager *images)
+{
+	size_t i, c;
+	for (i = 0, c = json_array_size(array); i < c; ++i)
+	{
+		json_t * const element = json_array_get(array, i);
+		json_t const * id = json_object_get(element, "id");
+		json_t const * type = json_object_get(element, "type");
+		json_t const * file = json_object_get(element, "file");
+		char const *type_str;
+		char const *file_str;
+		AppearanceLayout const *layout = NULL;
+		if (!id || !type || !file)
+		{
+			fprintf(stderr, "Appearance entry %lu is incomplete\n", (unsigned long)i);
+			return False;
+		}
+		if (!json_is_integer(id) || ((size_t)json_integer_value(id) != i))
+		{
+			fprintf(stderr, "Unexpected id in appearance entry %lu\n", (unsigned long)i);
+			return False;
+		}
+		type_str = json_string_value(type);
+		if (!type_str)
+		{
+			fprintf(stderr, "The type of appearance %lu is expected to be specified as a string\n", (unsigned long)i);
+			return False;
+		}
+		file_str = json_string_value(file);
+		if (!file_str)
+		{
+			fprintf(stderr, "The file of appearance %lu is expected to be specified as a string\n", (unsigned long)i);
+			return False;
+		}
+		if (!strcmp("static", type_str))
+		{
+			layout = &a->static_layout;
+		}
+		else if (!strcmp("dynamic1", type_str))
+		{
+			layout = &a->dynamic_layout_1;
+		}
+		if (!layout)
+		{
+			fprintf(stderr, "Appearance %lu has unknown layout %s\n", (unsigned long)i, type_str);
+			return False;
+		}
+		if (!add_appearance(a, images, file_str, layout))
+		{
+			return False;
+		}
+	}
+	return True;
+}
+
+Bool AppearanceManager_parse_file_v2(
+        AppearanceManager *a,
+        char const *begin,
+        size_t length,
+        struct ImageManager *images)
+{
+	json_error_t error;
+	json_t * const root = json_loadb(begin, length, 0, &error);
+	if (!root)
+	{
+		fprintf(stderr, "Error on line %d: %s\n", error.line, error.text);
+		return False;
+	}
+
+	{
+		Bool result;
+		if (json_is_array(root))
+		{
+			result = parse_appearances_array(a, root, images);
+		}
+		else
+		{
+			fprintf(stderr, "Expected a global array in appearances JSON file\n");
+			result = False;
+		}
+		json_decref(root);
+		return result;
+	}
 }
 
 void AppearanceManager_free(AppearanceManager *a)

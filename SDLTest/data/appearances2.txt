@@ -1,0 +1,12 @@
+[
+	{"id": 0, "type": "static", "file": "grass_32.bmp"},
+	{"id": 1, "type": "static", "file": "dirt_32.bmp"},
+	{"id": 2, "type": "static", "file": "n_grass_s_dirt_32.bmp"},
+	{"id": 3, "type": "static", "file": "n_dirt_s_grass_32.bmp"},
+	{"id": 4, "type": "static", "file": "fence_32.bmp"},
+	{"id": 5, "type": "static", "file": "nw_dirt_on_grass_32.bmp"},
+	{"id": 6, "type": "static", "file": "w_dirt_e_grass_32.bmp"},
+	{"id": 7, "type": "static", "file": "sw_dirt_on_grass_32.bmp"},
+	{"id": 8, "type": "dynamic1", "file": "dyn_test_0.bmp"},
+	{"id": 9, "type": "static", "file": "grey_rock_0.bmp"}
+]
