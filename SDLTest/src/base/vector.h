@@ -4,6 +4,7 @@
 
 #include "bool.h"
 #include <stddef.h>
+#include <stdio.h>
 
 
 typedef struct Vector
@@ -26,6 +27,7 @@ Bool Vector_reserve(Vector *v, size_t capacity);
 Bool Vector_resize(Vector *v, size_t size);
 char *Vector_begin(Vector const *v);
 char *Vector_end(Vector const *v);
+Bool Vector_append_binary_file(Vector *v, FILE *in);
 
 
 #endif
