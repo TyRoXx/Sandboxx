@@ -77,11 +77,8 @@ typedef struct AppearanceManager
 }
 AppearanceManager;
 
-Bool AppearanceManager_init(AppearanceManager *a,
-							FILE *file,
-							struct ImageManager *images);
-Bool AppearanceManager_init2(AppearanceManager *a);
-Bool AppearanceManager_parse_file_v2(
+Bool AppearanceManager_init(AppearanceManager *a);
+Bool AppearanceManager_parse_file(
         AppearanceManager *a,
         char const *begin,
         size_t length,

@@ -206,64 +206,6 @@ static Bool add_appearance(AppearanceManager *a,
 	return False;
 }
 
-static Bool load_appearances_file(AppearanceManager *a,
-								  FILE *file,
-								  ImageManager *images)
-{
-	unsigned expected_index = 0;
-	unsigned index;
-	char type[32];
-
-	while (fscanf(file, " %u %31s", &index, type) == 2)
-	{
-		if (index != expected_index)
-		{
-			fprintf(stderr, "Expected appearance index %u, found %u\n",
-					expected_index, index);
-			return False;
-		}
-
-		if (!strcmp("STATIC", type))
-		{
-			char image_name[1024];
-			if (fscanf(file, " %1023s", image_name) != 1)
-			{
-				fprintf(stderr, "Static appearance image name expected\n");
-				return False;
-			}
-
-			if (!add_appearance(a, images, image_name, &a->static_layout))
-			{
-				return False;
-			}
-		}
-		else if (!strcmp("DYNAMIC_1", type))
-		{
-			char image_name[1024];
-			if (fscanf(file, " %1023s", image_name) != 1)
-			{
-				fprintf(stderr, "Dynamic appearance 1 image name expected\n");
-				return False;
-			}
-
-			/*TODO*/
-			if (!add_appearance(a, images, image_name, &a->dynamic_layout_1))
-			{
-				return False;
-			}
-		}
-		else
-		{
-			fprintf(stderr, "Unknown appearance type\n");
-			return False;
-		}
-
-		++expected_index;
-	}
-
-	return True;
-}
-
 static void free_appearance(void *appearance, void *user)
 {
 	(void)user;
@@ -280,22 +222,7 @@ static void free_appearances(Vector *appearances)
 	Vector_free(appearances);
 }
 
-Bool AppearanceManager_init(AppearanceManager *a,
-							FILE *file,
-							ImageManager *images)
-{
-	if (AppearanceManager_init2(a))
-	{
-		if (load_appearances_file(a, file, images))
-		{
-			return True;
-		}
-		AppearanceManager_free(a);
-	}
-	return False;
-}
-
-Bool AppearanceManager_init2(AppearanceManager *a)
+Bool AppearanceManager_init(AppearanceManager *a)
 {
 	if (init_static_layout(&a->static_layout))
 	{
@@ -368,7 +295,7 @@ static Bool parse_appearances_array(
 	return True;
 }
 
-Bool AppearanceManager_parse_file_v2(
+Bool AppearanceManager_parse_file(
         AppearanceManager *a,
         char const *begin,
         size_t length,
