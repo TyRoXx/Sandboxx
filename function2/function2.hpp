@@ -1,11 +1,12 @@
-#ifndef FUNCTION_HPP
-#define FUNCTION_HPP
+#ifndef FUNCTION2_HPP
+#define FUNCTION2_HPP
 
-#include <memory>
+#include <boost/atomic.hpp>
 #include <cassert>
 #include <boost/type_traits/decay.hpp>
+#include <boost/intrusive_ptr.hpp>
 
-namespace tx
+namespace tx2
 {
 	template <class Signature>
 	struct function;
@@ -31,7 +32,7 @@ namespace tx
 
 		template <class F>
 		explicit function(F &&f)
-			: m_content(std::make_shared<functor<typename boost::decay<F>::type>>(std::forward<F>(f)))
+			: m_content(new functor<typename boost::decay<F>::type>(std::forward<F>(f)))
 		{
 		}
 
@@ -74,12 +75,33 @@ namespace tx
 
 		struct callable
 		{
+			boost::atomic<std::size_t> refs;
+
+			callable()
+				: refs(0)
+			{
+			}
+
 			virtual ~callable()
 			{
 			}
 
 			virtual R call(Args... args) const = 0;
 		};
+
+		friend void intrusive_ptr_add_ref(callable *ca)
+		{
+			ca->refs.fetch_add(1, boost::memory_order_relaxed);
+		}
+
+		friend void intrusive_ptr_release(callable *ca)
+		{
+			if (ca->refs.fetch_sub(1, boost::memory_order_release) == 1)
+			{
+				boost::atomic_thread_fence(boost::memory_order_acquire);
+				delete ca;
+			}
+		}
 
 		template <class F>
 		struct functor : callable
@@ -100,7 +122,7 @@ namespace tx
 			F m_f;
 		};
 		
-		std::shared_ptr<callable> m_content;
+		boost::intrusive_ptr<callable> m_content;
 	};
 }
 

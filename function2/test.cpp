@@ -1,4 +1,5 @@
 #include "function.hpp"
+#include "function2.hpp"
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <functional>
@@ -25,6 +26,10 @@ struct heavy_content
 {
 	std::array<long, 20> weight;
 
+	heavy_content()
+	{
+	}
+
 	void operator ()() const
 	{
 	}
@@ -34,10 +39,10 @@ template <class FunctorEraser>
 void run_test()
 {
 	std::vector<FunctorEraser> fs;
-	fs.resize(1000000);
+	fs.resize(10000000);
 	//std::fill(begin(fs), end(fs), light_content);
-	std::fill(begin(fs), end(fs), heavy_content());
-	auto fs2 = fs;
+	std::fill(begin(fs), end(fs), FunctorEraser(heavy_content()));
+	//auto fs2 = fs;
 }
 
 template <class FunctorEraser>
@@ -61,6 +66,7 @@ int main()
 	};
 
 	measure<tx::function<void()>>("tx");
+	measure<tx2::function<void()>>("tx2");
 	measure<std::function<void()>>("std");
 	measure<boost::function<void()>>("boost");
 }
