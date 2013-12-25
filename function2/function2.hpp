@@ -8,11 +8,62 @@
 
 namespace tx2
 {
-	template <class Signature>
+	struct thread_safe_ref_counter
+	{
+		thread_safe_ref_counter()
+			: m_refs(0)
+		{
+		}
+
+		void increment()
+		{
+			m_refs.fetch_add(1, boost::memory_order_relaxed);
+		}
+
+		bool decrement_is_zero_now()
+		{
+			if (m_refs.fetch_sub(1, boost::memory_order_release) == 1)
+			{
+				boost::atomic_thread_fence(boost::memory_order_acquire);
+				return true;
+			}
+			return false;
+		}
+
+	private:
+
+		boost::atomic<std::ptrdiff_t> m_refs;
+	};
+
+	struct single_thread_ref_counter
+	{
+		single_thread_ref_counter()
+			: m_refs(0)
+		{
+		}
+
+		void increment()
+		{
+			++m_refs;
+		}
+
+		bool decrement_is_zero_now()
+		{
+			assert(m_refs);
+			--m_refs;
+			return (m_refs == 0);
+		}
+
+	private:
+
+		std::ptrdiff_t m_refs;
+	};
+
+	template <class Signature, class RefCounter = thread_safe_ref_counter>
 	struct function;
 
-	template <class R, class ...Args>
-	struct function<R(Args...)>
+	template <class RefCounter, class R, class ...Args>
+	struct function<R(Args...), RefCounter>
 	{
 		typedef R result_type;
 
@@ -75,10 +126,9 @@ namespace tx2
 
 		struct callable
 		{
-			boost::atomic<std::size_t> refs;
+			RefCounter counter;
 
 			callable()
-				: refs(0)
 			{
 			}
 
@@ -91,14 +141,13 @@ namespace tx2
 
 		friend void intrusive_ptr_add_ref(callable *ca)
 		{
-			ca->refs.fetch_add(1, boost::memory_order_relaxed);
+			ca->counter.increment();
 		}
 
 		friend void intrusive_ptr_release(callable *ca)
 		{
-			if (ca->refs.fetch_sub(1, boost::memory_order_release) == 1)
+			if (ca->counter.decrement_is_zero_now())
 			{
-				boost::atomic_thread_fence(boost::memory_order_acquire);
 				delete ca;
 			}
 		}

@@ -59,7 +59,8 @@ void measure_all(std::string const &content_name)
 {
 	std::cerr << content_name << "\n";
 	measure<tx::function<void()>, Content>("tx");
-	measure<tx2::function<void()>, Content>("tx2");
+	measure<tx2::function<void(), tx2::thread_safe_ref_counter>, Content>("tx2 thread-safe");
+	measure<tx2::function<void(), tx2::single_thread_ref_counter>, Content>("tx2 single-thread");
 	measure<std::function<void()>, Content>("std");
 	measure<boost::function<void()>, Content>("boost");
 	std::cerr << '\n';
