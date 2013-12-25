@@ -7,7 +7,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <array>
 
 template <class Test>
 void measure_test_duration(std::string const &test_name, Test const &test)
@@ -18,13 +17,17 @@ void measure_test_duration(std::string const &test_name, Test const &test)
 	std::cerr << test_name << ": " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << '\n';
 }
 
-static void light_content()
+struct minimal_content
 {
-}
+	void operator ()() const
+	{
+	}
+};
 
+template <std::size_t Size>
 struct heavy_content
 {
-	std::array<long, 20> weight;
+	char weight[Size];
 
 	heavy_content()
 	{
@@ -35,24 +38,41 @@ struct heavy_content
 	}
 };
 
-template <class FunctorEraser>
+template <class FunctorEraser, class Content>
 void run_test()
 {
 	std::vector<FunctorEraser> fs;
-	fs.resize(10000000);
-	//std::fill(begin(fs), end(fs), light_content);
-	std::fill(begin(fs), end(fs), FunctorEraser(heavy_content()));
-	//auto fs2 = fs;
+	fs.resize(1000000);
+	std::fill(begin(fs), end(fs), Content());
+	auto fs2 = fs;
+	std::random_shuffle(begin(fs), end(fs));
 }
 
-template <class FunctorEraser>
+template <class FunctorEraser, class Content>
 void measure(std::string const &test_name)
 {
-	return measure_test_duration(test_name, run_test<FunctorEraser>);
+	return measure_test_duration(test_name, run_test<FunctorEraser, Content>);
+}
+
+template <class Content>
+void measure_all(std::string const &content_name)
+{
+	std::cerr << content_name << "\n";
+	measure<tx::function<void()>, Content>("tx");
+	measure<tx2::function<void()>, Content>("tx2");
+	measure<std::function<void()>, Content>("std");
+	measure<boost::function<void()>, Content>("boost");
+	std::cerr << '\n';
 }
 
 int main()
 {
+	measure_all<heavy_content<12>>("heavy 12");
+	measure_all<heavy_content<24>>("heavy 24");
+	measure_all<heavy_content<48>>("heavy 48");
+	measure_all<heavy_content<96>>("heavy 96");
+	measure_all<minimal_content>("minimal");
+
 	tx::function<void(std::string const &)> print_line([](std::string const &s)
 	{
 		std::cerr << s << '\n';
@@ -64,9 +84,4 @@ int main()
 	print_line = [](std::string const &s)
 	{
 	};
-
-	measure<tx::function<void()>>("tx");
-	measure<tx2::function<void()>>("tx2");
-	measure<std::function<void()>>("std");
-	measure<boost::function<void()>>("boost");
 }
