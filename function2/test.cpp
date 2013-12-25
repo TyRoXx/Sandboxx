@@ -2,6 +2,7 @@
 #include "function2.hpp"
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
+#include <boost/lexical_cast.hpp>
 #include <functional>
 #include <chrono>
 #include <iostream>
@@ -66,12 +67,25 @@ void measure_all(std::string const &content_name)
 	std::cerr << '\n';
 }
 
+template <std::size_t I>
+struct integer {};
+
+template <std::size_t From, std::size_t Through>
+void measure_different_weights(integer<From>, integer<Through>)
+{
+	static std::size_t const actual_weight = From * 12;
+	measure_all<heavy_content<actual_weight>>("heavy " + boost::lexical_cast<std::string>(actual_weight));
+	measure_different_weights(integer<From + 1>(), integer<Through>());
+}
+
+template <std::size_t From>
+void measure_different_weights(integer<From>, integer<From - 1>)
+{
+}
+
 int main()
 {
-	measure_all<heavy_content<12>>("heavy 12");
-	measure_all<heavy_content<24>>("heavy 24");
-	measure_all<heavy_content<48>>("heavy 48");
-	measure_all<heavy_content<96>>("heavy 96");
+	measure_different_weights(integer<1>(), integer<12>());
 	measure_all<minimal_content>("minimal");
 
 	tx::function<void(std::string const &)> print_line([](std::string const &s)
