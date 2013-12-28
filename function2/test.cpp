@@ -71,21 +71,30 @@ template <std::size_t I>
 struct integer {};
 
 template <std::size_t From, std::size_t Through>
-void measure_different_weights(integer<From>, integer<Through>)
+void measure_different_weights();
+
+template <std::size_t From, std::size_t Through>
+void measure_different_weights_impl(std::false_type)
+{
+}
+
+template <std::size_t From, std::size_t Through>
+void measure_different_weights_impl(std::true_type)
 {
 	static std::size_t const actual_weight = From * 12;
 	measure_all<heavy_content<actual_weight>>("heavy " + boost::lexical_cast<std::string>(actual_weight));
-	measure_different_weights(integer<From + 1>(), integer<Through>());
+	measure_different_weights<From + 1, Through>();
 }
 
-template <std::size_t From>
-void measure_different_weights(integer<From>, integer<From - 1>)
+template <std::size_t From, std::size_t Through>
+void measure_different_weights()
 {
+	measure_different_weights_impl<From, Through>(std::integral_constant<bool, (From < Through)>());
 }
 
 int main()
 {
-	measure_different_weights(integer<1>(), integer<12>());
+	measure_different_weights<1, 12>();
 	measure_all<minimal_content>("minimal");
 
 	tx::function<void(std::string const &)> print_line([](std::string const &s)
@@ -96,7 +105,7 @@ int main()
 	print_line("Hello,");
 	print_line("world!");
 
-	print_line = [](std::string const &s)
+	print_line = [](std::string const &)
 	{
 	};
 }
