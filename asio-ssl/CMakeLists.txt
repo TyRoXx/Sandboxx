@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 2.8)
+project(asiossl)
+find_package(Boost REQUIRED system)
+find_package(OpenSSL REQUIRED)
+add_executable(server server.cpp)
+target_link_libraries(server ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES})
