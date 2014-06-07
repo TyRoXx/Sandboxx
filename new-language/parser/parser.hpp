@@ -29,12 +29,12 @@ namespace nl
 		std::string content;
 	};
 
-	bool is_decimal_digit(char c)
+	inline bool is_decimal_digit(char c)
 	{
 		return (c >= '0') && (c <= '9');
 	}
 
-	bool is_identifier_head(char c)
+	inline bool is_identifier_head(char c)
 	{
 		return
 			(c >= 'a' && c <= 'z') ||
@@ -43,12 +43,12 @@ namespace nl
 			(c == '-');
 	}
 
-	bool is_identifier_middle(char c)
+	inline bool is_identifier_middle(char c)
 	{
 		return is_identifier_head(c) || is_decimal_digit(c);
 	}
 
-	boost::optional<token> scan_token(Si::source<char> &input)
+	inline boost::optional<token> scan_token(Si::source<char> &input)
 	{
 		auto const first = Si::get(input);
 		if (!first)
