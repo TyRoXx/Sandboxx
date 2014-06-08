@@ -1,6 +1,7 @@
 #define BOOST_TEST_MAIN
 #include <boost/test/unit_test.hpp>
 #include "parser.hpp"
+#include "analyze.hpp"
 #include <unordered_map>
 #include <boost/lexical_cast.hpp>
 
@@ -117,4 +118,19 @@ BOOST_AUTO_TEST_CASE(ast_lambda)
 
 	std::string back_to_str = boost::lexical_cast<std::string>(*lambda);
 	BOOST_CHECK_EQUAL(input, back_to_str);
+}
+
+BOOST_AUTO_TEST_CASE(analyzer_lambda)
+{
+	nl::il::name_space context;
+	context.next = nullptr;
+	context.definitions.insert("uint32");
+	nl::ast::lambda lambda;
+	lambda.body.result = nl::ast::identifier{nl::token{nl::token_type::integer, "a"}};
+	lambda.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32"}}, nl::token{nl::token_type::identifier, "a"}});
+	auto analyzed = nl::il::analyze(lambda, context);
+	nl::il::make_closure expected;
+	expected.parameters.emplace_back(nl::il::parameter{nl::il::definition_expression{"uint32", 1}, "a"});
+	expected.body.result = nl::il::definition_expression{"a", 0};
+	BOOST_CHECK_EQUAL(expected, analyzed);
 }
