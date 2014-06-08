@@ -16,5 +16,6 @@ include_directories(SYSTEM ${SILICIUM_INCLUDE_DIR})
 add_executable(parser parser.cpp)
 target_link_libraries(parser ${Boost_LIBRARIES})
 
-add_executable(test test.cpp)
+file(GLOB headers "*.hpp")
+add_executable(test ${headers} test.cpp)
 target_link_libraries(test ${Boost_LIBRARIES})
