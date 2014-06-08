@@ -509,7 +509,24 @@ namespace nl
 
 			void operator()(string const &value) const
 			{
-				Si::append(m_out, value.position.content);
+				Si::append(m_out, "\"");
+				for (auto c : value.position.content)
+				{
+					switch (c)
+					{
+					case '\"':
+						Si::append(m_out, "\\\"");
+						break;
+
+					case '\\':
+						Si::append(m_out, "\\\\");
+						break;
+
+					default:
+						Si::append(m_out, c);
+					}
+				}
+				Si::append(m_out, "\"");
 			}
 
 			void operator()(integer const &value) const
