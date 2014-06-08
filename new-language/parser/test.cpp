@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(analyzer_lambda)
 	nl::il::make_closure expected;
 	expected.parameters.emplace_back(nl::il::parameter{uint32, "a"});
 	expected.body.result = nl::il::definition_expression{"a", uint32, boost::none, 0};
-	BOOST_CHECK_EQUAL(expected, analyzed);
+	BOOST_CHECK_EQUAL(nl::il::expression(expected), analyzed);
 }
 
 BOOST_AUTO_TEST_CASE(analyzer_argument_type_mismatch)
@@ -152,4 +152,43 @@ BOOST_AUTO_TEST_CASE(analyzer_argument_type_mismatch)
 	{
 		return ex.what() == std::string("Argument type mismatch"); //TODO
 	});
+}
+
+namespace
+{
+	nl::ast::block parse(std::string const &code)
+	{
+		nl::ast::block result;
+		with_tokenizer(code, [&result](Si::source<nl::token> &tokens)
+		{
+			result = nl::ast::parse_block(tokens, 0);
+		});
+		return result;
+	}
+}
+
+BOOST_AUTO_TEST_CASE(analyzer_chaining)
+{
+	std::string const code = "return f(g())\n";
+	auto const parsed = parse(code);
+
+	nl::il::type const uint32{nl::il::external{"uint32"}};
+	nl::il::value const f{nl::il::external{"f"}};
+	nl::il::value const g{nl::il::external{"g"}};
+
+	nl::il::name_space globals;
+	globals.next = nullptr;
+	globals.definitions =
+	{
+		{"uint32", {nl::il::null(), uint32}},
+		{"f", {nl::il::signature{uint32, {uint32}}, f}},
+		{"g", {nl::il::signature{uint32, {}}, g}}
+	};
+
+	nl::il::block const analyzed = nl::il::analyze_block(parsed, globals);
+	nl::il::block expected;
+	auto g_call = nl::il::call{nl::il::definition_expression{"g", nl::il::signature{uint32, {}}, g, 0}, {}};
+	auto f_call = nl::il::call{nl::il::definition_expression{"f", nl::il::signature{uint32, {uint32}}, f, 0}, {g_call}};
+	expected.result = f_call;
+	BOOST_CHECK_EQUAL(expected, analyzed);
 }

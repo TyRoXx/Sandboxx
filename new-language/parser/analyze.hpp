@@ -121,10 +121,20 @@ namespace nl
 			value constant;
 		};
 
+		inline bool operator == (constant_expression const &left, constant_expression const &right)
+		{
+			return (left.constant == right.constant);
+		}
+
 		struct make_closure;
 		struct subscript;
 		struct call;
 		struct definition_expression;
+
+		bool operator == (make_closure const &left, make_closure const &right);
+		bool operator == (subscript const &left, subscript const &right);
+		bool operator == (call const &left, call const &right);
+		bool operator == (definition_expression const &left, definition_expression const &right);
 
 		typedef boost::variant<
 			constant_expression,
@@ -141,8 +151,6 @@ namespace nl
 			boost::optional<value> const_value;
 			std::size_t hops;
 		};
-
-		bool operator == (expression const &left, expression const &right);
 
 		struct parameter
 		{
@@ -179,6 +187,57 @@ namespace nl
 			expression function;
 			std::vector<expression> arguments;
 		};
+
+		inline bool operator == (definition_expression const &left, definition_expression const &right)
+		{
+			return
+					(left.name == right.name) &&
+					(left.type == right.type) &&
+					(left.const_value == right.const_value) &&
+					(left.hops == right.hops);
+		}
+
+		inline bool operator == (block const &left, block const &right)
+		{
+			return
+					(left.definitions == right.definitions) &&
+					(left.result == right.result);
+		}
+
+		inline bool operator == (parameter const &left, parameter const &right)
+		{
+			return
+					(left.type == right.type) &&
+					(left.name == right.name);
+		}
+
+		inline bool operator == (make_closure const &left, make_closure const &right)
+		{
+			return
+					(left.parameters == right.parameters) &&
+					(left.body == right.body);
+		}
+
+		inline bool operator == (subscript const &left, subscript const &right)
+		{
+			return
+					(left.left == right.left) &&
+					(left.element == right.element);
+		}
+
+		inline bool operator == (call const &left, call const &right)
+		{
+			return
+					(left.function == right.function) &&
+					(left.arguments == right.arguments);
+		}
+
+		inline bool operator == (definition const &left, definition const &right)
+		{
+			return
+					(left.name == right.name) &&
+					(left.value == right.value);
+		}
 
 		struct name_space_entry
 		{
@@ -270,7 +329,13 @@ namespace nl
 
 			type operator()(call const &expr) const
 			{
-				throw std::logic_error("not implemented");
+				type function_type = type_of_expression(expr.function);
+				signature const * const sig = boost::get<signature>(&function_type);
+				if (!sig)
+				{
+					throw std::runtime_error("The expression does not evaluate to something callable");
+				}
+				return sig->result;
 			}
 
 			type operator()(definition_expression const &expr) const
@@ -316,7 +381,12 @@ namespace nl
 			value operator()(subscript const &expr) const
 			{
 				auto left = evaluate_const(expr.left);
-				throw std::logic_error("not implemented");
+				auto element = boost::apply_visitor(subscription_visitor{expr.element}, left);
+				if (!element)
+				{
+					throw std::runtime_error("Cannot get element from map at compile-time: " + expr.element);
+				}
+				return std::move(*element);
 			}
 
 			value operator()(call const &) const
@@ -338,6 +408,8 @@ namespace nl
 		{
 			return boost::apply_visitor(const_expression_evaluator{}, expr);
 		}
+
+		block analyze_block(ast::block const &syntax, name_space names);
 
 		struct expression_analyzer : boost::static_visitor<expression>
 		{
@@ -381,25 +453,7 @@ namespace nl
 						throw std::runtime_error("Cannot redefine " + parameter_syntax.name.content);
 					}
 				}
-				block body;
-				for (ast::definition const &definition_syntax : syntax.body.elements)
-				{
-					auto value = analyze(definition_syntax.value, m_names);
-					body.definitions.emplace_back(definition{definition_syntax.name.content, value});
-					name_space_entry entry{type_of_expression(value), boost::none};
-					try
-					{
-						entry.const_value = evaluate_const(value);
-					}
-					catch (std::runtime_error const &) //TODO
-					{
-					}
-					if (!locals.definitions.insert(std::make_pair(definition_syntax.name.content, entry)).second)
-					{
-						throw std::runtime_error("Cannot redefine " + definition_syntax.name.content);
-					}
-				}
-				body.result = analyze(syntax.body.result, locals);
+				block body = analyze_block(syntax.body, std::move(locals));
 				return make_closure{std::move(parameters), std::move(body)};
 			}
 
@@ -432,6 +486,30 @@ namespace nl
 		inline expression analyze(ast::expression const &syntax, name_space const &names)
 		{
 			return boost::apply_visitor(expression_analyzer{names}, syntax);
+		}
+
+		inline block analyze_block(ast::block const &syntax, name_space locals)
+		{
+			block body;
+			for (ast::definition const &definition_syntax : syntax.elements)
+			{
+				auto value = analyze(definition_syntax.value, locals);
+				body.definitions.emplace_back(definition{definition_syntax.name.content, value});
+				name_space_entry entry{type_of_expression(value), boost::none};
+				try
+				{
+					entry.const_value = evaluate_const(value);
+				}
+				catch (std::runtime_error const &) //TODO
+				{
+				}
+				if (!locals.definitions.insert(std::make_pair(definition_syntax.name.content, entry)).second)
+				{
+					throw std::runtime_error("Cannot redefine " + definition_syntax.name.content);
+				}
+			}
+			body.result = analyze(syntax.result, locals);
+			return body;
 		}
 
 		void print(Si::sink<char> &sink, value const &v);
@@ -499,6 +577,18 @@ namespace nl
 			return boost::apply_visitor(value_printer{sink}, v);
 		}
 
+		inline void print(Si::sink<char> &sink, block const &b)
+		{
+			for (definition const &def : b.definitions)
+			{
+				Si::append(sink, def.name);
+				Si::append(sink, " = ");
+				print(sink, def.value);
+				Si::append(sink, "\n");
+			}
+			print(sink, b.result);
+		}
+
 		struct expression_printer : boost::static_visitor<>
 		{
 			explicit expression_printer(Si::sink<char> &out)
@@ -522,14 +612,7 @@ namespace nl
 					Si::append(m_out, ", ");
 				}
 				Si::append(m_out, ")\n");
-				for (definition const &def : expr.body.definitions)
-				{
-					Si::append(m_out, def.name);
-					Si::append(m_out, " = ");
-					print(m_out, def.value);
-					Si::append(m_out, "\n");
-				}
-				print(m_out, expr.body.result);
+				print(m_out, expr.body);
 				Si::append(m_out, "\n");
 			}
 
@@ -543,15 +626,23 @@ namespace nl
 			void operator()(call const &expr) const
 			{
 				print(m_out, expr.function);
-				Si::append(m_out, "(...)");
+				Si::append(m_out, "(");
+				for (auto &argument : expr.arguments)
+				{
+					print(m_out, argument);
+					Si::append(m_out, ", ");
+				}
+				Si::append(m_out, ")");
 			}
 
 			void operator()(definition_expression const &expr) const
 			{
 				Si::append(m_out, expr.name);
-				Si::append(m_out, "(");
-				Si::append(m_out, boost::lexical_cast<std::string>(expr.hops));
-				Si::append(m_out, ")");
+				if (expr.const_value)
+				{
+					Si::append(m_out, "=");
+					print(m_out, *expr.const_value);
+				}
 			}
 
 		private:
@@ -564,20 +655,17 @@ namespace nl
 			return boost::apply_visitor(expression_printer{sink}, expr);
 		}
 
-		inline bool operator == (expression const &left, expression const &right)
-		{
-			std::string left_str, right_str;
-			auto left_sink = Si::make_container_sink(left_str);
-			auto right_sink = Si::make_container_sink(right_str);
-			print(left_sink, left);
-			print(right_sink, right);
-			return (left_str == right_str);
-		}
-
 		inline std::ostream &operator << (std::ostream &out, expression const &expr)
 		{
 			Si::ostream_ref_sink sink(out);
 			print(sink, expr);
+			return out;
+		}
+
+		inline std::ostream &operator << (std::ostream &out, block const &b)
+		{
+			Si::ostream_ref_sink sink(out);
+			print(sink, b);
 			return out;
 		}
 	}
