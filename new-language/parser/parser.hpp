@@ -557,6 +557,10 @@ namespace nl
 					print(m_out, definition.value, m_indentation + 1);
 					Si::append(m_out, "\n");
 				}
+				print_indentation(m_out, m_indentation + 1);
+				Si::append(m_out, "return ");
+				print(m_out, value.body.result, m_indentation + 1);
+				Si::append(m_out, "\n");
 			}
 
 			void operator()(subscript const &value) const
@@ -590,6 +594,23 @@ namespace nl
 		inline void print(Si::sink<char> &out, expression const &value, std::size_t indentation)
 		{
 			return boost::apply_visitor(expression_printer(out, indentation), value);
+		}
+
+		inline bool operator == (expression const &left, expression const &right)
+		{
+			std::vector<char> left_str, right_str;
+			auto left_sink = Si::make_container_sink(left_str);
+			auto right_sink = Si::make_container_sink(right_str);
+			print(left_sink, left, 0);
+			print(right_sink, right, 0);
+			return (left_str == right_str);
+		}
+
+		inline std::ostream &operator << (std::ostream &out, expression const &value)
+		{
+			Si::ostream_ref_sink sink(out);
+			print(sink, value, 0);
+			return out;
 		}
 	}
 }

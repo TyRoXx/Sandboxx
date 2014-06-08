@@ -2,6 +2,7 @@
 #include <boost/test/unit_test.hpp>
 #include "parser.hpp"
 #include <unordered_map>
+#include <boost/lexical_cast.hpp>
 
 BOOST_AUTO_TEST_CASE(scan_token_end_of_file)
 {
@@ -151,7 +152,8 @@ BOOST_AUTO_TEST_CASE(ast_parse_parameters)
 BOOST_AUTO_TEST_CASE(ast_lambda)
 {
 	std::string const input =
-			"()\n"
+			"(uint32 b, string s)\n"
+			"\ta = 2\n"
 			"\treturn 1\n"
 			;
 	Si::memory_source<char> source(boost::make_iterator_range(input.data(), input.data() + input.size()));
@@ -168,6 +170,14 @@ BOOST_AUTO_TEST_CASE(ast_lambda)
 	auto parsed = nl::ast::parse_expression(buffer, 0);
 	nl::ast::lambda const * const lambda = boost::get<nl::ast::lambda>(&parsed);
 	BOOST_REQUIRE(lambda);
-	BOOST_CHECK(lambda->parameters.empty());
-	BOOST_CHECK(lambda->body.elements.empty());
+
+	nl::ast::lambda expected;
+	expected.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32"}}, nl::token{nl::token_type::identifier, "b"}});
+	expected.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "string"}}, nl::token{nl::token_type::identifier, "s"}});
+	expected.body.elements.emplace_back(nl::ast::definition{nl::token{nl::token_type::identifier, "a"}, nl::ast::integer{nl::token{nl::token_type::integer, "2"}}});
+	expected.body.result = nl::ast::integer{nl::token{nl::token_type::integer, "1"}};
+	BOOST_CHECK_EQUAL(expected, *lambda);
+
+	std::string back_to_str = boost::lexical_cast<std::string>(*lambda);
+	BOOST_CHECK_EQUAL(input, back_to_str);
 }
