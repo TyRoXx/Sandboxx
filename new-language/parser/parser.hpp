@@ -27,7 +27,6 @@ namespace nl
 	struct token
 	{
 		token_type type;
-		std::size_t position;
 		std::string content;
 	};
 
@@ -66,7 +65,7 @@ namespace nl
 		auto const first = Si::get(input);
 		if (!first)
 		{
-			return token{token_type::end_of_file, 0, ""};
+			return token{token_type::end_of_file, ""};
 		}
 		static std::unordered_map<char, nl::token_type> const tokens =
 		{
@@ -87,7 +86,7 @@ namespace nl
 				auto const next = Si::get(input);
 				if (*next == '"')
 				{
-					return token{token_type::string, 0, std::move(content)};
+					return token{token_type::string, std::move(content)};
 				}
 				switch (*next)
 				{
@@ -121,7 +120,7 @@ namespace nl
 			auto const single_char_found = tokens.find(*first);
 			if (single_char_found != end(tokens))
 			{
-				return token{single_char_found->second, 0, std::string(1, *first)};
+				return token{single_char_found->second, std::string(1, *first)};
 			}
 		}
 		if (is_identifier_head(*first))
@@ -143,9 +142,9 @@ namespace nl
 			}
 			if (content == "return")
 			{
-				return token{token_type::return_, 0, std::move(content)};
+				return token{token_type::return_, std::move(content)};
 			}
-			return token{token_type::identifier, 0, std::move(content)};
+			return token{token_type::identifier, std::move(content)};
 		}
 		else if (is_decimal_digit(*first))
 		{
@@ -164,7 +163,7 @@ namespace nl
 				content.push_back(*next);
 				Si::get(input);
 			}
-			return token{token_type::integer, 0, std::move(content)};
+			return token{token_type::integer, std::move(content)};
 		}
 		return boost::none;
 	}
