@@ -15,22 +15,62 @@ namespace nl
 
 		struct external
 		{
-			void *payload;
+			void const *payload;
 		};
+
+		inline bool operator == (external const &left, external const &right)
+		{
+			return (left.payload == right.payload);
+		}
+
+		inline std::size_t hash_value(external const &value)
+		{
+			return boost::hash_value(value.payload);
+		}
 
 		struct integer
 		{
 			std::string value;
 		};
 
+		inline bool operator == (integer const &left, integer const &right)
+		{
+			return (left.value == right.value);
+		}
+
+		inline std::size_t hash_value(integer const &value)
+		{
+			return boost::hash_value(value.value);
+		}
+
 		struct string
 		{
 			std::string value;
 		};
 
+		inline bool operator == (string const &left, string const &right)
+		{
+			return (left.value == right.value);
+		}
+
+		inline std::size_t hash_value(string const &value)
+		{
+			return boost::hash_value(value.value);
+		}
+
 		struct null
 		{
 		};
+
+		inline bool operator == (null, null)
+		{
+			return true;
+		}
+
+		inline std::size_t hash_value(null const &)
+		{
+			return boost::hash_value(true);
+		}
 
 		typedef boost::variant<null, boost::recursive_wrapper<map>, boost::recursive_wrapper<signature>, external, integer, string> value;
 		typedef value type;
@@ -40,38 +80,73 @@ namespace nl
 			boost::unordered_map<value, value> elements;
 		};
 
+		inline bool operator == (map const &left, map const &right)
+		{
+			return (left.elements == right.elements);
+		}
+
+		inline std::size_t hash_value(map const &value)
+		{
+			std::size_t digest = 0;
+			for (auto &entry : value.elements)
+			{
+				boost::hash_combine(digest, entry);
+			}
+			return digest;
+		}
+
 		struct signature
 		{
 			type result;
 			std::vector<type> parameters;
 		};
 
+		inline bool operator == (signature const &left, signature const &right)
+		{
+			return
+					(left.result == right.result) &&
+					(left.parameters == right.parameters);
+		}
+
+		inline std::size_t hash_value(signature const &value)
+		{
+			std::size_t digest = 0;
+			boost::hash_combine(digest, value.result);
+			boost::hash_combine(digest, value.parameters);
+			return digest;
+		}
+
 		struct constant_expression
 		{
 			value constant;
 		};
 
-		struct definition_expression
-		{
-			std::string name;
-			std::size_t hops;
-		};
-
 		struct make_closure;
 		struct subscript;
 		struct call;
+		struct definition_expression;
 
 		typedef boost::variant<
 			constant_expression,
 			boost::recursive_wrapper<make_closure>,
 			boost::recursive_wrapper<subscript>,
 			boost::recursive_wrapper<call>,
-			definition_expression
+			boost::recursive_wrapper<definition_expression>
 		> expression;
+
+		struct definition_expression
+		{
+			std::string name;
+			il::type type;
+			boost::optional<value> const_value;
+			std::size_t hops;
+		};
+
+		bool operator == (expression const &left, expression const &right);
 
 		struct parameter
 		{
-			expression type;
+			il::type type;
 			std::string name;
 		};
 
@@ -105,10 +180,16 @@ namespace nl
 			std::vector<expression> arguments;
 		};
 
+		struct name_space_entry
+		{
+			il::type type;
+			boost::optional<value> const_value;
+		};
+
 		struct name_space
 		{
 			name_space const *next;
-			boost::unordered_set<std::string> definitions;
+			boost::unordered_map<std::string, name_space_entry> definitions;
 		};
 
 		inline boost::optional<definition_expression> resolve_name(name_space const &leaf, std::string const &name)
@@ -120,7 +201,7 @@ namespace nl
 				auto definition = n->definitions.find(name);
 				if (definition != end(n->definitions))
 				{
-					return definition_expression{name, hops};
+					return definition_expression{name, definition->second.type, definition->second.const_value, hops};
 				}
 				n = n->next;
 				++hops;
@@ -128,12 +209,135 @@ namespace nl
 			return boost::none;
 		}
 
-		bool is_callable(expression const &function, std::vector<expression> const &arguments)
+		type type_of_expression(expression const &expr);
+
+		struct subscription_visitor : boost::static_visitor<boost::optional<type>>
 		{
-			throw std::logic_error("not implemented");
+			explicit subscription_visitor(std::string element)
+				: m_element(std::move(element))
+			{
+			}
+
+			boost::optional<type> operator()(map const &m) const
+			{
+				auto e = m.elements.find(string{m_element});
+				if  (e == end(m.elements))
+				{
+					return boost::none;
+				}
+				return e->second;
+			}
+
+			template <class Rest>
+			boost::optional<type> operator()(Rest const &) const
+			{
+				return boost::none;
+			}
+
+		private:
+
+			std::string m_element;
+		};
+
+		struct expression_type_visitor : boost::static_visitor<type>
+		{
+			type operator()(constant_expression const &) const
+			{
+				return null();
+			}
+
+			type operator()(make_closure const &closure) const
+			{
+				signature sig;
+				sig.result = type_of_expression(closure.body.result);
+				for (parameter const &param : closure.parameters)
+				{
+					sig.parameters.emplace_back(param.type);
+				}
+				return std::move(sig);
+			}
+
+			type operator()(subscript const &expr) const
+			{
+				auto left = type_of_expression(expr.left);
+				auto element_type = boost::apply_visitor(subscription_visitor{expr.element}, left);
+				if (!element_type)
+				{
+					throw std::runtime_error("Cannot deduce type because element does not exist: " + expr.element);
+				}
+				return std::move(*element_type);
+			}
+
+			type operator()(call const &expr) const
+			{
+				throw std::logic_error("not implemented");
+			}
+
+			type operator()(definition_expression const &expr) const
+			{
+				return expr.type;
+			}
+		};
+
+		inline type type_of_expression(expression const &expr)
+		{
+			return boost::apply_visitor(expression_type_visitor{}, expr);
+		}
+
+		inline bool is_callable(expression const &function, std::vector<expression> const &arguments)
+		{
+			type function_type = type_of_expression(function);
+			signature const * const sig = boost::get<signature>(&function_type);
+			if (!sig)
+			{
+				throw std::runtime_error("The expression does not evaluate to something callable");
+			}
+			std::vector<type> argument_types;
+			std::transform(begin(arguments), end(arguments), std::back_inserter(argument_types), type_of_expression);
+			return (sig->parameters == argument_types);
 		}
 
 		expression analyze(ast::expression const &syntax, name_space const &names);
+
+		value evaluate_const(expression const &expr);
+
+		struct const_expression_evaluator : boost::static_visitor<value>
+		{
+			value operator()(constant_expression const &expr) const
+			{
+				return expr.constant;
+			}
+
+			value operator()(make_closure const &) const
+			{
+				throw std::runtime_error("A closure is not a compile-time value");
+			}
+
+			value operator()(subscript const &expr) const
+			{
+				auto left = evaluate_const(expr.left);
+				throw std::logic_error("not implemented");
+			}
+
+			value operator()(call const &) const
+			{
+				throw std::runtime_error("Functions cannot be evaluated at compile-time");
+			}
+
+			value operator()(definition_expression const &expr) const
+			{
+				if (!expr.const_value)
+				{
+					throw std::runtime_error("This definition cannot be evaluated at compile-time: " + expr.name);
+				}
+				return *expr.const_value;
+			}
+		};
+
+		inline value evaluate_const(expression const &expr)
+		{
+			return boost::apply_visitor(const_expression_evaluator{}, expr);
+		}
 
 		struct expression_analyzer : boost::static_visitor<expression>
 		{
@@ -169,8 +373,10 @@ namespace nl
 				for (ast::parameter const &parameter_syntax : syntax.parameters)
 				{
 					auto type_expr = analyze(parameter_syntax.type, locals);
-					parameters.emplace_back(parameter{type_expr, parameter_syntax.name.content});
-					if (!locals.definitions.insert(parameter_syntax.name.content).second)
+					auto type = evaluate_const(type_expr);
+					parameters.emplace_back(parameter{type, parameter_syntax.name.content});
+					name_space_entry entry{type, boost::none};
+					if (!locals.definitions.insert(std::make_pair(parameter_syntax.name.content, entry)).second)
 					{
 						throw std::runtime_error("Cannot redefine " + parameter_syntax.name.content);
 					}
@@ -179,8 +385,16 @@ namespace nl
 				for (ast::definition const &definition_syntax : syntax.body.elements)
 				{
 					auto value = analyze(definition_syntax.value, m_names);
-					body.definitions.emplace_back(definition{definition_syntax.name.content, std::move(value)});
-					if (!locals.definitions.insert(definition_syntax.name.content).second)
+					body.definitions.emplace_back(definition{definition_syntax.name.content, value});
+					name_space_entry entry{type_of_expression(value), boost::none};
+					try
+					{
+						entry.const_value = evaluate_const(value);
+					}
+					catch (std::runtime_error const &) //TODO
+					{
+					}
+					if (!locals.definitions.insert(std::make_pair(definition_syntax.name.content, entry)).second)
 					{
 						throw std::runtime_error("Cannot redefine " + definition_syntax.name.content);
 					}

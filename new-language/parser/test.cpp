@@ -122,15 +122,34 @@ BOOST_AUTO_TEST_CASE(ast_lambda)
 
 BOOST_AUTO_TEST_CASE(analyzer_lambda)
 {
+	nl::il::external uint32{"uint32"};
 	nl::il::name_space context;
 	context.next = nullptr;
-	context.definitions.insert("uint32");
+	context.definitions.insert(std::make_pair("uint32", nl::il::name_space_entry{nl::il::null(), nl::il::type(uint32)}));
 	nl::ast::lambda lambda;
 	lambda.body.result = nl::ast::identifier{nl::token{nl::token_type::integer, "a"}};
 	lambda.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32"}}, nl::token{nl::token_type::identifier, "a"}});
 	auto analyzed = nl::il::analyze(lambda, context);
 	nl::il::make_closure expected;
-	expected.parameters.emplace_back(nl::il::parameter{nl::il::definition_expression{"uint32", 1}, "a"});
-	expected.body.result = nl::il::definition_expression{"a", 0};
+	expected.parameters.emplace_back(nl::il::parameter{uint32, "a"});
+	expected.body.result = nl::il::definition_expression{"a", uint32, boost::none, 0};
 	BOOST_CHECK_EQUAL(expected, analyzed);
+}
+
+BOOST_AUTO_TEST_CASE(analyzer_argument_type_mismatch)
+{
+	nl::il::external uint32{"uint32"};
+	nl::il::external uint64{"uint64"};
+	nl::il::external f{"f"};
+	nl::il::name_space context;
+	context.next = nullptr;
+	context.definitions.insert(std::make_pair("uint32", nl::il::name_space_entry{nl::il::null(), nl::il::type(uint32)}));
+	context.definitions.insert(std::make_pair("f", nl::il::name_space_entry{nl::il::type(nl::il::signature{uint32, {nl::il::type(uint64)}}), nl::il::value(f)}));
+	nl::ast::lambda lambda;
+	lambda.body.result = nl::ast::call{nl::ast::identifier{nl::token{nl::token_type::integer, "f"}}, {nl::ast::identifier{nl::token{nl::token_type::integer, "a"}}}};
+	lambda.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32"}}, nl::token{nl::token_type::identifier, "a"}});
+	BOOST_CHECK_EXCEPTION(nl::il::analyze(lambda, context), std::runtime_error, [](std::runtime_error const &ex)
+	{
+		return ex.what() == std::string("Argument type mismatch"); //TODO
+	});
 }
