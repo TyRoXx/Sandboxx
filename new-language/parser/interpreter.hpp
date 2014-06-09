@@ -18,20 +18,7 @@ namespace nl
 			virtual object_ptr call(std::vector<object_ptr> const &arguments) const = 0;
 		};
 
-		enum class local
-		{
-			bound,
-			argument,
-			definition
-		};
-
-		struct local_identifier
-		{
-			local type;
-			std::size_t index;
-		};
-
-		typedef std::function<object_ptr (local_identifier)> local_context;
+		typedef std::function<object_ptr (il::local_identifier)> local_context;
 
 		struct expression
 		{
@@ -55,28 +42,28 @@ namespace nl
 			{
 			}
 
-			object_ptr call(std::vector<object_ptr> const &arguments) const
+			object_ptr call(std::vector<object_ptr> const &arguments) const SILICIUM_OVERRIDE
 			{
 				std::vector<object_ptr> defined;
-				local_context const context = [this, &arguments, &defined](local_identifier id) -> object_ptr
+				local_context const context = [this, &arguments, &defined](il::local_identifier id) -> object_ptr
 				{
 					switch (id.type)
 					{
-					case local::bound:
+					case il::local::bound:
 						if (id.index >= bound.size())
 						{
 							throw std::logic_error("Invalid bound index access");
 						}
 						return bound[id.index];
 
-					case local::argument:
+					case il::local::argument:
 						if (id.index >= arguments.size())
 						{
 							throw std::logic_error("Invalid argument index access");
 						}
 						return arguments[id.index];
 
-					case local::definition:
+					case il::local::definition:
 						if (id.index >= defined.size())
 						{
 							throw std::logic_error("Invalid definition index access");
@@ -98,9 +85,24 @@ namespace nl
 			std::vector<object_ptr> bound;
 		};
 
+		struct value_object : object
+		{
+			il::value value;
+
+			explicit value_object(il::value value)
+				: value(std::move(value))
+			{
+			}
+
+			object_ptr call(std::vector<object_ptr> const &) const SILICIUM_OVERRIDE
+			{
+				throw std::logic_error("Cannot call this value as a function");
+			}
+		};
+
 		struct make_closure : expression
 		{
-			explicit make_closure(function original, std::vector<local_identifier> bound)
+			explicit make_closure(function original, std::vector<il::local_identifier> bound)
 				: original(std::move(original))
 				, bound(std::move(bound))
 			{
@@ -116,7 +118,7 @@ namespace nl
 		private:
 
 			function original;
-			std::vector<local_identifier> bound;
+			std::vector<il::local_identifier> bound;
 		};
 
 		struct call : expression
@@ -141,6 +143,40 @@ namespace nl
 			std::vector<std::unique_ptr<expression>> arguments;
 		};
 
+		struct local_expression : expression
+		{
+			explicit local_expression(il::local_identifier id)
+				: id(id)
+			{
+			}
+
+			virtual object_ptr evaluate(local_context const &context) const SILICIUM_OVERRIDE
+			{
+				return context(id);
+			}
+
+		private:
+
+			il::local_identifier id;
+		};
+
+		struct constant_expression : expression
+		{
+			explicit constant_expression(il::value value)
+				: value(std::move(value))
+			{
+			}
+
+			virtual object_ptr evaluate(local_context const &context) const SILICIUM_OVERRIDE
+			{
+				return std::make_shared<value_object>(value);
+			}
+
+		private:
+
+			il::value value;
+		};
+
 		template <class T, class ...Args>
 		std::unique_ptr<T> make_unique(Args &&...args)
 		{
@@ -154,15 +190,13 @@ namespace nl
 		{
 			std::shared_ptr<std::unique_ptr<expression>> operator()(nl::il::constant_expression const &expr) const
 			{
-				throw std::logic_error("not implemented");
+				return std::make_shared<std::unique_ptr<expression>>(make_unique<constant_expression>(expr.constant));
 			}
 
 			std::shared_ptr<std::unique_ptr<expression>> operator()(nl::il::make_closure const &expr) const
 			{
 				auto original = prepare_block(expr.body);
-				std::vector<local_identifier> bound;
-				throw std::logic_error("not implemented");
-				return std::make_shared<std::unique_ptr<expression>>(make_unique<make_closure>(std::move(original), std::move(bound)));
+				return std::make_shared<std::unique_ptr<expression>>(make_unique<make_closure>(std::move(original), expr.bind_from_parent));
 			}
 
 			std::shared_ptr<std::unique_ptr<expression>> operator()(nl::il::subscript const &expr) const
@@ -178,9 +212,9 @@ namespace nl
 				return std::make_shared<std::unique_ptr<expression>>(make_unique<call>(std::move(function), std::move(arguments)));
 			}
 
-			std::shared_ptr<std::unique_ptr<expression>> operator()(nl::il::definition_expression const &expr) const
+			std::shared_ptr<std::unique_ptr<expression>> operator()(nl::il::local_expression const &expr) const
 			{
-				throw std::logic_error("not implemented");
+				return std::make_shared<std::unique_ptr<expression>>(make_unique<local_expression>(expr.which));
 			}
 		};
 

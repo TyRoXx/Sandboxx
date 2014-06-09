@@ -126,14 +126,14 @@ BOOST_AUTO_TEST_CASE(analyzer_lambda)
 	nl::il::external uint32{"uint32"};
 	nl::il::name_space context;
 	context.next = nullptr;
-	context.definitions.insert(std::make_pair("uint32", nl::il::name_space_entry{nl::il::null(), nl::il::type(uint32)}));
+	context.definitions.insert(std::make_pair("uint32", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::definition, 0}, nl::il::null(), nl::il::type(uint32)}));
 	nl::ast::lambda lambda;
 	lambda.body.result = nl::ast::identifier{nl::token{nl::token_type::integer, "a"}};
 	lambda.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32"}}, nl::token{nl::token_type::identifier, "a"}});
 	auto analyzed = nl::il::analyze(lambda, context);
 	nl::il::make_closure expected;
 	expected.parameters.emplace_back(nl::il::parameter{uint32, "a"});
-	expected.body.result = nl::il::definition_expression{"a", uint32, boost::none};
+	expected.body.result = nl::il::local_expression{nl::il::local_identifier{nl::il::local::argument, 0}, uint32, "a", boost::none};
 	BOOST_CHECK_EQUAL(nl::il::expression(expected), analyzed);
 }
 
@@ -144,8 +144,8 @@ BOOST_AUTO_TEST_CASE(analyzer_argument_type_mismatch)
 	nl::il::external f{"f"};
 	nl::il::name_space context;
 	context.next = nullptr;
-	context.definitions.insert(std::make_pair("uint32", nl::il::name_space_entry{nl::il::null(), nl::il::type(uint32)}));
-	context.definitions.insert(std::make_pair("f", nl::il::name_space_entry{nl::il::type(nl::il::signature{uint32, {nl::il::type(uint64)}}), nl::il::value(f)}));
+	context.definitions.insert(std::make_pair("uint32", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::definition, 0}, nl::il::null(), nl::il::type(uint32)}));
+	context.definitions.insert(std::make_pair("f", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::definition, 1}, nl::il::type(nl::il::signature{uint32, {nl::il::type(uint64)}}), nl::il::value(f)}));
 	nl::ast::lambda lambda;
 	lambda.body.result = nl::ast::call{nl::ast::identifier{nl::token{nl::token_type::integer, "f"}}, {nl::ast::identifier{nl::token{nl::token_type::integer, "a"}}}};
 	lambda.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32"}}, nl::token{nl::token_type::identifier, "a"}});
@@ -181,15 +181,14 @@ BOOST_AUTO_TEST_CASE(analyzer_chaining)
 	globals.next = nullptr;
 	globals.definitions =
 	{
-		{"uint32", {nl::il::null(), uint32}},
-		{"f", {nl::il::signature{uint32, {uint32}}, f}},
-		{"g", {nl::il::signature{uint32, {}}, g}}
+		{"f", {nl::il::local_identifier{nl::il::local::bound, 0}, nl::il::signature{uint32, {uint32}}, f}},
+		{"g", {nl::il::local_identifier{nl::il::local::bound, 1}, nl::il::signature{uint32, {}}, g}}
 	};
 
 	nl::il::block const analyzed = nl::il::analyze_block(parsed, globals);
 	nl::il::block expected;
-	auto g_call = nl::il::call{nl::il::definition_expression{"g", nl::il::signature{uint32, {}}, g}, {}};
-	auto f_call = nl::il::call{nl::il::definition_expression{"f", nl::il::signature{uint32, {uint32}}, f}, {g_call}};
+	auto g_call = nl::il::call{nl::il::local_expression{nl::il::local_identifier{nl::il::local::bound, 1}, nl::il::signature{uint32, {}}, "g", g}, {}};
+	auto f_call = nl::il::call{nl::il::local_expression{nl::il::local_identifier{nl::il::local::bound, 0}, nl::il::signature{uint32, {uint32}}, "f", f}, {g_call}};
 	expected.result = f_call;
 	BOOST_CHECK_EQUAL(expected, analyzed);
 }
@@ -222,13 +221,62 @@ namespace
 		return std::make_shared<functor<clean_f>>(std::forward<F>(f));
 	}
 
+	struct print_operation_object : nl::interpreter::object
+	{
+		std::shared_ptr<nl::interpreter::value_object const> message;
+
+		explicit print_operation_object(std::shared_ptr<nl::interpreter::value_object const> message)
+			: message(std::move(message))
+		{
+		}
+
+		virtual nl::interpreter::object_ptr call(std::vector<nl::interpreter::object_ptr> const &) const SILICIUM_OVERRIDE
+		{
+			throw std::logic_error("Cannot call this object");
+		}
+	};
+
 	nl::interpreter::object_ptr print_line(std::vector<nl::interpreter::object_ptr> const &arguments)
 	{
-		throw std::logic_error("not implemented");
+		if (arguments.size() != 1)
+		{
+			throw std::invalid_argument("Expected one argument");
+		}
+		auto const message = std::dynamic_pointer_cast<nl::interpreter::value_object const>(arguments[0]);
+		if (!message)
+		{
+			throw std::invalid_argument("Expected a value_object argument");
+		}
+		return std::make_shared<print_operation_object>(message);
 	}
 }
 
 BOOST_AUTO_TEST_CASE(il_interpretation)
+{
+	std::string const code = "return print_line(\"Hello, world!\")\n";
+	auto const parsed = parse(code);
+
+	nl::il::value const print_line_symbol{nl::il::external{"print_line"}};
+	nl::il::value const print_operation{nl::il::external{"print_operation"}};
+
+	nl::il::name_space globals;
+	globals.next = nullptr;
+	globals.definitions =
+	{
+		{"print_line", {nl::il::local_identifier{nl::il::local::bound, 0}, nl::il::signature{print_operation, {nl::il::null{}}}, print_line_symbol}}
+	};
+
+	nl::il::block const analyzed = nl::il::analyze_block(parsed, globals);
+	nl::interpreter::function const prepared = nl::interpreter::prepare_block(analyzed);
+	nl::interpreter::closure const executable{prepared, {make_functor(&print_line)}};
+	auto const output = executable.call({});
+	BOOST_REQUIRE(output);
+	auto const operation = std::dynamic_pointer_cast<print_operation_object const>(output);
+	BOOST_REQUIRE(operation);
+	BOOST_CHECK(nl::il::value(nl::il::string{"Hello, world!"}) == operation->message->value);
+}
+
+BOOST_AUTO_TEST_CASE(il_interpretation_2)
 {
 	std::string const code =
 			"print_hello = ()\n"
@@ -244,11 +292,15 @@ BOOST_AUTO_TEST_CASE(il_interpretation)
 	globals.next = nullptr;
 	globals.definitions =
 	{
-		{"print_line", {nl::il::signature{print_operation, {nl::il::null{}}}, print_line_symbol}}
+		{"print_line", {nl::il::local_identifier{nl::il::local::bound, 0}, nl::il::signature{print_operation, {nl::il::null{}}}, print_line_symbol}}
 	};
 
 	nl::il::block const analyzed = nl::il::analyze_block(parsed, globals);
 	nl::interpreter::function const prepared = nl::interpreter::prepare_block(analyzed);
 	nl::interpreter::closure const executable{prepared, {make_functor(&print_line)}};
 	auto const output = executable.call({});
+	BOOST_REQUIRE(output);
+	auto const operation = std::dynamic_pointer_cast<print_operation_object const>(output);
+	BOOST_REQUIRE(operation);
+	BOOST_CHECK(nl::il::value(nl::il::string{"Hello, world!"}) == operation->message->value);
 }
