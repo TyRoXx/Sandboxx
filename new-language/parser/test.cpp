@@ -2,6 +2,7 @@
 #include <boost/test/unit_test.hpp>
 #include "parser.hpp"
 #include "analyze.hpp"
+#include "interpreter.hpp"
 #include <unordered_map>
 #include <boost/lexical_cast.hpp>
 
@@ -195,6 +196,36 @@ BOOST_AUTO_TEST_CASE(analyzer_chaining)
 
 namespace
 {
+	template <class F>
+	struct functor : nl::interpreter::object
+	{
+		template <class G>
+		explicit functor(G &&f)
+			: f(std::forward<G>(f))
+		{
+		}
+
+		virtual nl::interpreter::object_ptr call(std::vector<nl::interpreter::object_ptr> const &arguments) const SILICIUM_OVERRIDE
+		{
+			return f(arguments);
+		}
+
+	private:
+
+		F f;
+	};
+
+	template <class F>
+	nl::interpreter::object_ptr make_functor(F &&f)
+	{
+		typedef typename std::decay<F>::type clean_f;
+		return std::make_shared<functor<clean_f>>(std::forward<F>(f));
+	}
+
+	nl::interpreter::object_ptr print_line(std::vector<nl::interpreter::object_ptr> const &arguments)
+	{
+		throw std::logic_error("not implemented");
+	}
 }
 
 BOOST_AUTO_TEST_CASE(il_interpretation)
@@ -206,16 +237,18 @@ BOOST_AUTO_TEST_CASE(il_interpretation)
 			"return print_hello()\n";
 	auto const parsed = parse(code);
 
-	nl::il::value const print_line{nl::il::external{"print_line"}};
+	nl::il::value const print_line_symbol{nl::il::external{"print_line"}};
 	nl::il::value const print_operation{nl::il::external{"print_operation"}};
 
 	nl::il::name_space globals;
 	globals.next = nullptr;
 	globals.definitions =
 	{
-		{"print_line", {nl::il::signature{print_operation, {nl::il::null{}}}, boost::none}}
+		{"print_line", {nl::il::signature{print_operation, {nl::il::null{}}}, print_line_symbol}}
 	};
 
 	nl::il::block const analyzed = nl::il::analyze_block(parsed, globals);
-
+	nl::interpreter::function const prepared = nl::interpreter::prepare_block(analyzed);
+	nl::interpreter::closure const executable{prepared, {make_functor(&print_line)}};
+	auto const output = executable.call({});
 }
