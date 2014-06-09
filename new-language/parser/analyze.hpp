@@ -438,7 +438,7 @@ namespace nl
 			return boost::apply_visitor(const_expression_evaluator{}, expr);
 		}
 
-		block analyze_block(ast::block const &syntax, name_space names);
+		block analyze_block(ast::block const &syntax, name_space &names);
 
 		struct expression_analyzer : boost::static_visitor<expression>
 		{
@@ -486,7 +486,7 @@ namespace nl
 						++parameter_index;
 					}
 				}
-				block body = analyze_block(syntax.body, std::move(locals));
+				block body = analyze_block(syntax.body, locals);
 				return make_closure{std::move(parameters), std::move(body), std::move(locals.bind_from_parent)};
 			}
 
@@ -521,7 +521,7 @@ namespace nl
 			return boost::apply_visitor(expression_analyzer{names}, syntax);
 		}
 
-		inline block analyze_block(ast::block const &syntax, name_space locals)
+		inline block analyze_block(ast::block const &syntax, name_space &locals)
 		{
 			block body;
 			std::size_t definition_index = 0;
