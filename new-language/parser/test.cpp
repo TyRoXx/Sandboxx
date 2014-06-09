@@ -249,31 +249,35 @@ namespace
 		}
 		return std::make_shared<print_operation_object>(message);
 	}
+
+	void test_hello_world_printing(std::string const &code)
+	{
+		auto const parsed = parse(code);
+
+		nl::il::value const print_line_symbol{nl::il::external{"print_line"}};
+		nl::il::value const print_operation{nl::il::external{"print_operation"}};
+
+		nl::il::name_space globals;
+		globals.next = nullptr;
+		globals.definitions =
+		{
+			{"print_line", {nl::il::local_identifier{nl::il::local::bound, 0}, nl::il::signature{print_operation, {nl::il::null{}}}, print_line_symbol}}
+		};
+
+		nl::il::block const analyzed = nl::il::analyze_block(parsed, globals);
+		nl::interpreter::function const prepared = nl::interpreter::prepare_block(analyzed);
+		nl::interpreter::closure const executable{prepared, {make_functor(&print_line)}};
+		auto const output = executable.call({});
+		BOOST_REQUIRE(output);
+		auto const operation = std::dynamic_pointer_cast<print_operation_object const>(output);
+		BOOST_REQUIRE(operation);
+		BOOST_CHECK(nl::il::value(nl::il::string{"Hello, world!"}) == operation->message->value);
+	}
 }
 
-BOOST_AUTO_TEST_CASE(il_interpretation)
+BOOST_AUTO_TEST_CASE(il_interpretation_1)
 {
-	std::string const code = "return print_line(\"Hello, world!\")\n";
-	auto const parsed = parse(code);
-
-	nl::il::value const print_line_symbol{nl::il::external{"print_line"}};
-	nl::il::value const print_operation{nl::il::external{"print_operation"}};
-
-	nl::il::name_space globals;
-	globals.next = nullptr;
-	globals.definitions =
-	{
-		{"print_line", {nl::il::local_identifier{nl::il::local::bound, 0}, nl::il::signature{print_operation, {nl::il::null{}}}, print_line_symbol}}
-	};
-
-	nl::il::block const analyzed = nl::il::analyze_block(parsed, globals);
-	nl::interpreter::function const prepared = nl::interpreter::prepare_block(analyzed);
-	nl::interpreter::closure const executable{prepared, {make_functor(&print_line)}};
-	auto const output = executable.call({});
-	BOOST_REQUIRE(output);
-	auto const operation = std::dynamic_pointer_cast<print_operation_object const>(output);
-	BOOST_REQUIRE(operation);
-	BOOST_CHECK(nl::il::value(nl::il::string{"Hello, world!"}) == operation->message->value);
+	test_hello_world_printing("return print_line(\"Hello, world!\")\n");
 }
 
 BOOST_AUTO_TEST_CASE(il_interpretation_2)
@@ -283,24 +287,17 @@ BOOST_AUTO_TEST_CASE(il_interpretation_2)
 			"	return print_line(\"Hello, world!\")\n"
 			"\n"
 			"return print_hello()\n";
-	auto const parsed = parse(code);
+	test_hello_world_printing(code);
+}
 
-	nl::il::value const print_line_symbol{nl::il::external{"print_line"}};
-	nl::il::value const print_operation{nl::il::external{"print_operation"}};
-
-	nl::il::name_space globals;
-	globals.next = nullptr;
-	globals.definitions =
-	{
-		{"print_line", {nl::il::local_identifier{nl::il::local::bound, 0}, nl::il::signature{print_operation, {nl::il::null{}}}, print_line_symbol}}
-	};
-
-	nl::il::block const analyzed = nl::il::analyze_block(parsed, globals);
-	nl::interpreter::function const prepared = nl::interpreter::prepare_block(analyzed);
-	nl::interpreter::closure const executable{prepared, {make_functor(&print_line)}};
-	auto const output = executable.call({});
-	BOOST_REQUIRE(output);
-	auto const operation = std::dynamic_pointer_cast<print_operation_object const>(output);
-	BOOST_REQUIRE(operation);
-	BOOST_CHECK(nl::il::value(nl::il::string{"Hello, world!"}) == operation->message->value);
+BOOST_AUTO_TEST_CASE(il_interpretation_3)
+{
+	std::string const code =
+			"make_hello_printer = ()\n"
+			"	return ()\n"
+			"		return print_line(\"Hello, world!\")\n"
+			"\n"
+			"\n"
+			"return make_hello_printer()()\n";
+	test_hello_world_printing(code);
 }
