@@ -195,66 +195,6 @@ BOOST_AUTO_TEST_CASE(analyzer_chaining)
 
 namespace
 {
-	struct closure;
-
-	typedef boost::variant<nl::il::value, boost::recursive_wrapper<closure>> value;
-
-	struct closure
-	{
-		nl::il::make_closure const *original;
-		boost::unordered_map<std::string, value> bound;
-	};
-
-	struct expression_evaluator : boost::static_visitor<value>
-	{
-		explicit expression_evaluator(boost::unordered_map<std::string, value> const &locals)
-			: m_locals(locals)
-		{
-		}
-
-		value operator()(nl::il::constant_expression const &expr) const
-		{
-			return expr.constant;
-		}
-
-		value operator()(nl::il::make_closure const &expr) const
-		{
-
-		}
-
-		value operator()(nl::il::subscript const &expr) const
-		{
-
-		}
-
-		value operator()(nl::il::call const &expr) const
-		{
-
-		}
-
-		value operator()(nl::il::definition_expression const &expr) const
-		{
-
-		}
-
-	private:
-
-		boost::unordered_map<std::string, value> const &m_locals;
-	};
-
-	value evaluate(nl::il::expression const &expr, boost::unordered_map<std::string, value> const &locals)
-	{
-		return boost::apply_visitor(expression_evaluator{locals}, expr);
-	}
-
-	value evaluate(nl::il::block const &program, boost::unordered_map<std::string, value> locals)
-	{
-		for (nl::il::definition const &definition : program.definitions)
-		{
-			locals[definition.name] = evaluate(definition.value, locals);
-		}
-		return evaluate(program.result, locals);
-	}
 }
 
 BOOST_AUTO_TEST_CASE(il_interpretation)
