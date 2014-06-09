@@ -149,7 +149,6 @@ namespace nl
 			std::string name;
 			il::type type;
 			boost::optional<value> const_value;
-			std::size_t hops;
 		};
 
 		struct parameter
@@ -193,8 +192,7 @@ namespace nl
 			return
 					(left.name == right.name) &&
 					(left.type == right.type) &&
-					(left.const_value == right.const_value) &&
-					(left.hops == right.hops);
+					(left.const_value == right.const_value);
 		}
 
 		inline bool operator == (block const &left, block const &right)
@@ -254,16 +252,14 @@ namespace nl
 		inline boost::optional<definition_expression> resolve_name(name_space const &leaf, std::string const &name)
 		{
 			name_space const *n = &leaf;
-			std::size_t hops = 0;
 			while (n)
 			{
 				auto definition = n->definitions.find(name);
 				if (definition != end(n->definitions))
 				{
-					return definition_expression{name, definition->second.type, definition->second.const_value, hops};
+					return definition_expression{name, definition->second.type, definition->second.const_value};
 				}
 				n = n->next;
-				++hops;
 			}
 			return boost::none;
 		}

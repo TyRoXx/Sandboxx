@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(analyzer_lambda)
 	auto analyzed = nl::il::analyze(lambda, context);
 	nl::il::make_closure expected;
 	expected.parameters.emplace_back(nl::il::parameter{uint32, "a"});
-	expected.body.result = nl::il::definition_expression{"a", uint32, boost::none, 0};
+	expected.body.result = nl::il::definition_expression{"a", uint32, boost::none};
 	BOOST_CHECK_EQUAL(nl::il::expression(expected), analyzed);
 }
 
@@ -188,8 +188,8 @@ BOOST_AUTO_TEST_CASE(analyzer_chaining)
 
 	nl::il::block const analyzed = nl::il::analyze_block(parsed, globals);
 	nl::il::block expected;
-	auto g_call = nl::il::call{nl::il::definition_expression{"g", nl::il::signature{uint32, {}}, g, 0}, {}};
-	auto f_call = nl::il::call{nl::il::definition_expression{"f", nl::il::signature{uint32, {uint32}}, f, 0}, {g_call}};
+	auto g_call = nl::il::call{nl::il::definition_expression{"g", nl::il::signature{uint32, {}}, g}, {}};
+	auto f_call = nl::il::call{nl::il::definition_expression{"f", nl::il::signature{uint32, {uint32}}, f}, {g_call}};
 	expected.result = f_call;
 	BOOST_CHECK_EQUAL(expected, analyzed);
 }
