@@ -220,7 +220,6 @@ namespace nl
 					Si::get(tokens);
 					expect_token(tokens, token_type::space);
 					auto result = parse_expression(tokens, indentation);
-					expect_token(tokens, token_type::newline);
 					return block{std::move(elements), std::move(result)};
 				}
 

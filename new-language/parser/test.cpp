@@ -285,7 +285,6 @@ BOOST_AUTO_TEST_CASE(il_interpretation_2)
 	std::string const code =
 			"print_hello = ()\n"
 			"	return print_line(\"Hello, world!\")\n"
-			"\n"
 			"return print_hello()\n";
 	test_hello_world_printing(code);
 }
@@ -296,8 +295,6 @@ BOOST_AUTO_TEST_CASE(il_interpretation_3)
 			"make_hello_printer = ()\n"
 			"	return ()\n"
 			"		return print_line(\"Hello, world!\")\n"
-			"\n"
-			"\n"
 			"return make_hello_printer()()\n";
 	test_hello_world_printing(code);
 }
