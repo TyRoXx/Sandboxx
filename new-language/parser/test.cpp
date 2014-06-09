@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(il_interpretation)
 	globals.next = nullptr;
 	globals.definitions =
 	{
-		{"print_line", {nl::il::signature{print_operation, {nl::il::null{}}}}}
+		{"print_line", {nl::il::signature{print_operation, {nl::il::null{}}}, boost::none}}
 	};
 
 	nl::il::block const analyzed = nl::il::analyze_block(parsed, globals);
