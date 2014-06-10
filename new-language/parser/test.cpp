@@ -272,9 +272,19 @@ namespace
 		return nl::il::signature{arguments.front(), std::vector<nl::il::value>(begin(arguments) + 1, end(arguments))};
 	}
 
+	nl::il::value my_type_of(std::vector<nl::il::value> const &arguments)
+	{
+		if (arguments.size() != 1)
+		{
+			throw std::runtime_error("typeof requires exactly one argument");
+		}
+		return nl::il::type_of_value(arguments[0]);
+	}
+
 	void test_hello_world_printing(std::string const &code)
 	{
 		auto const make_function_type = nl::il::signature{nl::il::signature_type{}, {nl::il::meta_type{}}};
+		auto const my_type_of_type = nl::il::generic_signature{nl::il::meta_type{}, {[](nl::il::type const &) { return true; }}};
 
 		nl::il::name_space global_info;
 
@@ -294,6 +304,10 @@ namespace
 			{
 				"function",
 				{nl::il::local_identifier{nl::il::local::bound, 2}, make_function_type, nl::il::value{nl::il::compile_time_closure{make_function_type, make_function}}}
+			},
+			{
+				"typeof",
+				{nl::il::local_identifier{nl::il::local::bound, 3}, my_type_of_type, nl::il::value{nl::il::compile_time_closure{my_type_of_type, my_type_of}}}
 			}
 		};
 
@@ -301,7 +315,8 @@ namespace
 		{
 			make_functor(&print_line),
 			nl::interpreter::object_ptr{}, //string
-			nl::interpreter::object_ptr{} //function
+			nl::interpreter::object_ptr{}, //function
+			nl::interpreter::object_ptr{} //typeof
 		};
 		auto const output = run_code(code, global_info, globals);
 
@@ -353,6 +368,18 @@ BOOST_AUTO_TEST_CASE(il_interpretation_5)
 			"get_hello = ()\n"
 			"	return \"Hello, world!\"\n"
 			"string_generator = function(string)\n"
+			"call = (string_generator callee)\n"
+			"	return callee()\n"
+			"return print_line(call(get_hello))\n";
+	test_hello_world_printing(code);
+}
+
+BOOST_AUTO_TEST_CASE(il_interpretation_6)
+{
+	std::string const code =
+			"get_hello = ()\n"
+			"	return \"Hello, world!\"\n"
+			"string_generator = function(typeof(\"\"))\n"
 			"call = (string_generator callee)\n"
 			"	return callee()\n"
 			"return print_line(call(get_hello))\n";

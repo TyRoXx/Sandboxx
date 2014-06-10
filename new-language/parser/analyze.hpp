@@ -14,6 +14,7 @@ namespace nl
 	{
 		struct map;
 		struct signature;
+		struct generic_signature;
 
 		struct external
 		{
@@ -86,6 +87,7 @@ namespace nl
 			null,
 			boost::recursive_wrapper<map>,
 			boost::recursive_wrapper<signature>,
+			boost::recursive_wrapper<generic_signature>,
 			external,
 			integer,
 			string,
@@ -138,9 +140,32 @@ namespace nl
 			return digest;
 		}
 
+		struct generic_signature
+		{
+			typedef std::function<bool (type const &)> type_predicate;
+
+			type result;
+			std::vector<type_predicate> parameters;
+		};
+
+		inline bool operator == (generic_signature const &left, generic_signature const &right)
+		{
+			return
+					(left.result == right.result) &&
+					(left.parameters.size() == right.parameters.size()); //TODO cannot really be compared
+		}
+
+		inline std::size_t hash_value(generic_signature const &value)
+		{
+			std::size_t digest = 0;
+			boost::hash_combine(digest, value.result);
+			boost::hash_combine(digest, value.parameters.size()); //TODO does not really have a hash
+			return digest;
+		}
+
 		struct compile_time_closure
 		{
-			signature type;
+			il::type type;
 			std::function<value (std::vector<value> const &)> call;
 		};
 
@@ -382,6 +407,11 @@ namespace nl
 				return meta_type{};
 			}
 
+			type operator()(generic_signature const &) const
+			{
+				return meta_type{};
+			}
+
 			type operator()(external const &) const
 			{
 				throw std::logic_error("not implemented");
@@ -423,6 +453,30 @@ namespace nl
 			return boost::apply_visitor(value_type_getter{}, v);
 		}
 
+		struct type_of_call_visitor : boost::static_visitor<boost::optional<type>>
+		{
+			boost::optional<type> operator()(signature const &s) const
+			{
+				return s.result;
+			}
+
+			boost::optional<type> operator()(generic_signature const &s) const
+			{
+				return s.result;
+			}
+
+			template <class Other>
+			boost::optional<type> operator()(Other const &) const
+			{
+				return boost::none;
+			}
+		};
+
+		inline boost::optional<type> result_of_call(type const &callee)
+		{
+			return boost::apply_visitor(type_of_call_visitor{}, callee);
+		}
+
 		struct expression_type_visitor : boost::static_visitor<type>
 		{
 			type operator()(constant_expression const &expr) const
@@ -455,12 +509,12 @@ namespace nl
 			type operator()(call const &expr) const
 			{
 				type function_type = type_of_expression(expr.function);
-				signature const * const sig = boost::get<signature>(&function_type);
-				if (!sig)
+				auto result = result_of_call(function_type);
+				if (!result)
 				{
-					throw std::runtime_error("The expression does not evaluate to something callable");
+					throw std::runtime_error("Value cannot be called as a function");
 				}
-				return sig->result;
+				return std::move(*result);
 			}
 
 			type operator()(local_expression const &expr) const
@@ -474,17 +528,49 @@ namespace nl
 			return boost::apply_visitor(expression_type_visitor{}, expr);
 		}
 
+		struct callability_visitor : boost::static_visitor<bool>
+		{
+			std::vector<type> const &argument_types;
+
+			explicit callability_visitor(std::vector<type> const &argument_types)
+				: argument_types(argument_types)
+			{
+			}
+
+			bool operator()(signature const &callee) const
+			{
+				return (argument_types == callee.parameters);
+			}
+
+			bool operator()(generic_signature const &callee) const
+			{
+				if (argument_types.size() != callee.parameters.size())
+				{
+					return false;
+				}
+				for (size_t i = 0; i < argument_types.size(); ++i)
+				{
+					if (!callee.parameters[i](argument_types[i]))
+					{
+						return false;
+					}
+				}
+				return true;
+			}
+
+			template <class Other>
+			bool operator()(Other const &) const
+			{
+				return false;
+			}
+		};
+
 		inline bool is_callable(expression const &function, std::vector<expression> const &arguments)
 		{
 			type function_type = type_of_expression(function);
-			signature const * const sig = boost::get<signature>(&function_type);
-			if (!sig)
-			{
-				throw std::runtime_error("The expression does not evaluate to something callable");
-			}
 			std::vector<type> argument_types;
 			std::transform(begin(arguments), end(arguments), std::back_inserter(argument_types), type_of_expression);
-			return (sig->parameters == argument_types);
+			return boost::apply_visitor(callability_visitor{argument_types}, function_type);
 		}
 
 		struct const_closure_caller : boost::static_visitor<boost::optional<value>>
@@ -735,6 +821,14 @@ namespace nl
 					print(m_out, param);
 					Si::append(m_out, ", ");
 				}
+				Si::append(m_out, ")->");
+				print(m_out, value.result);
+			}
+
+			void operator()(generic_signature const &value) const
+			{
+				Si::append(m_out, "-generic_signature-(");
+				Si::append(m_out, boost::lexical_cast<std::string>(value.parameters.size()));
 				Si::append(m_out, ")->");
 				print(m_out, value.result);
 			}
