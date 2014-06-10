@@ -250,24 +250,37 @@ namespace
 		return std::make_shared<print_operation_object>(message);
 	}
 
-	void test_hello_world_printing(std::string const &code)
+	nl::interpreter::object_ptr run_code(
+			std::string const &code,
+			nl::il::name_space global_info,
+			std::vector<nl::interpreter::object_ptr> const &globals)
 	{
 		auto const parsed = parse(code);
+		nl::il::block const analyzed = nl::il::analyze_block(parsed, global_info);
+		nl::interpreter::function const prepared = nl::interpreter::prepare_block(analyzed);
+		nl::interpreter::closure const executable{prepared, globals};
+		auto const output = executable.call({});
+		return output;
+	}
+
+	void test_hello_world_printing(std::string const &code)
+	{
+		nl::il::name_space global_info;
 
 		nl::il::value const print_line_symbol{nl::il::external{"print_line"}};
 		nl::il::value const print_operation{nl::il::external{"print_operation"}};
-
-		nl::il::name_space globals;
-		globals.next = nullptr;
-		globals.definitions =
+		global_info.next = nullptr;
+		global_info.definitions =
 		{
 			{"print_line", {nl::il::local_identifier{nl::il::local::bound, 0}, nl::il::signature{print_operation, {nl::il::null{}}}, print_line_symbol}}
 		};
 
-		nl::il::block const analyzed = nl::il::analyze_block(parsed, globals);
-		nl::interpreter::function const prepared = nl::interpreter::prepare_block(analyzed);
-		nl::interpreter::closure const executable{prepared, {make_functor(&print_line)}};
-		auto const output = executable.call({});
+		std::vector<nl::interpreter::object_ptr> const globals
+		{
+			make_functor(&print_line)
+		};
+		auto const output = run_code(code, global_info, globals);
+
 		BOOST_REQUIRE(output);
 		auto const operation = std::dynamic_pointer_cast<print_operation_object const>(output);
 		BOOST_REQUIRE(operation);
