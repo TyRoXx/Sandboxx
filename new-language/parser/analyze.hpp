@@ -5,6 +5,7 @@
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/range/algorithm/transform.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
 
@@ -646,10 +647,10 @@ namespace nl
 					return boost::none;
 				}
 				std::vector<value> actual_arguments;
-				boost::range::copy(arguments | boost::adaptors::transformed([](boost::optional<value> const &v)
+				boost::range::transform(arguments, std::back_inserter(actual_arguments), [](boost::optional<value> const &v)
 				{
 					return *v;
-				}), std::back_inserter(actual_arguments));
+				});
 				return call_const_closure(*function, actual_arguments);
 			}
 
