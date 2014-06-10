@@ -263,8 +263,19 @@ namespace
 		return output;
 	}
 
+	nl::il::value make_function(std::vector<nl::il::value> const &arguments)
+	{
+		if (arguments.empty())
+		{
+			throw std::invalid_argument("a function requires a result type");
+		}
+		return nl::il::signature{arguments.front(), std::vector<nl::il::value>(begin(arguments) + 1, end(arguments))};
+	}
+
 	void test_hello_world_printing(std::string const &code)
 	{
+		auto const make_function_type = nl::il::signature{nl::il::signature_type{}, {nl::il::meta_type{}}};
+
 		nl::il::name_space global_info;
 
 		nl::il::value const print_line_symbol{nl::il::external{"print_line"}};
@@ -272,12 +283,25 @@ namespace
 		global_info.next = nullptr;
 		global_info.definitions =
 		{
-			{"print_line", {nl::il::local_identifier{nl::il::local::bound, 0}, nl::il::signature{print_operation, {nl::il::null{}}}, print_line_symbol}}
+			{
+				"print_line",
+				{nl::il::local_identifier{nl::il::local::bound, 0}, nl::il::signature{print_operation, {nl::il::string_type{}}}, print_line_symbol}
+			},
+			{
+				"string",
+				{nl::il::local_identifier{nl::il::local::bound, 1}, nl::il::meta_type{}, nl::il::value{nl::il::string_type{}}}
+			},
+			{
+				"function",
+				{nl::il::local_identifier{nl::il::local::bound, 2}, make_function_type, nl::il::value{nl::il::compile_time_closure{make_function_type, make_function}}}
+			}
 		};
 
 		std::vector<nl::interpreter::object_ptr> const globals
 		{
-			make_functor(&print_line)
+			make_functor(&print_line),
+			nl::interpreter::object_ptr{}, //string
+			nl::interpreter::object_ptr{} //function
 		};
 		auto const output = run_code(code, global_info, globals);
 
@@ -309,5 +333,16 @@ BOOST_AUTO_TEST_CASE(il_interpretation_3)
 			"	return ()\n"
 			"		return print_line(\"Hello, world!\")\n"
 			"return make_hello_printer()()\n";
+	test_hello_world_printing(code);
+}
+
+BOOST_AUTO_TEST_CASE(il_interpretation_4)
+{
+	std::string const code =
+			"get_hello = ()\n"
+			"	return \"Hello, world!\"\n"
+			"call = (function(string) callee)\n"
+			"	return callee()\n"
+			"return print_line(call(get_hello))\n";
 	test_hello_world_printing(code);
 }

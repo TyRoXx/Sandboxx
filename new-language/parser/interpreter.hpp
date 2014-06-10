@@ -167,7 +167,7 @@ namespace nl
 			{
 			}
 
-			virtual object_ptr evaluate(local_context const &context) const SILICIUM_OVERRIDE
+			virtual object_ptr evaluate(local_context const &) const SILICIUM_OVERRIDE
 			{
 				return std::make_shared<value_object>(value);
 			}
@@ -199,7 +199,7 @@ namespace nl
 				return std::make_shared<std::unique_ptr<expression>>(make_unique<make_closure>(std::move(original), expr.bind_from_parent));
 			}
 
-			std::shared_ptr<std::unique_ptr<expression>> operator()(nl::il::subscript const &expr) const
+			std::shared_ptr<std::unique_ptr<expression>> operator()(nl::il::subscript const &) const
 			{
 				throw std::logic_error("not implemented");
 			}

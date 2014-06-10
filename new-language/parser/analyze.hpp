@@ -5,6 +5,8 @@
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/algorithm/cxx11/all_of.hpp>
 
 namespace nl
 {
@@ -58,21 +60,41 @@ namespace nl
 			return boost::hash_value(value.value);
 		}
 
-		struct null
-		{
-		};
-
-		inline bool operator == (null, null)
-		{
-			return true;
+#define NL_DEFINE_TRIVIAL_INLINE_STRUCT(name_) \
+		struct name_ \
+		{ \
+		}; \
+		inline bool operator == (name_ const &, name_ const &) \
+		{ \
+			return true; \
+		} \
+		inline std::size_t hash_value(name_ const &) \
+		{ \
+			return boost::hash_value(true); \
 		}
 
-		inline std::size_t hash_value(null const &)
-		{
-			return boost::hash_value(true);
-		}
+		NL_DEFINE_TRIVIAL_INLINE_STRUCT(null)
+		NL_DEFINE_TRIVIAL_INLINE_STRUCT(meta_type)
+		NL_DEFINE_TRIVIAL_INLINE_STRUCT(string_type)
+		NL_DEFINE_TRIVIAL_INLINE_STRUCT(signature_type)
 
-		typedef boost::variant<null, boost::recursive_wrapper<map>, boost::recursive_wrapper<signature>, external, integer, string> value;
+#undef NL_DEFINE_TRIVIAL_INLINE_STRUCT
+
+		struct compile_time_closure;
+
+		typedef boost::variant<
+			null,
+			boost::recursive_wrapper<map>,
+			boost::recursive_wrapper<signature>,
+			external,
+			integer,
+			string,
+			meta_type,
+			string_type,
+			signature_type,
+			boost::recursive_wrapper<compile_time_closure>
+		> value;
+
 		typedef value type;
 
 		struct map
@@ -114,6 +136,22 @@ namespace nl
 			boost::hash_combine(digest, value.result);
 			boost::hash_combine(digest, value.parameters);
 			return digest;
+		}
+
+		struct compile_time_closure
+		{
+			signature type;
+			std::function<value (std::vector<value> const &)> call;
+		};
+
+		inline bool operator == (compile_time_closure const &, compile_time_closure const &)
+		{
+			return true;
+		}
+
+		inline std::size_t hash_value(compile_time_closure const &)
+		{
+			return 0;
 		}
 
 		struct constant_expression
@@ -327,11 +365,69 @@ namespace nl
 			std::string m_element;
 		};
 
+		struct value_type_getter : boost::static_visitor<type>
+		{
+			type operator()(null const &) const
+			{
+				return null{};
+			}
+
+			type operator()(map const &) const
+			{
+				throw std::logic_error("not implemented");
+			}
+
+			type operator()(signature const &) const
+			{
+				return meta_type{};
+			}
+
+			type operator()(external const &) const
+			{
+				throw std::logic_error("not implemented");
+			}
+
+			type operator()(integer const &) const
+			{
+				throw std::logic_error("not implemented");
+			}
+
+			type operator()(string const &) const
+			{
+				return string_type{};
+			}
+
+			type operator()(meta_type const &) const
+			{
+				return null{};
+			}
+
+			type operator()(string_type const &) const
+			{
+				return meta_type{};
+			}
+
+			type operator()(signature_type const &) const
+			{
+				return meta_type{};
+			}
+
+			type operator()(compile_time_closure const &v) const
+			{
+				return v.type;
+			}
+		};
+
+		inline type type_of_value(value const &v)
+		{
+			return boost::apply_visitor(value_type_getter{}, v);
+		}
+
 		struct expression_type_visitor : boost::static_visitor<type>
 		{
-			type operator()(constant_expression const &) const
+			type operator()(constant_expression const &expr) const
 			{
-				return null();
+				return type_of_value(expr.constant);
 			}
 
 			type operator()(make_closure const &closure) const
@@ -391,49 +487,97 @@ namespace nl
 			return (sig->parameters == argument_types);
 		}
 
+		struct const_closure_caller : boost::static_visitor<boost::optional<value>>
+		{
+			std::vector<value> const &arguments;
+
+			explicit const_closure_caller(std::vector<value> const &arguments)
+				: arguments(arguments)
+			{
+			}
+
+			boost::optional<value> operator()(compile_time_closure const &v) const
+			{
+				return v.call(arguments);
+			}
+
+			template <class Other>
+			boost::optional<value> operator()(Other const &) const
+			{
+				return boost::none;
+			}
+		};
+
+		boost::optional<value> call_const_closure(value const &maybe_closure, std::vector<value> const &arguments)
+		{
+			return boost::apply_visitor(const_closure_caller{arguments}, maybe_closure);
+		}
+
 		expression analyze(ast::expression const &syntax, name_space &names);
 
-		value evaluate_const(expression const &expr);
+		boost::optional<value> evaluate_const(expression const &expr);
 
-		struct const_expression_evaluator : boost::static_visitor<value>
+		struct const_expression_evaluator : boost::static_visitor<boost::optional<value>>
 		{
-			value operator()(constant_expression const &expr) const
+			boost::optional<value> operator()(constant_expression const &expr) const
 			{
 				return expr.constant;
 			}
 
-			value operator()(make_closure const &) const
+			boost::optional<value> operator()(make_closure const &) const
 			{
-				throw std::runtime_error("A closure is not a compile-time value");
+				return boost::none;
 			}
 
-			value operator()(subscript const &expr) const
+			boost::optional<value> operator()(subscript const &expr) const
 			{
 				auto left = evaluate_const(expr.left);
-				auto element = boost::apply_visitor(subscription_visitor{expr.element}, left);
+				if (!left)
+				{
+					return boost::none;
+				}
+				auto element = boost::apply_visitor(subscription_visitor{expr.element}, *left);
 				if (!element)
 				{
-					throw std::runtime_error("Cannot get element from map at compile-time: " + expr.element);
+					return boost::none;
 				}
 				return std::move(*element);
 			}
 
-			value operator()(call const &) const
+			boost::optional<value> operator()(call const &expr) const
 			{
-				throw std::runtime_error("Functions cannot be evaluated at compile-time");
+				auto function = evaluate_const(expr.function);
+				if (!function)
+				{
+					return boost::none;
+				}
+				auto arguments = expr.arguments | boost::adaptors::transformed(evaluate_const);
+				if (!boost::algorithm::all_of(arguments, [](boost::optional<value> const &v) -> bool
+				{
+					return v.is_initialized();
+				}))
+				{
+					return boost::none;
+				}
+				std::vector<value> actual_arguments;
+				boost::range::copy(arguments | boost::adaptors::transformed([](boost::optional<value> const &v)
+				{
+					return *v;
+				}), std::back_inserter(actual_arguments));
+				return call_const_closure(*function, actual_arguments);
 			}
 
-			value operator()(local_expression const &expr) const
+			boost::optional<value> operator()(local_expression const &expr) const
 			{
 				if (!expr.const_value)
 				{
-					throw std::runtime_error("This definition cannot be evaluated at compile-time: " + expr.name);
+					return boost::none;
 				}
 				return *expr.const_value;
 			}
 		};
 
-		inline value evaluate_const(expression const &expr)
+		inline boost::optional<value> evaluate_const(expression const &expr)
 		{
 			return boost::apply_visitor(const_expression_evaluator{}, expr);
 		}
@@ -477,8 +621,12 @@ namespace nl
 					{
 						auto type_expr = analyze(parameter_syntax.type, locals);
 						auto type = evaluate_const(type_expr);
-						parameters.emplace_back(parameter{type, parameter_syntax.name.content});
-						name_space_entry entry{local_identifier{local::argument, parameter_index}, type, boost::none};
+						if (!type)
+						{
+							throw std::runtime_error("Type of parameter is not constant: " + parameter_syntax.name.content);
+						}
+						parameters.emplace_back(parameter{*type, parameter_syntax.name.content});
+						name_space_entry entry{local_identifier{local::argument, parameter_index}, *type, boost::none};
 						if (!locals.definitions.insert(std::make_pair(parameter_syntax.name.content, entry)).second)
 						{
 							throw std::runtime_error("Cannot redefine " + parameter_syntax.name.content);
@@ -600,6 +748,26 @@ namespace nl
 			void operator()(string const &value) const
 			{
 				Si::append(m_out, value.value);
+			}
+
+			void operator()(meta_type const &) const
+			{
+				Si::append(m_out, "-type-");
+			}
+
+			void operator()(string_type const &) const
+			{
+				Si::append(m_out, "-string-");
+			}
+
+			void operator()(signature_type const &) const
+			{
+				Si::append(m_out, "-signature-");
+			}
+
+			void operator()(compile_time_closure const &) const
+			{
+				Si::append(m_out, "-ctclosure-");
 			}
 
 		private:
