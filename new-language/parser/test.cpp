@@ -346,3 +346,15 @@ BOOST_AUTO_TEST_CASE(il_interpretation_4)
 			"return print_line(call(get_hello))\n";
 	test_hello_world_printing(code);
 }
+
+BOOST_AUTO_TEST_CASE(il_interpretation_5)
+{
+	std::string const code =
+			"get_hello = ()\n"
+			"	return \"Hello, world!\"\n"
+			"string_generator = function(string)\n"
+			"call = (string_generator callee)\n"
+			"	return callee()\n"
+			"return print_line(call(get_hello))\n";
+	test_hello_world_printing(code);
+}

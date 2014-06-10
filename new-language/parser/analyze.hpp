@@ -676,15 +676,19 @@ namespace nl
 			for (ast::definition const &definition_syntax : syntax.elements)
 			{
 				auto value = analyze(definition_syntax.value, locals);
-				body.definitions.emplace_back(definition{definition_syntax.name.content, value});
-				name_space_entry entry{local_identifier{local::definition, definition_index}, type_of_expression(value), boost::none};
+				boost::optional<il::value> const_value;
 				try
 				{
-					entry.const_value = evaluate_const(value);
+					const_value = evaluate_const(value);
 				}
 				catch (std::runtime_error const &) //TODO
 				{
 				}
+				{
+					auto simplified_value = (const_value ? expression{constant_expression{*const_value}} : value);
+					body.definitions.emplace_back(definition{definition_syntax.name.content, std::move(simplified_value)});
+				}
+				name_space_entry entry{local_identifier{local::definition, definition_index}, type_of_expression(value), const_value};
 				if (!locals.definitions.insert(std::make_pair(definition_syntax.name.content, entry)).second)
 				{
 					throw std::runtime_error("Cannot redefine " + definition_syntax.name.content);
