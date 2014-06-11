@@ -281,43 +281,58 @@ namespace
 		return nl::il::type_of_value(arguments[0]);
 	}
 
+	void add_constant(
+			nl::il::name_space &analyzation_info,
+			std::vector<nl::interpreter::object_ptr> &execution_info,
+			std::string const &name,
+			nl::il::value const &constant)
+	{
+		std::size_t const id = execution_info.size();
+		nl::il::name_space_entry entry
+		{
+			nl::il::local_identifier{nl::il::local::bound, id},
+			nl::il::type_of_value(constant),
+			constant
+		};
+		analyzation_info.definitions.insert(std::make_pair(name, std::move(entry)));
+		execution_info.emplace_back(nl::interpreter::object_ptr{});
+	}
+
+	void add_external(
+			nl::il::name_space &analyzation_info,
+			std::vector<nl::interpreter::object_ptr> &execution_info,
+			std::string const &name,
+			nl::il::type const &type,
+			nl::interpreter::object_ptr value
+			)
+	{
+		std::size_t const id = execution_info.size();
+		nl::il::name_space_entry entry
+		{
+			nl::il::local_identifier{nl::il::local::bound, id},
+			type,
+			boost::none
+		};
+		analyzation_info.definitions.insert(std::make_pair(name, std::move(entry)));
+		execution_info.emplace_back(value);
+	}
+
 	void test_hello_world_printing(std::string const &code)
 	{
 		auto const make_function_type = nl::il::signature{nl::il::signature_type{}, {nl::il::meta_type{}}};
 		auto const my_type_of_type = nl::il::generic_signature{nl::il::meta_type{}, {[](nl::il::type const &) { return true; }}};
 
-		nl::il::name_space global_info;
-
-		nl::il::value const print_line_symbol{nl::il::external{"print_line"}};
 		nl::il::value const print_operation{nl::il::external{"print_operation"}};
-		global_info.next = nullptr;
-		global_info.definitions =
-		{
-			{
-				"print_line",
-				{nl::il::local_identifier{nl::il::local::bound, 0}, nl::il::signature{print_operation, {nl::il::string_type{}}}, print_line_symbol}
-			},
-			{
-				"string",
-				{nl::il::local_identifier{nl::il::local::bound, 1}, nl::il::meta_type{}, nl::il::value{nl::il::string_type{}}}
-			},
-			{
-				"function",
-				{nl::il::local_identifier{nl::il::local::bound, 2}, make_function_type, nl::il::value{nl::il::compile_time_closure{make_function_type, make_function}}}
-			},
-			{
-				"typeof",
-				{nl::il::local_identifier{nl::il::local::bound, 3}, my_type_of_type, nl::il::value{nl::il::compile_time_closure{my_type_of_type, my_type_of}}}
-			}
-		};
 
-		std::vector<nl::interpreter::object_ptr> const globals
-		{
-			make_functor(&print_line),
-			nl::interpreter::object_ptr{}, //string
-			nl::interpreter::object_ptr{}, //function
-			nl::interpreter::object_ptr{} //typeof
-		};
+		nl::il::name_space global_info;
+		global_info.next = nullptr;
+
+		std::vector<nl::interpreter::object_ptr> globals;
+		add_external(global_info, globals, "print_line", nl::il::signature{print_operation, {nl::il::string_type{}}}, make_functor(&print_line));
+		add_constant(global_info, globals, "string", nl::il::string_type{});
+		add_constant(global_info, globals, "function", nl::il::compile_time_closure{make_function_type, make_function});
+		add_constant(global_info, globals, "typeof", nl::il::compile_time_closure{my_type_of_type, my_type_of});
+
 		auto const output = run_code(code, global_info, globals);
 
 		BOOST_REQUIRE(output);
