@@ -111,22 +111,12 @@ namespace nl
 
 		inline bool operator == (indirect_value const &left, indirect_value const &right)
 		{
-			if (left.actual && right.actual)
-			{
-				return (*left.actual == *right.actual);
-			}
 			return (left.actual == right.actual);
 		}
 
 		inline std::size_t hash_value(indirect_value const &value)
 		{
-			std::size_t digest = 0;
-			if (value.actual)
-			{
-				using boost::hash_value;
-				return hash_value(*value.actual);
-			}
-			return digest;
+			return hash_value(value.actual);
 		}
 
 		struct map
@@ -429,9 +419,14 @@ namespace nl
 				return null{};
 			}
 
-			type operator()(map const &) const
+			type operator()(map const &v) const
 			{
-				throw std::logic_error("not implemented");
+				map v_type;
+				for (auto const &element : v.elements)
+				{
+					v_type.elements.insert(std::make_pair(element.first, type_of_value(element.second)));
+				}
+				return std::move(v_type);
 			}
 
 			type operator()(signature const &) const

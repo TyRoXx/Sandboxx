@@ -431,17 +431,12 @@ namespace
 					{
 						throw std::invalid_argument("add requires exactly one argument");
 					}
-					auto const right = std::dynamic_pointer_cast<nl::interpreter::value_object const>(arguments.front());
-					if (!right)
-					{
-						throw std::invalid_argument("the argument to add has to be an integer literal");
-					}
-					auto const * const right_int = boost::get<nl::il::integer>(&right->value);
+					auto const right_int = std::dynamic_pointer_cast<uint_object const>(arguments.front());
 					if (!right_int)
 					{
 						throw std::invalid_argument("the argument to add has to be an integer literal");
 					}
-					auto result = static_cast<UInt>(left + static_cast<UInt>(boost::lexical_cast<boost::uintmax_t>(right_int->value)));
+					auto result = static_cast<UInt>(left + right_int->value);
 					return std::make_shared<uint_object>(result);
 				});
 			}
@@ -449,26 +444,50 @@ namespace
 		}
 	};
 
-	nl::interpreter::object_ptr make_uint8(boost::uint8_t value)
+	template <class UInt>
+	nl::interpreter::object_ptr make_uint(UInt value)
 	{
-		return std::make_shared<uint_object<boost::uint8_t>>(value);
+		return std::make_shared<uint_object<UInt>>(value);
+	}
+
+	template <class UInt>
+	nl::interpreter::object_ptr my_make_uint(std::vector<nl::interpreter::object_ptr> const &arguments)
+	{
+		if (arguments.size() != 1)
+		{
+			throw std::invalid_argument("add requires exactly one argument");
+		}
+		auto const value = std::dynamic_pointer_cast<nl::interpreter::value_object const>(arguments.front());
+		if (!value)
+		{
+			throw std::invalid_argument("the argument to add has to be an integer literal");
+		}
+		auto const * const value_int = boost::get<nl::il::integer>(&value->value);
+		if (!value_int)
+		{
+			throw std::invalid_argument("the argument to add has to be an integer literal");
+		}
+		auto const int_ = static_cast<UInt>(boost::lexical_cast<boost::uintmax_t>(value_int->value));
+		return make_uint(int_);
 	}
 }
 
 BOOST_AUTO_TEST_CASE(il_interpretation_subscript)
 {
-	std::string const code = "return i.add(1)\n";
+	std::string const code = "return i.add(make_uint8(1))\n";
 
 	nl::il::value const uint8_type{nl::il::map{boost::unordered_map<nl::il::value, nl::il::value>
 	{
-		{nl::il::string{"add"}, nl::il::signature{nl::il::indirect_value{&uint8_type}, {nl::il::integer_type{}}}}
+		{nl::il::string{"add"}, nl::il::signature{nl::il::indirect_value{&uint8_type}, {nl::il::indirect_value{&uint8_type}}}}
 	}}};
+	auto uint8_indirect = nl::il::indirect_value{&uint8_type};
 
 	nl::il::name_space global_info;
 	global_info.next = nullptr;
 
 	std::vector<nl::interpreter::object_ptr> globals;
-	add_external(global_info, globals, "i", uint8_type, make_uint8(2));
+	add_external(global_info, globals, "i", uint8_type, make_uint<boost::uint8_t>(2));
+	add_external(global_info, globals, "make_uint8", nl::il::signature{uint8_indirect, {nl::il::integer_type{}}}, make_functor(my_make_uint<boost::uint8_t>));
 
 	auto const output = run_code(code, global_info, globals);
 
