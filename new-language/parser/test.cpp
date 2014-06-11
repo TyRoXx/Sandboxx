@@ -406,6 +406,8 @@ namespace
 	template <class UInt>
 	struct uint_object : nl::interpreter::object
 	{
+		static_assert(std::is_unsigned<UInt>::value, "This class supports only unsigned integers");
+
 		UInt const value;
 
 		explicit uint_object(UInt value)
