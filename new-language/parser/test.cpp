@@ -400,3 +400,78 @@ BOOST_AUTO_TEST_CASE(il_interpretation_6)
 			"return print_line(call(get_hello))\n";
 	test_hello_world_printing(code);
 }
+
+namespace
+{
+	template <class UInt>
+	struct uint_object : nl::interpreter::object
+	{
+		UInt const value;
+
+		explicit uint_object(UInt value)
+			: value(value)
+		{
+		}
+
+		virtual nl::interpreter::object_ptr call(std::vector<nl::interpreter::object_ptr> const &) const SILICIUM_OVERRIDE
+		{
+			throw std::logic_error("uint cannot be called");
+		}
+
+		virtual nl::interpreter::object_ptr subscript(std::string const &element) const SILICIUM_OVERRIDE
+		{
+			if (element == "add")
+			{
+				auto left = value;
+				return make_functor([left](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
+				{
+					if (arguments.size() != 1)
+					{
+						throw std::invalid_argument("add requires exactly one argument");
+					}
+					auto const right = std::dynamic_pointer_cast<nl::interpreter::value_object const>(arguments.front());
+					if (!right)
+					{
+						throw std::invalid_argument("the argument to add has to be an integer literal");
+					}
+					auto const * const right_int = boost::get<nl::il::integer>(&right->value);
+					if (!right_int)
+					{
+						throw std::invalid_argument("the argument to add has to be an integer literal");
+					}
+					auto result = static_cast<UInt>(left + static_cast<UInt>(boost::lexical_cast<boost::uintmax_t>(right_int->value)));
+					return std::make_shared<uint_object>(result);
+				});
+			}
+			throw std::invalid_argument("invalid element access on uint_object: " + element);
+		}
+	};
+
+	nl::interpreter::object_ptr make_uint8(boost::uint8_t value)
+	{
+		return std::make_shared<uint_object<boost::uint8_t>>(value);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(il_interpretation_subscript)
+{
+	std::string const code = "return i.add(1)\n";
+
+	nl::il::value const uint8_type{nl::il::map{boost::unordered_map<nl::il::value, nl::il::value>
+	{
+		{nl::il::string{"add"}, nl::il::signature{nl::il::indirect_value{&uint8_type}, {nl::il::integer_type{}}}}
+	}}};
+
+	nl::il::name_space global_info;
+	global_info.next = nullptr;
+
+	std::vector<nl::interpreter::object_ptr> globals;
+	add_external(global_info, globals, "i", uint8_type, make_uint8(2));
+
+	auto const output = run_code(code, global_info, globals);
+
+	BOOST_REQUIRE(output);
+	auto const result = std::dynamic_pointer_cast<uint_object<boost::uint8_t> const>(output);
+	BOOST_REQUIRE(result);
+	BOOST_CHECK(3 == result->value);
+}

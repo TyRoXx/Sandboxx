@@ -78,11 +78,13 @@ namespace nl
 		NL_DEFINE_TRIVIAL_INLINE_STRUCT(null)
 		NL_DEFINE_TRIVIAL_INLINE_STRUCT(meta_type)
 		NL_DEFINE_TRIVIAL_INLINE_STRUCT(string_type)
+		NL_DEFINE_TRIVIAL_INLINE_STRUCT(integer_type)
 		NL_DEFINE_TRIVIAL_INLINE_STRUCT(signature_type)
 
 #undef NL_DEFINE_TRIVIAL_INLINE_STRUCT
 
 		struct compile_time_closure;
+		struct indirect_value;
 
 		typedef boost::variant<
 			null,
@@ -94,11 +96,38 @@ namespace nl
 			string,
 			meta_type,
 			string_type,
+			integer_type,
 			signature_type,
-			boost::recursive_wrapper<compile_time_closure>
+			boost::recursive_wrapper<compile_time_closure>,
+			boost::recursive_wrapper<indirect_value>
 		> value;
 
 		typedef value type;
+
+		struct indirect_value
+		{
+			value const *actual;
+		};
+
+		inline bool operator == (indirect_value const &left, indirect_value const &right)
+		{
+			if (left.actual && right.actual)
+			{
+				return (*left.actual == *right.actual);
+			}
+			return (left.actual == right.actual);
+		}
+
+		inline std::size_t hash_value(indirect_value const &value)
+		{
+			std::size_t digest = 0;
+			if (value.actual)
+			{
+				using boost::hash_value;
+				return hash_value(*value.actual);
+			}
+			return digest;
+		}
 
 		struct map
 		{
@@ -391,6 +420,8 @@ namespace nl
 			std::string m_element;
 		};
 
+		type type_of_value(value const &v);
+
 		struct value_type_getter : boost::static_visitor<type>
 		{
 			type operator()(null const &) const
@@ -420,7 +451,7 @@ namespace nl
 
 			type operator()(integer const &) const
 			{
-				throw std::logic_error("not implemented");
+				return integer_type{};
 			}
 
 			type operator()(string const &) const
@@ -438,6 +469,11 @@ namespace nl
 				return meta_type{};
 			}
 
+			type operator()(integer_type const &) const
+			{
+				return meta_type{};
+			}
+
 			type operator()(signature_type const &) const
 			{
 				return meta_type{};
@@ -446,6 +482,12 @@ namespace nl
 			type operator()(compile_time_closure const &v) const
 			{
 				return v.type;
+			}
+
+			type operator()(indirect_value const &v) const
+			{
+				assert(v.actual);
+				return type_of_value(*v.actual);
 			}
 		};
 
@@ -859,6 +901,11 @@ namespace nl
 				Si::append(m_out, "-string-");
 			}
 
+			void operator()(integer_type const &) const
+			{
+				Si::append(m_out, "-integer-");
+			}
+
 			void operator()(signature_type const &) const
 			{
 				Si::append(m_out, "-signature-");
@@ -867,6 +914,16 @@ namespace nl
 			void operator()(compile_time_closure const &) const
 			{
 				Si::append(m_out, "-ctclosure-");
+			}
+
+			void operator()(indirect_value const &v) const
+			{
+				Si::append(m_out, "-indirect-(");
+				if (v.actual)
+				{
+					print(m_out, *v.actual);
+				}
+				Si::append(m_out, ")");
 			}
 
 		private:

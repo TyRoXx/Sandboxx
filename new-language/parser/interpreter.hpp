@@ -16,6 +16,11 @@ namespace nl
 			{
 			}
 			virtual object_ptr call(std::vector<object_ptr> const &arguments) const = 0;
+
+			virtual object_ptr subscript(std::string const &) const
+			{
+				throw std::logic_error("This object does not support the subscript operator");
+			}
 		};
 
 		typedef std::function<object_ptr (il::local_identifier)> local_context;
@@ -177,6 +182,26 @@ namespace nl
 			il::value value;
 		};
 
+		struct subscript : expression
+		{
+			explicit subscript(std::unique_ptr<expression> left, std::string element)
+				: left(std::move(left))
+				, element(std::move(element))
+			{
+			}
+
+			virtual object_ptr evaluate(local_context const &context) const SILICIUM_OVERRIDE
+			{
+				object_ptr const left_value = left->evaluate(context);
+				return left_value->subscript(element);
+			}
+
+		private:
+
+			std::unique_ptr<expression> left;
+			std::string element;
+		};
+
 		template <class T, class ...Args>
 		std::unique_ptr<T> make_unique(Args &&...args)
 		{
@@ -199,9 +224,10 @@ namespace nl
 				return std::make_shared<std::unique_ptr<expression>>(make_unique<make_closure>(std::move(original), expr.bind_from_parent));
 			}
 
-			std::shared_ptr<std::unique_ptr<expression>> operator()(nl::il::subscript const &) const
+			std::shared_ptr<std::unique_ptr<expression>> operator()(nl::il::subscript const &expr) const
 			{
-				throw std::logic_error("not implemented");
+				auto left = prepare_expression(expr.left);
+				return std::make_shared<std::unique_ptr<expression>>(make_unique<subscript>(std::move(left), expr.element));
 			}
 
 			std::shared_ptr<std::unique_ptr<expression>> operator()(nl::il::call const &expr) const
