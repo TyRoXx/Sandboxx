@@ -472,22 +472,60 @@ namespace
 	}
 }
 
+namespace
+{
+	void assign_uint_type(nl::il::type &destination)
+	{
+		nl::il::indirect_value self{&destination};
+		nl::il::signature const branch{self, {}};
+		nl::il::signature const boolean{branch, {branch, branch}};
+
+		destination = nl::il::map
+		{
+			boost::unordered_map<nl::il::value, nl::il::value>
+			{
+				{nl::il::string{"add"}, nl::il::signature{self, {self}}},
+				{nl::il::string{"sub"}, nl::il::signature{self, {self}}},
+				{nl::il::string{"less"}, nl::il::signature{boolean, {self}}}
+			}
+		};
+	}
+
+	template <class UInt>
+	void add_uint_type(
+			nl::il::name_space &analyzation_info,
+			std::vector<nl::interpreter::object_ptr> &execution_info,
+			nl::il::indirect_value const &uint_type
+			)
+	{
+		auto name = "uint" + boost::lexical_cast<std::string>(sizeof(UInt) * 8);
+		add_external(analyzation_info, execution_info, "make_" + name, nl::il::signature{uint_type, {nl::il::integer_type{}}}, make_functor(my_make_uint<UInt>));
+		add_constant(analyzation_info, execution_info, name, uint_type);
+	}
+}
+
 BOOST_AUTO_TEST_CASE(il_interpretation_subscript)
 {
 	std::string const code = "return i.add(make_uint8(1))\n";
 
-	nl::il::value const uint8_type{nl::il::map{boost::unordered_map<nl::il::value, nl::il::value>
-	{
-		{nl::il::string{"add"}, nl::il::signature{nl::il::indirect_value{&uint8_type}, {nl::il::indirect_value{&uint8_type}}}}
-	}}};
-	auto uint8_indirect = nl::il::indirect_value{&uint8_type};
+	nl::il::value uint8_type;
+	assign_uint_type(uint8_type);
+	nl::il::value uint16_type;
+	assign_uint_type(uint16_type);
+	nl::il::value uint32_type;
+	assign_uint_type(uint32_type);
+	nl::il::value uint64_type;
+	assign_uint_type(uint64_type);
 
 	nl::il::name_space global_info;
 	global_info.next = nullptr;
 
 	std::vector<nl::interpreter::object_ptr> globals;
 	add_external(global_info, globals, "i", uint8_type, make_uint<boost::uint8_t>(2));
-	add_external(global_info, globals, "make_uint8", nl::il::signature{uint8_indirect, {nl::il::integer_type{}}}, make_functor(my_make_uint<boost::uint8_t>));
+	add_uint_type<boost::uint8_t>(global_info, globals, nl::il::indirect_value{&uint8_type});
+	add_uint_type<boost::uint16_t>(global_info, globals, nl::il::indirect_value{&uint16_type});
+	add_uint_type<boost::uint32_t>(global_info, globals, nl::il::indirect_value{&uint32_type});
+	add_uint_type<boost::uint64_t>(global_info, globals, nl::il::indirect_value{&uint64_type});
 
 	auto const output = run_code(code, global_info, globals);
 
@@ -511,10 +549,24 @@ BOOST_AUTO_TEST_CASE(il_interpretation_self_recurse)
 			"return fib\n"
 			;
 
+	nl::il::value uint8_type;
+	assign_uint_type(uint8_type);
+	nl::il::value uint16_type;
+	assign_uint_type(uint16_type);
+	nl::il::value uint32_type;
+	assign_uint_type(uint32_type);
+	nl::il::value uint64_type;
+	assign_uint_type(uint64_type);
+
 	nl::il::name_space global_info;
 	global_info.next = nullptr;
 
 	std::vector<nl::interpreter::object_ptr> globals;
+	add_external(global_info, globals, "i", uint8_type, make_uint<boost::uint8_t>(2));
+	add_uint_type<boost::uint8_t>(global_info, globals, nl::il::indirect_value{&uint8_type});
+	add_uint_type<boost::uint16_t>(global_info, globals, nl::il::indirect_value{&uint16_type});
+	add_uint_type<boost::uint32_t>(global_info, globals, nl::il::indirect_value{&uint32_type});
+	add_uint_type<boost::uint64_t>(global_info, globals, nl::il::indirect_value{&uint64_type});
 
 	auto const output = run_code(code, global_info, globals);
 
