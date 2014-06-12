@@ -496,3 +496,27 @@ BOOST_AUTO_TEST_CASE(il_interpretation_subscript)
 	BOOST_REQUIRE(result);
 	BOOST_CHECK(3 == result->value);
 }
+
+BOOST_AUTO_TEST_CASE(il_interpretation_self_recurse)
+{
+	std::string const code =
+			"fib = (uint64 n)\n"
+			"	return_n = ()\n"
+			"		return n\n"
+			"	recurse = ()\n"
+			"		first = fib(n.sub(make_uint64(2)))\n"
+			"		second = fib(n.sub(make_uint64(1)))\n"
+			"		return first.add(second)\n"
+			"	return n.less(make_uint64(2))(return_n, recurse)\n"
+			"return fib\n"
+			;
+
+	nl::il::name_space global_info;
+	global_info.next = nullptr;
+
+	std::vector<nl::interpreter::object_ptr> globals;
+
+	auto const output = run_code(code, global_info, globals);
+
+	BOOST_REQUIRE(output);
+}
