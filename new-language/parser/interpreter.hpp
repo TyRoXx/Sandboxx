@@ -74,6 +74,9 @@ namespace nl
 							throw std::logic_error("Invalid definition index access");
 						}
 						return defined[id.index];
+
+					case il::local::this_closure:
+						throw std::logic_error("not implemented");
 					}
 					return object_ptr();
 				};

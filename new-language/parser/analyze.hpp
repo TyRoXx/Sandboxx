@@ -213,7 +213,8 @@ namespace nl
 		{
 			bound,
 			argument,
-			definition
+			definition,
+			this_closure
 		};
 
 		struct local_identifier
@@ -637,7 +638,7 @@ namespace nl
 			return boost::apply_visitor(const_closure_caller{arguments}, maybe_closure);
 		}
 
-		expression analyze(ast::expression const &syntax, name_space &names);
+		expression analyze(ast::expression const &syntax, name_space &names, std::string const *defined_name);
 
 		boost::optional<value> evaluate_const(expression const &expr);
 
@@ -710,8 +711,9 @@ namespace nl
 
 		struct expression_analyzer : boost::static_visitor<expression>
 		{
-			explicit expression_analyzer(name_space &names)
+			explicit expression_analyzer(name_space &names, std::string const *defined_name)
 				: m_names(names)
+				, m_defined_name(defined_name)
 			{
 			}
 
@@ -738,19 +740,34 @@ namespace nl
 			expression operator()(ast::lambda const &syntax) const
 			{
 				name_space locals{&m_names, {}, {}};
+
+				std::vector<type> parameter_types;
+				for (ast::parameter const &parameter_syntax : syntax.parameters)
+				{
+					auto type_expr = analyze(parameter_syntax.type, locals, nullptr);
+					auto type = evaluate_const(type_expr);
+					if (!type)
+					{
+						throw std::runtime_error("Type of parameter is not constant: " + parameter_syntax.name.content);
+					}
+					parameter_types.emplace_back(std::move(*type));
+				}
+
+				if (m_defined_name)
+				{
+					type result_type; throw std::logic_error("not implemented");
+					signature self_signature{result_type, parameter_types};
+					locals.definitions.insert(std::make_pair(*m_defined_name, name_space_entry{local_identifier{local::this_closure, 0}, self_signature, boost::none}));
+				}
+
 				std::vector<parameter> parameters;
 				{
 					std::size_t parameter_index = 0;
 					for (ast::parameter const &parameter_syntax : syntax.parameters)
 					{
-						auto type_expr = analyze(parameter_syntax.type, locals);
-						auto type = evaluate_const(type_expr);
-						if (!type)
-						{
-							throw std::runtime_error("Type of parameter is not constant: " + parameter_syntax.name.content);
-						}
-						parameters.emplace_back(parameter{*type, parameter_syntax.name.content});
-						name_space_entry entry{local_identifier{local::argument, parameter_index}, *type, boost::none};
+						auto const &type = parameter_types[parameter_index];
+						parameters.emplace_back(parameter{type, parameter_syntax.name.content});
+						name_space_entry entry{local_identifier{local::argument, parameter_index}, type, boost::none};
 						if (!locals.definitions.insert(std::make_pair(parameter_syntax.name.content, entry)).second)
 						{
 							throw std::runtime_error("Cannot redefine " + parameter_syntax.name.content);
@@ -764,17 +781,17 @@ namespace nl
 
 			expression operator()(ast::subscript const &syntax) const
 			{
-				auto left = analyze(syntax.left, m_names);
+				auto left = analyze(syntax.left, m_names, nullptr);
 				return subscript{std::move(left), syntax.element.content};
 			}
 
 			expression operator()(ast::call const &syntax) const
 			{
-				auto function = analyze(syntax.function, m_names);
+				auto function = analyze(syntax.function, m_names, nullptr);
 				std::vector<expression> arguments;
 				for (auto &argument : syntax.arguments)
 				{
-					arguments.emplace_back(analyze(argument, m_names));
+					arguments.emplace_back(analyze(argument, m_names, nullptr));
 				}
 				if (!is_callable(function, arguments))
 				{
@@ -786,11 +803,12 @@ namespace nl
 		private:
 
 			name_space &m_names;
+			std::string const *m_defined_name;
 		};
 
-		inline expression analyze(ast::expression const &syntax, name_space &names)
+		inline expression analyze(ast::expression const &syntax, name_space &names, std::string const *defined_name)
 		{
-			return boost::apply_visitor(expression_analyzer{names}, syntax);
+			return boost::apply_visitor(expression_analyzer{names, defined_name}, syntax);
 		}
 
 		inline block analyze_block(ast::block const &syntax, name_space &locals)
@@ -799,7 +817,7 @@ namespace nl
 			std::size_t definition_index = 0;
 			for (ast::definition const &definition_syntax : syntax.elements)
 			{
-				auto value = analyze(definition_syntax.value, locals);
+				auto value = analyze(definition_syntax.value, locals, &definition_syntax.name.content);
 				boost::optional<il::value> const_value;
 				try
 				{
@@ -819,7 +837,7 @@ namespace nl
 				}
 				++definition_index;
 			}
-			body.result = analyze(syntax.result, locals);
+			body.result = analyze(syntax.result, locals, nullptr);
 			return body;
 		}
 
@@ -950,6 +968,7 @@ namespace nl
 			case local::argument: Si::append(sink, "arg:"); break;
 			case local::bound: Si::append(sink, "bnd:"); break;
 			case local::definition: Si::append(sink, "def:"); break;
+			case local::this_closure: Si::append(sink, "this"); return;
 			}
 			Si::append(sink, boost::lexical_cast<std::string>(id.index));
 		}

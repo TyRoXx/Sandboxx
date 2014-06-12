@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(analyzer_lambda)
 	nl::ast::lambda lambda;
 	lambda.body.result = nl::ast::identifier{nl::token{nl::token_type::integer, "a"}};
 	lambda.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32"}}, nl::token{nl::token_type::identifier, "a"}});
-	auto analyzed = nl::il::analyze(lambda, context);
+	auto analyzed = nl::il::analyze(lambda, context, nullptr);
 	nl::il::make_closure expected;
 	expected.parameters.emplace_back(nl::il::parameter{uint32, "a"});
 	expected.body.result = nl::il::local_expression{nl::il::local_identifier{nl::il::local::argument, 0}, uint32, "a", boost::none};
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(analyzer_argument_type_mismatch)
 	nl::ast::lambda lambda;
 	lambda.body.result = nl::ast::call{nl::ast::identifier{nl::token{nl::token_type::integer, "f"}}, {nl::ast::identifier{nl::token{nl::token_type::integer, "a"}}}};
 	lambda.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32"}}, nl::token{nl::token_type::identifier, "a"}});
-	BOOST_CHECK_EXCEPTION(nl::il::analyze(lambda, context), std::runtime_error, [](std::runtime_error const &ex)
+	BOOST_CHECK_EXCEPTION(nl::il::analyze(lambda, context, nullptr), std::runtime_error, [](std::runtime_error const &ex)
 	{
 		return ex.what() == std::string("Argument type mismatch"); //TODO
 	});
