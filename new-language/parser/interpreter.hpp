@@ -37,6 +37,35 @@ namespace nl
 		{
 			std::vector<std::unique_ptr<expression>> definitions;
 			std::unique_ptr<expression> result;
+
+			function()
+			{
+			}
+
+			function(
+				std::vector<std::unique_ptr<expression>> definitions,
+				std::unique_ptr<expression> result)
+				: definitions(std::move(definitions))
+				, result(std::move(result))
+			{
+			}
+
+			function(function &&other)
+			{
+				swap(other);
+			}
+
+			function &operator = (function &&other)
+			{
+				swap(other);
+				return *this;
+			}
+
+			void swap(function &other)
+			{
+				definitions.swap(other.definitions);
+				result.swap(other.result);
+			}
 		};
 
 		struct closure : object
@@ -218,19 +247,19 @@ namespace nl
 		{
 			std::shared_ptr<std::unique_ptr<expression>> operator()(nl::il::constant_expression const &expr) const
 			{
-				return std::make_shared<std::unique_ptr<expression>>(make_unique<constant_expression>(expr.constant));
+				return std::make_shared<std::unique_ptr<expression>>(interpreter::make_unique<constant_expression>(expr.constant));
 			}
 
 			std::shared_ptr<std::unique_ptr<expression>> operator()(nl::il::make_closure const &expr) const
 			{
 				auto original = prepare_block(expr.body);
-				return std::make_shared<std::unique_ptr<expression>>(make_unique<make_closure>(std::move(original), expr.bind_from_parent));
+				return std::make_shared<std::unique_ptr<expression>>(interpreter::make_unique<make_closure>(std::move(original), expr.bind_from_parent));
 			}
 
 			std::shared_ptr<std::unique_ptr<expression>> operator()(nl::il::subscript const &expr) const
 			{
 				auto left = prepare_expression(expr.left);
-				return std::make_shared<std::unique_ptr<expression>>(make_unique<subscript>(std::move(left), expr.element));
+				return std::make_shared<std::unique_ptr<expression>>(interpreter::make_unique<subscript>(std::move(left), expr.element));
 			}
 
 			std::shared_ptr<std::unique_ptr<expression>> operator()(nl::il::call const &expr) const
@@ -238,7 +267,7 @@ namespace nl
 				auto function = prepare_expression(expr.function);
 				std::vector<std::unique_ptr<expression>> arguments;
 				std::transform(begin(expr.arguments), end(expr.arguments), std::back_inserter(arguments), prepare_expression);
-				return std::make_shared<std::unique_ptr<expression>>(make_unique<call>(std::move(function), std::move(arguments)));
+				return std::make_shared<std::unique_ptr<expression>>(interpreter::make_unique<call>(std::move(function), std::move(arguments)));
 			}
 
 			std::shared_ptr<std::unique_ptr<expression>> operator()(nl::il::local_expression const &expr) const

@@ -50,6 +50,15 @@ namespace nl
 		struct string
 		{
 			std::string value;
+
+			string()
+			{
+			}
+
+			explicit string(std::string value)
+				: value(std::move(value))
+			{
+			}
 		};
 
 		inline bool operator == (string const &left, string const &right)
@@ -143,6 +152,16 @@ namespace nl
 		{
 			type result;
 			std::vector<type> parameters;
+
+			signature()
+			{
+			}
+
+			signature(type result, std::vector<type> parameters)
+				: result(std::move(result))
+				, parameters(std::move(parameters))
+			{
+			}
 		};
 
 		inline bool operator == (signature const &left, signature const &right)
@@ -739,7 +758,7 @@ namespace nl
 
 			expression operator()(ast::lambda const &syntax) const
 			{
-				name_space locals{&m_names, {}, {}};
+				name_space locals{ &m_names, boost::unordered_map<std::string, name_space_entry>{}, {} };
 
 				std::vector<type> parameter_types;
 				for (ast::parameter const &parameter_syntax : syntax.parameters)

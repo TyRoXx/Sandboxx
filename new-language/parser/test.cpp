@@ -145,7 +145,8 @@ BOOST_AUTO_TEST_CASE(analyzer_argument_type_mismatch)
 	nl::il::name_space context;
 	context.next = nullptr;
 	context.definitions.insert(std::make_pair("uint32", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::definition, 0}, nl::il::null(), nl::il::type(uint32)}));
-	context.definitions.insert(std::make_pair("f", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::definition, 1}, nl::il::type(nl::il::signature{uint32, {nl::il::type(uint64)}}), nl::il::value(f)}));
+	auto const f_type = nl::il::type(nl::il::signature{uint32, {nl::il::type(uint64)}});
+	context.definitions.insert(std::make_pair("f", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::definition, 1}, f_type, nl::il::value(f)}));
 	nl::ast::lambda lambda;
 	lambda.body.result = nl::ast::call{nl::ast::identifier{nl::token{nl::token_type::integer, "f"}}, {nl::ast::identifier{nl::token{nl::token_type::integer, "a"}}}};
 	lambda.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32"}}, nl::token{nl::token_type::identifier, "a"}});
@@ -179,11 +180,8 @@ BOOST_AUTO_TEST_CASE(analyzer_chaining)
 
 	nl::il::name_space globals;
 	globals.next = nullptr;
-	globals.definitions =
-	{
-		{"f", {nl::il::local_identifier{nl::il::local::bound, 0}, nl::il::signature{uint32, {uint32}}, f}},
-		{"g", {nl::il::local_identifier{nl::il::local::bound, 1}, nl::il::signature{uint32, {}}, g}}
-	};
+	globals.definitions.insert(std::make_pair("f", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::bound, 0}, nl::il::signature{uint32, {uint32}}, f}));
+	globals.definitions.insert(std::make_pair("g", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::bound, 1}, nl::il::signature{uint32, {}}, g}));
 
 	nl::il::block const analyzed = nl::il::analyze_block(parsed, globals);
 	nl::il::block expected;

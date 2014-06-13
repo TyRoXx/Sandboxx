@@ -109,6 +109,7 @@ namespace nl
 
 					default:
 						Si::append(m_out, c);
+						break;
 					}
 				}
 				Si::append(m_out, "\"");
