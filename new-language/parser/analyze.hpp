@@ -419,6 +419,11 @@ namespace nl
 				return e->second;
 			}
 
+			boost::optional<type> operator()(indirect_value const &v) const
+			{
+				return boost::apply_visitor(*this, *v.actual);
+			}
+
 			template <class Rest>
 			boost::optional<type> operator()(Rest const &) const
 			{
@@ -774,9 +779,14 @@ namespace nl
 
 				if (m_defined_name)
 				{
-					type result_type; throw std::logic_error("not implemented");
-					signature self_signature{result_type, parameter_types};
-					locals.definitions.insert(std::make_pair(*m_defined_name, name_space_entry{local_identifier{local::this_closure, 0}, self_signature, boost::none}));
+					//TODO: support result types other than uint64
+					auto uint64 = require_local_identifier(m_names, "uint64");
+					if (uint64 && uint64->const_value)
+					{
+						type result_type = *uint64->const_value;
+						signature self_signature{result_type, parameter_types};
+						locals.definitions.insert(std::make_pair(*m_defined_name, name_space_entry{local_identifier{local::this_closure, 0}, self_signature, boost::none}));
+					}
 				}
 
 				std::vector<parameter> parameters;

@@ -401,6 +401,18 @@ BOOST_AUTO_TEST_CASE(il_interpretation_6)
 
 namespace
 {
+	nl::interpreter::object_ptr make_boolean(bool value)
+	{
+		return make_functor([value](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
+		{
+			if (arguments.size() != 2)
+			{
+				throw std::invalid_argument("a bool has to be called with two arguments");
+			}
+			return arguments[!value];
+		});
+	}
+
 	template <class UInt>
 	struct uint_object : nl::interpreter::object
 	{
@@ -420,10 +432,11 @@ namespace
 
 		virtual nl::interpreter::object_ptr subscript(std::string const &element) const SILICIUM_OVERRIDE
 		{
-			if (element == "add")
+			if (element == "add" || element == "sub")
 			{
 				auto left = value;
-				return make_functor([left](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
+				bool is_sub = (element == "sub");
+				return make_functor([left, is_sub](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
 				{
 					if (arguments.size() != 1)
 					{
@@ -432,10 +445,34 @@ namespace
 					auto const right_int = std::dynamic_pointer_cast<uint_object const>(arguments.front());
 					if (!right_int)
 					{
-						throw std::invalid_argument("the argument to add has to be an integer literal");
+						throw std::invalid_argument("the argument to add has to be an integer");
 					}
-					auto result = static_cast<UInt>(left + right_int->value);
+					auto right = right_int->value;
+					if (is_sub)
+					{
+						right = static_cast<UInt>(-right);
+					}
+					auto result = static_cast<UInt>(left + right);
 					return std::make_shared<uint_object>(result);
+				});
+			}
+			else if (element == "less")
+			{
+				auto left = value;
+				return make_functor([left](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
+				{
+					if (arguments.size() != 1)
+					{
+						throw std::invalid_argument("less requires exactly one argument");
+					}
+					auto const right_int = std::dynamic_pointer_cast<uint_object const>(arguments.front());
+					if (!right_int)
+					{
+						throw std::invalid_argument("the argument to less has to be an integer");
+					}
+					auto right = right_int->value;
+					bool const is_less = (left < right);
+					return make_boolean(is_less);
 				});
 			}
 			throw std::invalid_argument("invalid element access on uint_object: " + element);
@@ -543,8 +580,8 @@ BOOST_AUTO_TEST_CASE(il_interpretation_self_recurse)
 			"		first = fib(n.sub(make_uint64(2)))\n"
 			"		second = fib(n.sub(make_uint64(1)))\n"
 			"		return first.add(second)\n"
-			"	return n.less(make_uint64(2))(return_n, recurse)\n"
-			"return fib\n"
+			"	return n.less(make_uint64(2))(return_n, recurse)()\n"
+			"return fib(make_uint64(10))\n"
 			;
 
 	nl::il::value uint8_type;
@@ -567,6 +604,8 @@ BOOST_AUTO_TEST_CASE(il_interpretation_self_recurse)
 	add_uint_type<boost::uint64_t>(global_info, globals, nl::il::indirect_value{&uint64_type});
 
 	auto const output = run_code(code, global_info, globals);
-
 	BOOST_REQUIRE(output);
+	auto output_uint = std::dynamic_pointer_cast<uint_object<boost::uint64_t> const>(output);
+	BOOST_REQUIRE(output_uint);
+	BOOST_CHECK_EQUAL(55, output_uint->value);
 }

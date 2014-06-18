@@ -66,14 +66,22 @@ namespace nl
 				definitions.swap(other.definitions);
 				result.swap(other.result);
 			}
+
+			bool is_set() const
+			{
+				return
+					(boost::algorithm::all_of(definitions, [](std::unique_ptr<expression> const &d) { return !!d; })) &&
+					result;
+			}
 		};
 
-		struct closure : object
+		struct closure final : object, std::enable_shared_from_this<closure>
 		{
 			explicit closure(function const &original, std::vector<object_ptr> bound)
 				: original(&original)
 				, bound(std::move(bound))
 			{
+				assert(this->original->is_set());
 			}
 
 			object_ptr call(std::vector<object_ptr> const &arguments) const SILICIUM_OVERRIDE
@@ -105,12 +113,13 @@ namespace nl
 						return defined[id.index];
 
 					case il::local::this_closure:
-						throw std::logic_error("not implemented");
+						return shared_from_this();
 					}
 					return object_ptr();
 				};
 				for (auto const &definition : original->definitions)
 				{
+					assert(definition);
 					defined.emplace_back(definition->evaluate(context));
 				}
 				return original->result->evaluate(context);
@@ -143,12 +152,14 @@ namespace nl
 				: original(std::move(original))
 				, bound(std::move(bound))
 			{
+				assert(this->original.is_set());
 			}
 
 			virtual object_ptr evaluate(local_context const &context) const SILICIUM_OVERRIDE
 			{
 				std::vector<object_ptr> bound_values;
 				std::transform(begin(bound), end(bound), std::back_inserter(bound_values), context);
+				assert(this->original.is_set());
 				return std::make_shared<closure>(std::ref(original), std::move(bound_values));
 			}
 
@@ -287,8 +298,10 @@ namespace nl
 			for (nl::il::definition const &definition : program.definitions)
 			{
 				definitions.emplace_back(prepare_expression(definition.value));
+				assert(definitions.back());
 			}
 			auto result = prepare_expression(program.result);
+			assert(result);
 			return function{std::move(definitions), std::move(result)};
 		}
 	}
