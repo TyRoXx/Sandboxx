@@ -737,11 +737,17 @@ namespace
 					}
 
 					auto next_action = arguments[0];
+					assert(next_action);
+
 					auto next_ = make_functor([next_action, action_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
 					{
 						assert(arguments.empty());
-						action_->call({});
-						return next_action->call({});
+						auto intermediate = std::dynamic_pointer_cast<future const>(action_->call({}));
+						assert(intermediate);
+						intermediate->get();
+						auto finished = std::dynamic_pointer_cast<future const>(next_action->call({}));
+						assert(finished);
+						return finished->get();
 					});
 					return std::make_shared<future>(next_);
 				});
@@ -786,7 +792,10 @@ namespace
 		return std::make_shared<future>(make_functor([&print_stream, printed](std::vector<nl::interpreter::object_ptr> const &) -> nl::interpreter::object_ptr
 		{
 			nl::il::print(print_stream, printed);
-			return nl::interpreter::object_ptr();
+			return std::make_shared<future>(make_functor([](std::vector<nl::interpreter::object_ptr> const &) -> nl::interpreter::object_ptr
+			{
+				return nl::interpreter::object_ptr();
+			}));
 		}));
 	}
 
@@ -842,7 +851,10 @@ BOOST_AUTO_TEST_CASE(il_interpretation_future_then)
 {
 	std::string const code =
 			"return print(\"Hello\").then(()\n"
-			"	return print(\", future!\"))\n";
+			"	return print(\", futur\")).then(()\n"
+			"	return print(\"e\")).then(()\n"
+			"	return print(\"!\"))\n"
+			;
 
 	std::vector<nl::interpreter::object_ptr> globals;
 
