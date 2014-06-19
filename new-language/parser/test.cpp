@@ -248,17 +248,32 @@ namespace
 		return std::make_shared<print_operation_object>(message);
 	}
 
-	nl::interpreter::object_ptr run_code(
+	template <class ResultHandler>
+	void run_code(
 			std::string const &code,
 			nl::il::name_space global_info,
-			std::vector<nl::interpreter::object_ptr> const &globals)
+			std::vector<nl::interpreter::object_ptr> const &globals,
+			ResultHandler const &handle_result)
 	{
 		auto const parsed = parse(code);
 		nl::il::block const analyzed = nl::il::analyze_block(parsed, global_info);
 		nl::interpreter::function const prepared = nl::interpreter::prepare_block(analyzed);
 		nl::interpreter::closure const executable{prepared, globals};
-		auto const output = executable.call({});
-		return output;
+		auto output = executable.call({});
+		handle_result(std::move(output));
+	}
+
+	nl::interpreter::object_ptr run_code(
+			std::string const &code,
+			nl::il::name_space global_info,
+			std::vector<nl::interpreter::object_ptr> const &globals)
+	{
+		nl::interpreter::object_ptr result;
+		run_code(code, global_info, globals, [&result](nl::interpreter::object_ptr r)
+		{
+			result = std::move(r);
+		});
+		return result;
 	}
 
 	nl::il::value make_function(std::vector<nl::il::value> const &arguments)
@@ -690,5 +705,72 @@ BOOST_AUTO_TEST_CASE(il_analyze_wrong_explicit_return_type)
 	{
 		BOOST_REQUIRE_EQUAL("The return value type is not convertible into the explicit return type", std::string(e.what()));
 		return true;
+	});
+}
+
+namespace
+{
+	struct future : nl::interpreter::object
+	{
+		nl::interpreter::object_ptr action;
+
+		explicit future(nl::interpreter::object_ptr action)
+			: action(std::move(action))
+		{
+		}
+
+		virtual nl::interpreter::object_ptr call(std::vector<nl::interpreter::object_ptr> const &) const override
+		{
+			throw std::logic_error("no methods yet");
+		}
+	};
+
+	nl::interpreter::object_ptr my_async(std::vector<nl::interpreter::object_ptr> const &arguments)
+	{
+		if (arguments.size() != 1)
+		{
+			throw std::runtime_error("async requires exactly one argument");
+		}
+		return std::make_shared<future>(arguments[0]);
+	}
+
+	void add_async(
+			nl::il::name_space &analyzation_info,
+			std::vector<nl::interpreter::object_ptr> &execution_info)
+	{
+		nl::il::signature string_generator_type{nl::il::string_type{}, {}};
+		nl::il::external string_future_type{"future(string)"};
+		nl::il::signature async_type{string_future_type, {string_generator_type}};
+		add_external(analyzation_info, execution_info, "async", async_type, make_functor(my_async));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(il_interpretation_hello_future)
+{
+	std::string const code =
+			"return async(()\n"
+			"	return \"Hello, future!\")\n";
+
+	std::vector<nl::interpreter::object_ptr> globals;
+
+	nl::il::name_space global_info;
+	global_info.next = nullptr;
+
+	add_async(global_info, globals);
+
+	run_code(code, global_info, globals, [](nl::interpreter::object_ptr const &output)
+	{
+		BOOST_REQUIRE(output);
+
+		auto const future_output = std::dynamic_pointer_cast<future const>(output);
+		BOOST_REQUIRE(future_output);
+
+		auto const message = future_output->action->call({});
+		BOOST_REQUIRE(message);
+
+		auto const message_string = std::dynamic_pointer_cast<nl::interpreter::value_object const>(message);
+		BOOST_REQUIRE(message_string);
+
+		BOOST_CHECK(nl::il::value{nl::il::string{"Hello, future!"}} == message_string->value);
 	});
 }
