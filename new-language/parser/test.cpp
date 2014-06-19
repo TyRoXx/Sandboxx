@@ -281,11 +281,10 @@ namespace
 
 	void add_constant(
 			nl::il::name_space &analyzation_info,
-			std::vector<nl::interpreter::object_ptr> &execution_info,
 			std::string const &name,
 			nl::il::value const &constant)
 	{
-		std::size_t const id = execution_info.size();
+		std::size_t const id = analyzation_info.definitions.size();
 		nl::il::name_space_entry entry
 		{
 			nl::il::local_identifier{nl::il::local::bound, id},
@@ -293,6 +292,15 @@ namespace
 			constant
 		};
 		analyzation_info.definitions.insert(std::make_pair(name, std::move(entry)));
+	}
+
+	void add_constant(
+			nl::il::name_space &analyzation_info,
+			std::vector<nl::interpreter::object_ptr> &execution_info,
+			std::string const &name,
+			nl::il::value const &constant)
+	{
+		add_constant(analyzation_info, name, constant);
 		execution_info.emplace_back(nl::interpreter::object_ptr{});
 	}
 
@@ -608,4 +616,26 @@ BOOST_AUTO_TEST_CASE(il_interpretation_self_recurse)
 	auto output_uint = std::dynamic_pointer_cast<uint_object<boost::uint64_t> const>(output);
 	BOOST_REQUIRE(output_uint);
 	BOOST_CHECK_EQUAL(55, output_uint->value);
+}
+
+BOOST_AUTO_TEST_CASE(il_analyze_missing_explicit_return_type)
+{
+	std::string const code =
+			"f = ()\n"
+			"	return f()\n"
+			"return f\n";
+
+	auto const parsed = parse(code);
+
+	nl::il::name_space global_info;
+	global_info.next = nullptr;
+	nl::il::value uint64_type;
+	assign_uint_type(uint64_type);
+	add_constant(global_info, "uint64", uint64_type);
+
+	BOOST_CHECK_EXCEPTION(nl::il::analyze_block(parsed, global_info), std::runtime_error, [](std::runtime_error const &e)
+	{
+		BOOST_REQUIRE_EQUAL("Self-recursion requires an explicit return type", std::string(e.what()));
+		return true;
+	});
 }
