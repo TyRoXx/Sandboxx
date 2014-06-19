@@ -721,7 +721,37 @@ namespace
 
 		virtual nl::interpreter::object_ptr call(std::vector<nl::interpreter::object_ptr> const &) const override
 		{
-			throw std::logic_error("no methods yet");
+			throw std::logic_error("This object does not support the call operator");
+		}
+
+		virtual nl::interpreter::object_ptr subscript(std::string const &method_name) const
+		{
+			if (method_name == "then")
+			{
+				auto action_ = action;
+				return make_functor([action_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
+				{
+					if (arguments.size() != 1)
+					{
+						throw std::invalid_argument("then requires one argument");
+					}
+
+					auto next_action = arguments[0];
+					auto next_ = make_functor([next_action, action_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
+					{
+						assert(arguments.empty());
+						action_->call({});
+						return next_action->call({});
+					});
+					return std::make_shared<future>(next_);
+				});
+			}
+			throw std::logic_error("Unknown method name");
+		}
+
+		nl::interpreter::object_ptr get() const
+		{
+			return action->call({});
 		}
 	};
 
@@ -742,6 +772,39 @@ namespace
 		nl::il::external string_future_type{"future(string)"};
 		nl::il::signature async_type{string_future_type, {string_generator_type}};
 		add_external(analyzation_info, execution_info, "async", async_type, make_functor(my_async));
+	}
+
+	nl::interpreter::object_ptr my_print(std::vector<nl::interpreter::object_ptr> const &arguments, Si::sink<char> &print_stream)
+	{
+		if (arguments.size() != 1)
+		{
+			throw std::runtime_error("print requires exactly one argument");
+		}
+		auto value_obj = std::dynamic_pointer_cast<nl::interpreter::value_object const>(arguments[0]);
+		assert(value_obj);
+		auto printed = value_obj->value;
+		return std::make_shared<future>(make_functor([&print_stream, printed](std::vector<nl::interpreter::object_ptr> const &) -> nl::interpreter::object_ptr
+		{
+			nl::il::print(print_stream, printed);
+			return nl::interpreter::object_ptr();
+		}));
+	}
+
+	void add_print(
+			nl::il::name_space &analyzation_info,
+			std::vector<nl::interpreter::object_ptr> &execution_info,
+			Si::sink<char> &print_stream,
+			nl::il::value &void_future_type)
+	{
+		void_future_type = nl::il::map
+		{
+			boost::unordered_map<nl::il::value, nl::il::value>
+			{
+				{nl::il::string{"then"}, nl::il::signature{nl::il::indirect_value{&void_future_type}, {nl::il::signature{nl::il::indirect_value{&void_future_type}, {}}}}}
+			}
+		};
+		nl::il::signature print_type{nl::il::indirect_value{&void_future_type}, {nl::il::string_type{}}};
+		add_external(analyzation_info, execution_info, "print", print_type, make_functor(std::bind(my_print, std::placeholders::_1, std::ref(print_stream))));
 	}
 }
 
@@ -773,4 +836,42 @@ BOOST_AUTO_TEST_CASE(il_interpretation_hello_future)
 
 		BOOST_CHECK(nl::il::value{nl::il::string{"Hello, future!"}} == message_string->value);
 	});
+}
+
+BOOST_AUTO_TEST_CASE(il_interpretation_future_then)
+{
+	std::string const code =
+			"return print(\"Hello\").then(()\n"
+			"	return print(\", future!\"))\n";
+
+	std::vector<nl::interpreter::object_ptr> globals;
+
+	nl::il::name_space global_info;
+	global_info.next = nullptr;
+
+	add_async(global_info, globals);
+
+	std::string printed;
+	auto print_stream = Si::make_container_sink(printed);
+	nl::il::type void_future;
+	add_print(global_info, globals, print_stream, void_future);
+
+	run_code(code, global_info, globals, [](nl::interpreter::object_ptr const &output)
+	{
+		BOOST_REQUIRE(output);
+
+		auto const future_output = std::dynamic_pointer_cast<future const>(output);
+		BOOST_REQUIRE(future_output);
+
+		auto const next = future_output->get();
+		BOOST_REQUIRE(next);
+
+		auto const next_future = std::dynamic_pointer_cast<future const>(next);
+		BOOST_REQUIRE(next_future);
+
+		auto const zero = next_future->get();
+		BOOST_REQUIRE(!zero);
+	});
+
+	BOOST_CHECK_EQUAL(printed, "Hello, future!");
 }
