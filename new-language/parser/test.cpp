@@ -581,7 +581,7 @@ BOOST_AUTO_TEST_CASE(il_interpretation_subscript)
 BOOST_AUTO_TEST_CASE(il_interpretation_self_recurse)
 {
 	std::string const code =
-			"fib = (uint64 n)\n"
+			"fib = (uint64 n) uint64\n"
 			"	return_n = ()\n"
 			"		return n\n"
 			"	recurse = ()\n"
@@ -618,6 +618,30 @@ BOOST_AUTO_TEST_CASE(il_interpretation_self_recurse)
 	BOOST_CHECK_EQUAL(55, output_uint->value);
 }
 
+BOOST_AUTO_TEST_CASE(il_analyze_non_const_explicit_return_type)
+{
+	std::string const code =
+			"f = () make_uint64(0)\n"
+			"	return f()\n"
+			"return f\n";
+
+	auto const parsed = parse(code);
+
+	std::vector<nl::interpreter::object_ptr> dummy;
+
+	nl::il::name_space global_info;
+	global_info.next = nullptr;
+	nl::il::value uint64_type;
+	assign_uint_type(uint64_type);
+	add_uint_type<boost::uint64_t>(global_info, dummy, nl::il::indirect_value{&uint64_type});
+
+	BOOST_CHECK_EXCEPTION(nl::il::analyze_block(parsed, global_info), std::runtime_error, [](std::runtime_error const &e)
+	{
+		BOOST_REQUIRE_EQUAL("An explicit return type has to be a constant", std::string(e.what()));
+		return true;
+	});
+}
+
 BOOST_AUTO_TEST_CASE(il_analyze_missing_explicit_return_type)
 {
 	std::string const code =
@@ -635,7 +659,36 @@ BOOST_AUTO_TEST_CASE(il_analyze_missing_explicit_return_type)
 
 	BOOST_CHECK_EXCEPTION(nl::il::analyze_block(parsed, global_info), std::runtime_error, [](std::runtime_error const &e)
 	{
-		BOOST_REQUIRE_EQUAL("Self-recursion requires an explicit return type", std::string(e.what()));
+		BOOST_REQUIRE_EQUAL("Unknown identifier f", std::string(e.what()));
+		return true;
+	});
+}
+
+BOOST_AUTO_TEST_CASE(il_analyze_wrong_explicit_return_type)
+{
+	std::string const code =
+			"f = () uint64\n"
+			"	return make_uint32(0)\n"
+			"return f";
+
+	auto const parsed = parse(code);
+
+	std::vector<nl::interpreter::object_ptr> dummy;
+
+	nl::il::name_space global_info;
+	global_info.next = nullptr;
+
+	nl::il::value uint32_type;
+	assign_uint_type(uint32_type);
+	add_uint_type<boost::uint32_t>(global_info, dummy, nl::il::indirect_value{&uint32_type});
+
+	nl::il::value uint64_type;
+	assign_uint_type(uint64_type);
+	add_uint_type<boost::uint64_t>(global_info, dummy, nl::il::indirect_value{&uint64_type});
+
+	BOOST_CHECK_EXCEPTION(nl::il::analyze_block(parsed, global_info), std::runtime_error, [](std::runtime_error const &e)
+	{
+		BOOST_REQUIRE_EQUAL("The return value type is not convertible into the explicit return type", std::string(e.what()));
 		return true;
 	});
 }

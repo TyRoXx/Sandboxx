@@ -42,6 +42,7 @@ namespace nl
 		struct lambda
 		{
 			std::vector<parameter> parameters;
+			boost::optional<expression> explicit_return_type;
 			block body;
 		};
 

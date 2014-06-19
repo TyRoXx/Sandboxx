@@ -35,6 +35,12 @@ namespace nl
 			}
 		}
 
+		inline bool is_next_token(Si::source<token> &tokens, token_type expected)
+		{
+			auto &&next = peek(tokens);
+			return (next && (next->type == expected));
+		}
+
 		expression parse_expression(Si::source<token> &tokens, std::size_t indentation);
 
 		inline definition parse_definition(Si::source<token> &tokens, std::size_t indentation)
@@ -136,9 +142,16 @@ namespace nl
 				{
 					Si::get(tokens);
 					auto parameters = parse_parameters(tokens, indentation);
+					boost::optional<expression> explicit_return_type;
+					if (is_next_token(tokens, token_type::space))
+					{
+						//pop the space
+						Si::get(tokens);
+						explicit_return_type = parse_expression(tokens, indentation);
+					}
 					expect_token(tokens, token_type::newline);
 					auto body = parse_block(tokens, indentation + 1);
-					return lambda{std::move(parameters), std::move(body)};
+					return lambda{std::move(parameters), std::move(explicit_return_type), std::move(body)};
 				}
 
 			default:

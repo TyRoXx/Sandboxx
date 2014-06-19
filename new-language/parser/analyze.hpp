@@ -731,6 +731,11 @@ namespace nl
 			return boost::apply_visitor(const_expression_evaluator{}, expr);
 		}
 
+		inline bool is_convertible(type const &from, type const &into)
+		{
+			return (from == into); //TODO
+		}
+
 		block analyze_block(ast::block const &syntax, name_space &names);
 
 		struct expression_analyzer : boost::static_visitor<expression>
@@ -777,16 +782,18 @@ namespace nl
 					parameter_types.emplace_back(std::move(*type));
 				}
 
-				if (m_defined_name)
+				boost::optional<type> explicit_return_type;
+				if (m_defined_name &&
+					syntax.explicit_return_type)
 				{
-					//TODO: support result types other than uint64
-					auto uint64 = require_local_identifier(m_names, "uint64");
-					if (uint64 && uint64->const_value)
+					auto explicit_return_type_expr = analyze(*syntax.explicit_return_type, m_names, nullptr);
+					explicit_return_type = evaluate_const(explicit_return_type_expr);
+					if (!explicit_return_type)
 					{
-						type result_type = *uint64->const_value;
-						signature self_signature{result_type, parameter_types};
-						locals.definitions.insert(std::make_pair(*m_defined_name, name_space_entry{local_identifier{local::this_closure, 0}, self_signature, boost::none}));
+						throw std::runtime_error("An explicit return type has to be a constant");
 					}
+					signature self_signature{*explicit_return_type, parameter_types};
+					locals.definitions.insert(std::make_pair(*m_defined_name, name_space_entry{local_identifier{local::this_closure, 0}, self_signature, boost::none}));
 				}
 
 				std::vector<parameter> parameters;
@@ -805,6 +812,16 @@ namespace nl
 					}
 				}
 				block body = analyze_block(syntax.body, locals);
+
+				if (explicit_return_type)
+				{
+					auto const returned_type = type_of_expression(body.result);
+					if (!is_convertible(returned_type, *explicit_return_type))
+					{
+						throw std::runtime_error("The return value type is not convertible into the explicit return type");
+					}
+				}
+
 				return make_closure{std::move(parameters), std::move(body), std::move(locals.bind_from_parent)};
 			}
 
