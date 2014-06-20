@@ -919,9 +919,9 @@ namespace
 
 	struct source : nl::interpreter::object
 	{
-		typedef Si::source<nl::interpreter::object_ptr> object_source;
+		typedef std::vector<nl::interpreter::object_ptr> object_source;
 
-		explicit source(object_source &next)
+		explicit source(object_source const &next)
 			: next(next)
 		{
 		}
@@ -940,14 +940,9 @@ namespace
 				assert(arguments.size() == 2);
 				auto accumulator = arguments[0];
 				auto combinator = arguments[1];
-				for (;;)
+				for (auto &&element : next_)
 				{
-					auto element = Si::get(next_);
-					if (!element)
-					{
-						break;
-					}
-					accumulator = combinator->call({accumulator, *element});
+					accumulator = combinator->call({accumulator, element});
 				}
 				return accumulator;
 			});
@@ -955,7 +950,7 @@ namespace
 
 	private:
 
-		object_source &next;
+		object_source const &next;
 	};
 }
 
@@ -983,15 +978,14 @@ BOOST_AUTO_TEST_CASE(il_interpretation_source_accumulate)
 	{
 		BOOST_REQUIRE(output);
 
-		std::vector<nl::interpreter::object_ptr> input
+		std::vector<nl::interpreter::object_ptr> const input
 		{
 			make_uint<boost::uint32_t>(1),
 			make_uint<boost::uint32_t>(4),
 			make_uint<boost::uint32_t>(8),
 			make_uint<boost::uint32_t>(2)
 		};
-		auto input_source = Si::make_container_source(input);
-		auto const result = output->call({std::make_shared<source>(input_source)});
+		auto const result = output->call({std::make_shared<source>(input)});
 		BOOST_REQUIRE(result);
 		auto const result_int = std::dynamic_pointer_cast<uint_object<boost::uint32_t> const>(result);
 		BOOST_REQUIRE(result_int);
