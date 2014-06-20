@@ -150,9 +150,11 @@ BOOST_AUTO_TEST_CASE(analyzer_argument_type_mismatch)
 	nl::ast::lambda lambda;
 	lambda.body.result = nl::ast::call{nl::ast::identifier{nl::token{nl::token_type::integer, "f"}}, {nl::ast::identifier{nl::token{nl::token_type::integer, "a"}}}};
 	lambda.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32"}}, nl::token{nl::token_type::identifier, "a"}});
-	BOOST_CHECK_EXCEPTION(nl::il::analyze(lambda, context, nullptr), std::runtime_error, [](std::runtime_error const &ex)
+	BOOST_CHECK_EXCEPTION(nl::il::analyze(lambda, context, nullptr), std::runtime_error, [&](std::runtime_error const &ex)
 	{
-		return ex.what() == std::string("Argument type mismatch"); //TODO
+		auto const expected_message = nl::il::format_callability_error(nl::il::argument_type_not_applicable{0, uint64, uint32});
+		BOOST_REQUIRE(expected_message);
+		return ex.what() == *expected_message;
 	});
 }
 
@@ -886,4 +888,113 @@ BOOST_AUTO_TEST_CASE(il_interpretation_future_then)
 	});
 
 	BOOST_CHECK_EQUAL(printed, "Hello, future!");
+}
+
+namespace
+{
+	nl::il::value my_source(std::vector<nl::il::value> const &arguments)
+	{
+		if (arguments.size() != 1)
+		{
+			throw std::runtime_error("source requires one argument");
+		}
+		auto const &element = arguments[0];
+		nl::il::signature const combination{element, {element, element}};
+		nl::il::map source_methods
+		{
+			boost::unordered_map<nl::il::value, nl::il::value>
+			{
+				{nl::il::string{"accumulate"}, nl::il::signature{element, {element, combination}}}
+			}
+		};
+		return source_methods;
+	}
+
+	void add_source(nl::il::name_space &analyzation_info,
+					std::vector<nl::interpreter::object_ptr> &execution_info)
+	{
+		nl::il::generic_signature const source{nl::il::meta_type{}, {[](nl::il::type const &) { return true; }}};
+		add_constant(analyzation_info, execution_info, "source", nl::il::compile_time_closure{source, my_source});
+	}
+
+	struct source : nl::interpreter::object
+	{
+		typedef Si::source<nl::interpreter::object_ptr> object_source;
+
+		explicit source(object_source &next)
+			: next(next)
+		{
+		}
+
+		virtual nl::interpreter::object_ptr call(std::vector<nl::interpreter::object_ptr> const &arguments) const override
+		{
+			throw std::logic_error("This object does not support the call operator");
+		}
+
+		virtual nl::interpreter::object_ptr subscript(std::string const &method_name) const override
+		{
+			assert(method_name == "accumulate");
+			auto &next_ = next;
+			return make_functor([&next_](std::vector<nl::interpreter::object_ptr> const &arguments)
+			{
+				assert(arguments.size() == 2);
+				auto accumulator = arguments[0];
+				auto combinator = arguments[1];
+				for (;;)
+				{
+					auto element = Si::get(next_);
+					if (!element)
+					{
+						break;
+					}
+					accumulator = combinator->call({accumulator, *element});
+				}
+				return accumulator;
+			});
+		}
+
+	private:
+
+		object_source &next;
+	};
+}
+
+BOOST_AUTO_TEST_CASE(il_interpretation_source_accumulate)
+{
+	std::string const code =
+			"return (source(uint32) input)\n"
+			"	combine = (uint32 first, uint32 second)\n"
+			"		return first.add(second)\n"
+			"	return input.accumulate(make_uint32(0), combine)\n"
+			;
+
+	std::vector<nl::interpreter::object_ptr> globals;
+
+	nl::il::name_space global_info;
+	global_info.next = nullptr;
+
+	nl::il::value uint32_type;
+	assign_uint_type(uint32_type);
+	add_uint_type<boost::uint32_t>(global_info, globals, nl::il::indirect_value{&uint32_type});
+
+	add_source(global_info, globals);
+
+	run_code(code, global_info, globals, [](nl::interpreter::object_ptr const &output)
+	{
+		BOOST_REQUIRE(output);
+
+		std::vector<nl::interpreter::object_ptr> input
+		{
+			make_uint<boost::uint32_t>(1),
+			make_uint<boost::uint32_t>(4),
+			make_uint<boost::uint32_t>(8),
+			make_uint<boost::uint32_t>(2)
+		};
+		auto input_source = Si::make_container_source(input);
+		auto const result = output->call({std::make_shared<source>(input_source)});
+		BOOST_REQUIRE(result);
+		auto const result_int = std::dynamic_pointer_cast<uint_object<boost::uint32_t> const>(result);
+		BOOST_REQUIRE(result_int);
+		BOOST_CHECK_EQUAL(15, result_int->value);
+	});
 }

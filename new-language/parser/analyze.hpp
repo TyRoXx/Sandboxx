@@ -7,6 +7,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/range/algorithm/transform.hpp>
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/format.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
 
 namespace nl
@@ -591,7 +592,41 @@ namespace nl
 			return boost::apply_visitor(expression_type_visitor{}, expr);
 		}
 
-		struct callability_visitor : boost::static_visitor<bool>
+		inline bool is_convertible(type const &from, type const &into)
+		{
+			return (from == into); //TODO
+		}
+
+		struct checked_callable
+		{
+		};
+
+		struct wrong_argument_count
+		{
+			std::size_t provided, expected;
+		};
+
+		struct type_not_callable_at_all
+		{
+			type not_callable;
+		};
+
+		struct generic_argument_type_not_applicable
+		{
+			std::size_t argument_index;
+			type argument_type;
+		};
+
+		struct argument_type_not_applicable
+		{
+			std::size_t argument_index;
+			type expected;
+			type provided;
+		};
+
+		typedef boost::variant<checked_callable, wrong_argument_count, type_not_callable_at_all, generic_argument_type_not_applicable, argument_type_not_applicable> callability;
+
+		struct callability_visitor : boost::static_visitor<callability>
 		{
 			std::vector<type> const &argument_types;
 
@@ -600,35 +635,46 @@ namespace nl
 			{
 			}
 
-			bool operator()(signature const &callee) const
-			{
-				return (argument_types == callee.parameters);
-			}
-
-			bool operator()(generic_signature const &callee) const
+			callability operator()(signature const &callee) const
 			{
 				if (argument_types.size() != callee.parameters.size())
 				{
-					return false;
+					return wrong_argument_count{argument_types.size(), callee.parameters.size()};
+				}
+				for (size_t i = 0; i < argument_types.size(); ++i)
+				{
+					if (!is_convertible(argument_types[i], callee.parameters[i]))
+					{
+						return argument_type_not_applicable{i, callee.parameters[i], argument_types[i]};
+					}
+				}
+				return checked_callable{};
+			}
+
+			callability operator()(generic_signature const &callee) const
+			{
+				if (argument_types.size() != callee.parameters.size())
+				{
+					return wrong_argument_count{argument_types.size(), callee.parameters.size()};
 				}
 				for (size_t i = 0; i < argument_types.size(); ++i)
 				{
 					if (!callee.parameters[i](argument_types[i]))
 					{
-						return false;
+						return generic_argument_type_not_applicable{i, argument_types[i]};
 					}
 				}
-				return true;
+				return checked_callable{};
 			}
 
 			template <class Other>
-			bool operator()(Other const &) const
+			callability operator()(Other const &other) const
 			{
-				return false;
+				return type_not_callable_at_all{other};
 			}
 		};
 
-		inline bool is_callable(expression const &function, std::vector<expression> const &arguments)
+		inline callability is_callable(expression const &function, std::vector<expression> const &arguments)
 		{
 			type function_type = type_of_expression(function);
 			std::vector<type> argument_types;
@@ -657,7 +703,7 @@ namespace nl
 			}
 		};
 
-		boost::optional<value> call_const_closure(value const &maybe_closure, std::vector<value> const &arguments)
+		inline boost::optional<value> call_const_closure(value const &maybe_closure, std::vector<value> const &arguments)
 		{
 			return boost::apply_visitor(const_closure_caller{arguments}, maybe_closure);
 		}
@@ -731,9 +777,57 @@ namespace nl
 			return boost::apply_visitor(const_expression_evaluator{}, expr);
 		}
 
-		inline bool is_convertible(type const &from, type const &into)
+		void print(Si::sink<char> &sink, value const &v);
+
+		struct callability_error_formatter : boost::static_visitor<boost::optional<std::string>>
 		{
-			return (from == into); //TODO
+			boost::optional<std::string> operator()(checked_callable const &) const
+			{
+				return boost::none;
+			}
+
+			boost::optional<std::string> operator()(wrong_argument_count const &error) const
+			{
+				return boost::str(boost::format("Expected %1% arguments, got %2%") % error.expected % error.provided);
+			}
+
+			boost::optional<std::string> operator()(type_not_callable_at_all const &error) const
+			{
+				std::string message;
+				auto sink = Si::make_container_sink(message);
+				print(sink, error.not_callable);
+				return message;
+			}
+
+			boost::optional<std::string> operator()(generic_argument_type_not_applicable const &error) const
+			{
+				std::string message;
+				auto sink = Si::make_container_sink(message);
+				Si::append(sink, "Generic argument ");
+				Si::append(sink, boost::lexical_cast<std::string>(error.argument_index));
+				Si::append(sink, " of type ");
+				print(sink, error.argument_type);
+				Si::append(sink, " is not applicable");
+				return message;
+			}
+
+			boost::optional<std::string> operator()(argument_type_not_applicable const &error) const
+			{
+				std::string message;
+				auto sink = Si::make_container_sink(message);
+				Si::append(sink, "Argument ");
+				Si::append(sink, boost::lexical_cast<std::string>(error.argument_index));
+				Si::append(sink, " of type ");
+				print(sink, error.provided);
+				Si::append(sink, " is not convertible to ");
+				print(sink, error.expected);
+				return message;
+			}
+		};
+
+		inline boost::optional<std::string> format_callability_error(callability const callability_)
+		{
+			return boost::apply_visitor(callability_error_formatter{}, callability_);
 		}
 
 		block analyze_block(ast::block const &syntax, name_space &names);
@@ -839,9 +933,13 @@ namespace nl
 				{
 					arguments.emplace_back(analyze(argument, m_names, nullptr));
 				}
-				if (!is_callable(function, arguments))
 				{
-					throw std::runtime_error("Argument type mismatch");
+					auto const callability = is_callable(function, arguments);
+					auto const error_message = format_callability_error(callability);
+					if (error_message)
+					{
+						throw std::runtime_error(*error_message);
+					}
 				}
 				return call{std::move(function), std::move(arguments)};
 			}
@@ -952,7 +1050,7 @@ namespace nl
 
 			void operator()(meta_type const &) const
 			{
-				Si::append(m_out, "-type-");
+				Si::append(m_out, "-meta_type-");
 			}
 
 			void operator()(string_type const &) const
