@@ -843,12 +843,12 @@ namespace
 					auto next_ = [next_action, action_]() -> nl::interpreter::object_ptr
 					{
 						auto action_result = action_();
-						auto intermediate = std::dynamic_pointer_cast<future const>(action_result);
+						assert(action_result);
+						auto intermediate = next_action->call({action_result});
 						assert(intermediate);
-						auto intermediate_result = intermediate->action();
-						auto finished = std::dynamic_pointer_cast<future const>(next_action->call({intermediate_result}));
-						assert(finished);
-						return finished->action();
+						auto intermediate_future = std::dynamic_pointer_cast<future const>(intermediate);
+						assert(intermediate_future);
+						return intermediate_future->action();
 					};
 					return std::make_shared<future>(next_);
 				});
@@ -1342,9 +1342,9 @@ namespace
 					auto next = Si::get(source_);
 					if (next)
 					{
-						return my_make_ready_future({std::make_shared<some>(*next)});
+						return std::make_shared<some>(*next);
 					}
-					return my_make_ready_future({std::make_shared<none>()});
+					return std::make_shared<none>();
 				};
 				return std::make_shared<future>(act);
 			});
@@ -1400,7 +1400,7 @@ namespace
 				auto act = [written, &sink_]() -> nl::interpreter::object_ptr
 				{
 					sink_.append(boost::make_iterator_range(&written, &written + 1));
-					return my_make_ready_future({std::make_shared<nl::interpreter::value_object>(nl::il::map{{}})});
+					return std::make_shared<nl::interpreter::value_object>(nl::il::map{{}});
 				};
 				return std::make_shared<future>(act);
 			});

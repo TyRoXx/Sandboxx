@@ -968,7 +968,7 @@ namespace nl
 
 			expression operator()(ast::lambda const &syntax) const
 			{
-				name_space locals{ &m_names, boost::unordered_map<std::string, name_space_entry>{}, {} };
+				name_space locals{&m_names, boost::unordered_map<std::string, name_space_entry>{}, {}};
 
 				std::vector<type> parameter_types;
 				for (ast::parameter const &parameter_syntax : syntax.parameters)

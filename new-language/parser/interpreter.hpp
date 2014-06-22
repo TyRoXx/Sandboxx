@@ -207,6 +207,7 @@ namespace nl
 			explicit local_expression(il::local_identifier id)
 				: id(id)
 			{
+				assert(id.type != il::local::constant);
 			}
 
 			virtual object_ptr evaluate(local_context const &context) const SILICIUM_OVERRIDE
@@ -294,6 +295,11 @@ namespace nl
 
 			std::shared_ptr<std::unique_ptr<expression>> operator()(nl::il::local_expression const &expr) const
 			{
+				if (expr.which.type == nl::il::local::constant)
+				{
+					assert(expr.const_value);
+					return std::make_shared<std::unique_ptr<expression>>(make_unique<constant_expression>(*expr.const_value));
+				}
 				return std::make_shared<std::unique_ptr<expression>>(make_unique<local_expression>(expr.which));
 			}
 		};
