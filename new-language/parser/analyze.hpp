@@ -211,7 +211,8 @@ namespace nl
 			bound,
 			argument,
 			definition,
-			this_closure
+			this_closure,
+			constant
 		};
 
 		struct local_identifier
@@ -394,9 +395,15 @@ namespace nl
 				return boost::none;
 			}
 
-			std::size_t const bound_index = where.bind_from_parent.size();
-			where.bind_from_parent.emplace_back(in_parent->which);
-			return local_expression{local_identifier{local::bound, bound_index}, in_parent->type, in_parent->name, in_parent->const_value};
+			local type = local::constant;
+			std::size_t bound_index = std::numeric_limits<std::size_t>::max();
+			if (!in_parent->const_value)
+			{
+				type = local::bound;
+				bound_index = where.bind_from_parent.size();
+				where.bind_from_parent.emplace_back(in_parent->which);
+			}
+			return local_expression{local_identifier{type, bound_index}, in_parent->type, in_parent->name, in_parent->const_value};
 		}
 
 		type type_of_expression(expression const &expr);
@@ -608,9 +615,86 @@ namespace nl
 			return boost::apply_visitor(expression_type_visitor{}, expr);
 		}
 
+		struct convertible
+		{
+		};
+
+		struct totally_different
+		{
+		};
+
+		struct map_elements_missing
+		{
+			map missing_elements;
+		};
+
+		typedef boost::variant<
+			convertible,
+			totally_different,
+			map_elements_missing
+		> convertability;
+
+		inline convertability determine_convertability(type const &from, type const &into)
+		{
+			if (from == into)
+			{
+				return convertible{};
+			}
+			{
+				auto const * const from_map = boost::get<map>(&from);
+				auto const * const into_map = boost::get<map>(&into);
+				if (from_map && into_map)
+				{
+					map missing_elements;
+					for (auto const &required_element : into_map->elements)
+					{
+						auto const found = from_map->elements.find(required_element.first);
+						if (found != from_map->elements.end())
+						{
+							if (required_element.second == found->second)
+							{
+								continue;
+							}
+						}
+						missing_elements.elements.insert(required_element);
+					}
+					if (missing_elements.elements.empty())
+					{
+						return convertible{};
+					}
+					return map_elements_missing{std::move(missing_elements)};
+				}
+			}
+			return totally_different{};
+		}
+
 		inline bool is_convertible(type const &from, type const &into)
 		{
-			return (from == into); //TODO
+			auto conv = determine_convertability(from, into);
+			return boost::get<convertible>(&conv);
+		}
+
+		struct convertability_formatter : boost::static_visitor<boost::optional<std::string>>
+		{
+			boost::optional<std::string> operator()(convertible const &) const
+			{
+				return boost::none;
+			}
+
+			boost::optional<std::string> operator()(totally_different const &) const
+			{
+				return std::string("totally different");
+			}
+
+			boost::optional<std::string> operator()(map_elements_missing const &) const
+			{
+				return std::string("there are map elements missing");
+			}
+		};
+
+		inline boost::optional<std::string> format_convertability_error(convertability const &conv)
+		{
+			return boost::apply_visitor(convertability_formatter{}, conv);
 		}
 
 		struct checked_callable
@@ -1129,6 +1213,7 @@ namespace nl
 			case local::bound: Si::append(sink, "bnd:"); break;
 			case local::definition: Si::append(sink, "def:"); break;
 			case local::this_closure: Si::append(sink, "this"); return;
+			case local::constant: Si::append(sink, "const"); return;
 			}
 			Si::append(sink, boost::lexical_cast<std::string>(id.index));
 		}
@@ -1214,6 +1299,15 @@ namespace nl
 			Si::ostream_ref_sink sink(out);
 			print(sink, b);
 			return out;
+		}
+
+		inline boost::optional<signature> get_signature(type const &t)
+		{
+			if (auto const * const s = boost::get<signature>(&t))
+			{
+				return *s;
+			}
+			return boost::none;
 		}
 	}
 }

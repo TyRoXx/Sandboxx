@@ -413,16 +413,6 @@ namespace
 		analyzation_info.definitions.insert(std::make_pair(name, std::move(entry)));
 	}
 
-	void add_constant(
-			nl::il::name_space &analyzation_info,
-			std::vector<nl::interpreter::object_ptr> &execution_info,
-			std::string const &name,
-			nl::il::value const &constant)
-	{
-		add_constant(analyzation_info, name, constant);
-		execution_info.emplace_back(nl::interpreter::object_ptr{});
-	}
-
 	void add_external(
 			nl::il::name_space &analyzation_info,
 			std::vector<nl::interpreter::object_ptr> &execution_info,
@@ -447,7 +437,7 @@ namespace
 			std::vector<nl::interpreter::object_ptr> &execution_info)
 	{
 		auto const my_type_of_type = nl::il::generic_signature{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
-		add_constant(analyzation_info, execution_info, "typeof", nl::il::compile_time_closure{my_type_of_type, my_type_of});
+		add_constant(analyzation_info, "typeof", nl::il::compile_time_closure{my_type_of_type, my_type_of});
 	}
 
 	void test_hello_world_printing(std::string const &code)
@@ -461,8 +451,8 @@ namespace
 
 		std::vector<nl::interpreter::object_ptr> globals;
 		add_external(global_info, globals, "print_line", nl::il::signature{print_operation, {nl::il::string_type{}}}, make_functor(&print_line));
-		add_constant(global_info, globals, "string", nl::il::string_type{});
-		add_constant(global_info, globals, "function", nl::il::compile_time_closure{make_function_type, make_function});
+		add_constant(global_info, "string", nl::il::string_type{});
+		add_constant(global_info, "function", nl::il::compile_time_closure{make_function_type, make_function});
 		add_typeof(global_info, globals);
 
 		auto const output = run_code(code, global_info, globals);
@@ -669,7 +659,7 @@ namespace
 	{
 		auto name = "uint" + boost::lexical_cast<std::string>(sizeof(UInt) * 8);
 		add_external(analyzation_info, execution_info, "make_" + name, nl::il::signature{uint_type, {nl::il::integer_type{}}}, make_functor(my_make_uint<UInt>));
-		add_constant(analyzation_info, execution_info, name, uint_type);
+		add_constant(analyzation_info, name, uint_type);
 	}
 }
 
@@ -853,10 +843,11 @@ namespace
 					auto next_ = make_functor([next_action, action_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
 					{
 						assert(arguments.empty());
-						auto intermediate = std::dynamic_pointer_cast<future const>(action_->call({}));
+						auto action_result = action_->call({});
+						auto intermediate = std::dynamic_pointer_cast<future const>(action_result);
 						assert(intermediate);
-						intermediate->get();
-						auto finished = std::dynamic_pointer_cast<future const>(next_action->call({}));
+						auto intermediate_result = intermediate->get();
+						auto finished = std::dynamic_pointer_cast<future const>(next_action->call({intermediate_result}));
 						assert(finished);
 						return finished->get();
 					});
@@ -881,21 +872,6 @@ namespace
 		return std::make_shared<future>(arguments[0]);
 	}
 
-	nl::il::indirect_value get_void_future()
-	{
-		static nl::il::value const void_future
-		{
-			nl::il::map
-			{
-				boost::unordered_map<nl::il::value, nl::il::value>
-				{
-					{nl::il::string{"then"}, nl::il::signature{nl::il::indirect_value{&void_future}, {nl::il::signature{nl::il::indirect_value{&void_future}, {}}}}}
-				}
-			}
-		};
-		return {&void_future};
-	}
-
 	nl::il::value my_future(std::vector<nl::il::value> const &arguments)
 	{
 		assert(arguments.size() == 1);
@@ -904,10 +880,58 @@ namespace
 		{
 			boost::unordered_map<nl::il::value, nl::il::value>
 			{
-				{nl::il::string{"then"}, nl::il::signature{get_void_future(), {nl::il::signature{get_void_future(), {element}}}}}
+				{nl::il::string{"then"}, nl::il::generic_signature
+					{
+						[element](std::vector<nl::il::expression> const &arguments) -> nl::il::type
+						{
+							assert(arguments.size() == 1);
+							auto const callback_type = nl::il::type_of_expression(arguments[0]);
+							auto const callback_signature = nl::il::get_signature(callback_type);
+							if (!callback_signature)
+							{
+								throw std::invalid_argument("The argument of future.then needs to be callable");
+							}
+							if (callback_signature->parameters.size() != 1)
+							{
+								throw std::invalid_argument("The argument of future.then needs to be a callback that takes one argument");
+							}
+							if (!nl::il::is_convertible(element, callback_signature->parameters[0]))
+							{
+								throw std::invalid_argument("The parameter of the callback provided to future.then is not compatible with the future type");
+							}
+							return my_future({callback_signature->result});
+						},
+						{[element](nl::il::type const &callback_type) -> bool
+							{
+								auto const callback_signature = nl::il::get_signature(callback_type);
+								if (!callback_signature)
+								{
+									return false;
+								}
+								if (callback_signature->parameters.size() != 1)
+								{
+									return false;
+								}
+								auto const convertible = nl::il::determine_convertability(element, callback_signature->parameters[0]);
+								auto const convert_error = nl::il::format_convertability_error(convertible);
+								if (!convert_error)
+								{
+									return true;
+								}
+								return false;
+							}
+						}
+					}
+				}
 			}
 		};
 		return future;
+	}
+
+	nl::il::type get_void_future()
+	{
+		nl::il::map void_;
+		return my_future({void_});
 	}
 
 	nl::interpreter::object_ptr my_make_ready_future(std::vector<nl::interpreter::object_ptr> const &arguments)
@@ -934,7 +958,7 @@ namespace
 
 		{
 			nl::il::generic_signature const my_future_type{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
-			add_constant(analyzation_info, execution_info, "future", nl::il::compile_time_closure{my_future_type, my_future});
+			add_constant(analyzation_info, "future", nl::il::compile_time_closure{my_future_type, my_future});
 		}
 
 		{
@@ -975,7 +999,7 @@ namespace
 			nl::il::print(print_stream, printed);
 			return std::make_shared<future>(make_functor([](std::vector<nl::interpreter::object_ptr> const &) -> nl::interpreter::object_ptr
 			{
-				return nl::interpreter::object_ptr();
+				return std::make_shared<nl::interpreter::value_object>(nl::il::map{{}});
 			}));
 		}));
 	}
@@ -1053,9 +1077,9 @@ BOOST_AUTO_TEST_CASE(il_interpretation_hello_future)
 BOOST_AUTO_TEST_CASE(il_interpretation_future_then)
 {
 	std::string const code =
-			"return print(\"Hello\").then(()\n"
-			"	return print(\", futur\")).then(()\n"
-			"	return print(\"e\")).then(()\n"
+			"return print(\"Hello\").then((void nothing)\n"
+			"	return print(\", futur\")).then((void nothing)\n"
+			"	return print(\"e\")).then((void nothing)\n"
 			"	return print(\"!\"))\n"
 			;
 
@@ -1064,6 +1088,7 @@ BOOST_AUTO_TEST_CASE(il_interpretation_future_then)
 	nl::il::name_space global_info;
 	global_info.next = nullptr;
 
+	add_constant(global_info, "void", nl::il::map{{}});
 	add_async(global_info, globals);
 
 	std::string printed;
@@ -1084,7 +1109,7 @@ BOOST_AUTO_TEST_CASE(il_interpretation_future_then)
 		BOOST_REQUIRE(next_future);
 
 		auto const zero = next_future->get();
-		BOOST_REQUIRE(!zero);
+		BOOST_REQUIRE(zero);
 	});
 
 	BOOST_CHECK_EQUAL(printed, "Hello, future!");
@@ -1114,7 +1139,7 @@ namespace
 					std::vector<nl::interpreter::object_ptr> &execution_info)
 	{
 		nl::il::generic_signature const source{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
-		add_constant(analyzation_info, execution_info, "source", nl::il::compile_time_closure{source, my_source});
+		add_constant(analyzation_info, "source", nl::il::compile_time_closure{source, my_source});
 	}
 
 	struct source : nl::interpreter::object
@@ -1195,59 +1220,6 @@ BOOST_AUTO_TEST_CASE(il_interpretation_source_accumulate)
 
 namespace
 {
-	nl::il::value my_istream(std::vector<nl::il::value> const &arguments)
-	{
-		assert(arguments.size());
-		auto const &element = my_future({arguments[0]});
-		nl::il::map istream
-		{
-			boost::unordered_map<nl::il::value, nl::il::value>
-			{
-				{nl::il::string{"read"}, nl::il::signature{element, {}}}
-			}
-		};
-		return istream;
-	}
-
-	void add_istream(
-			nl::il::name_space &analyzation_info,
-			std::vector<nl::interpreter::object_ptr> &execution_info)
-	{
-		nl::il::generic_signature const my_istream_type{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
-		add_constant(analyzation_info, execution_info, "istream", nl::il::compile_time_closure{my_istream_type, my_istream});
-	}
-
-	nl::il::value my_ostream(std::vector<nl::il::value> const &arguments)
-	{
-		assert(arguments.size());
-		auto const &element = arguments[0];
-		nl::il::map ostream
-		{
-			boost::unordered_map<nl::il::value, nl::il::value>
-			{
-				{nl::il::string{"write"}, nl::il::signature{get_void_future(), {element}}}
-			}
-		};
-		return ostream;
-	}
-
-	void add_ostream(
-			nl::il::name_space &analyzation_info,
-			std::vector<nl::interpreter::object_ptr> &execution_info)
-	{
-		nl::il::generic_signature const my_ostream_type{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
-		add_constant(analyzation_info, execution_info, "ostream", nl::il::compile_time_closure{my_ostream_type, my_ostream});
-	}
-
-	void add_boolean(
-			nl::il::name_space &analyzation_info,
-			std::vector<nl::interpreter::object_ptr> &execution_info)
-	{
-		add_constant(analyzation_info, execution_info, "true", nl::il::string{"true"});
-		add_constant(analyzation_info, execution_info, "false", nl::il::string{"false"});
-		add_constant(analyzation_info, execution_info, "boolean", nl::il::string_type{});
-	}
-
 	nl::il::type my_optional(std::vector<nl::il::type> const &arguments)
 	{
 		assert(arguments.size() == 1);
@@ -1278,7 +1250,181 @@ namespace
 			nl::il::name_space &analyzation_info,
 			std::vector<nl::interpreter::object_ptr> &execution_info)
 	{
-		add_constant(analyzation_info, execution_info, "optional", nl::il::compile_time_closure{nl::il::generic_signature{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}}, my_optional});
+		add_constant(analyzation_info, "optional", nl::il::compile_time_closure{nl::il::generic_signature{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}}, my_optional});
+	}
+
+	struct some : nl::interpreter::object
+	{
+		explicit some(nl::interpreter::object_ptr value)
+			: value(std::move(value))
+		{
+		}
+
+		virtual nl::interpreter::object_ptr call(std::vector<nl::interpreter::object_ptr> const &) const override
+		{
+			throw std::logic_error("This object does not support the call operator");
+		}
+
+		virtual nl::interpreter::object_ptr subscript(std::string const &method_name) const override
+		{
+			assert(method_name == "branch");
+			auto value_ = value;
+			return make_functor([value_](std::vector<nl::interpreter::object_ptr> const &arguments)
+			{
+				assert(arguments.size() == 1);
+				auto some_callback = arguments[0];
+				return some_callback->call({value_});
+			});
+		}
+
+	private:
+
+		nl::interpreter::object_ptr value;
+	};
+
+	struct none : nl::interpreter::object
+	{
+		virtual nl::interpreter::object_ptr call(std::vector<nl::interpreter::object_ptr> const &) const override
+		{
+			throw std::logic_error("This object does not support the call operator");
+		}
+
+		virtual nl::interpreter::object_ptr subscript(std::string const &method_name) const override
+		{
+			assert(method_name == "branch");
+			return make_functor([](std::vector<nl::interpreter::object_ptr> const &arguments)
+			{
+				assert(arguments.size() == 1);
+				auto none_callback = arguments[1];
+				return none_callback->call({});
+			});
+		}
+	};
+
+	nl::il::value my_istream(std::vector<nl::il::value> const &arguments)
+	{
+		assert(arguments.size());
+		auto const &element = arguments[0];
+		nl::il::map istream
+		{
+			boost::unordered_map<nl::il::value, nl::il::value>
+			{
+				{nl::il::string{"read"}, nl::il::signature{my_future({my_optional({element})}), {}}}
+			}
+		};
+		return istream;
+	}
+
+	void add_istream(
+			nl::il::name_space &analyzation_info,
+			std::vector<nl::interpreter::object_ptr> &execution_info)
+	{
+		nl::il::generic_signature const my_istream_type{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
+		add_constant(analyzation_info, "istream", nl::il::compile_time_closure{my_istream_type, my_istream});
+	}
+
+	struct istream : nl::interpreter::object
+	{
+		explicit istream(Si::source<nl::interpreter::object_ptr> &source)
+			: source(source)
+		{
+		}
+
+		virtual nl::interpreter::object_ptr call(std::vector<nl::interpreter::object_ptr> const &) const override
+		{
+			throw std::logic_error("This object does not support the call operator");
+		}
+
+		virtual nl::interpreter::object_ptr subscript(std::string const &method_name) const override
+		{
+			assert(method_name == "read");
+			auto &source_ = source;
+			return std::make_shared<future>(make_functor([&source_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
+			{
+				assert(arguments.empty());
+				auto act = [&source_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
+				{
+					assert(arguments.empty());
+					auto next = Si::get(source_);
+					if (next)
+					{
+						return my_make_ready_future({std::make_shared<some>(*next)});
+					}
+					return my_make_ready_future({std::make_shared<none>()});
+				};
+				return std::make_shared<future>(make_functor(act));
+			}));
+		}
+
+	private:
+
+		Si::source<nl::interpreter::object_ptr> &source;
+	};
+
+	nl::il::value my_ostream(std::vector<nl::il::value> const &arguments)
+	{
+		assert(arguments.size());
+		auto const &element = arguments[0];
+		nl::il::map ostream
+		{
+			boost::unordered_map<nl::il::value, nl::il::value>
+			{
+				{nl::il::string{"write"}, nl::il::signature{get_void_future(), {element}}}
+			}
+		};
+		return ostream;
+	}
+
+	void add_ostream(
+			nl::il::name_space &analyzation_info,
+			std::vector<nl::interpreter::object_ptr> &execution_info)
+	{
+		nl::il::generic_signature const my_ostream_type{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
+		add_constant(analyzation_info, "ostream", nl::il::compile_time_closure{my_ostream_type, my_ostream});
+	}
+
+	struct ostream : nl::interpreter::object
+	{
+		explicit ostream(Si::sink<nl::interpreter::object_ptr> &sink)
+			: sink(sink)
+		{
+		}
+
+		virtual nl::interpreter::object_ptr call(std::vector<nl::interpreter::object_ptr> const &) const override
+		{
+			throw std::logic_error("This object does not support the call operator");
+		}
+
+		virtual nl::interpreter::object_ptr subscript(std::string const &method_name) const override
+		{
+			assert(method_name == "write");
+			auto &sink_ = sink;
+			return std::make_shared<future>(make_functor([&sink_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
+			{
+				assert(arguments.size() == 1);
+				auto const written = arguments[0];
+				auto act = [written, &sink_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
+				{
+					assert(arguments.empty());
+					sink_.append(boost::make_iterator_range(&written, &written + 1));
+					return my_make_ready_future({std::make_shared<nl::interpreter::value_object>(nl::il::map{{}})});
+				};
+				return std::make_shared<future>(make_functor(act));
+			}));
+		}
+
+	private:
+
+		Si::sink<nl::interpreter::object_ptr> &sink;
+	};
+
+	void add_boolean(
+			nl::il::name_space &analyzation_info,
+			std::vector<nl::interpreter::object_ptr> &execution_info)
+	{
+		add_constant(analyzation_info, "true", nl::il::string{"true"});
+		add_constant(analyzation_info, "false", nl::il::string{"false"});
+		add_constant(analyzation_info, "boolean", nl::il::string_type{});
 	}
 }
 
@@ -1288,7 +1434,7 @@ BOOST_AUTO_TEST_CASE(il_interpretation_stdio)
 			"copy_element = (istream(uint32) in, ostream(uint32) out) future(boolean)\n"
 			"	return in.read().then((optional(uint32) element) future(boolean)\n"
 			"		got_sth = (uint32 element) future(boolean)\n"
-			"			return out.write(element).then(() future(boolean)\n"
+			"			return out.write(element).then((void nothing) future(boolean)\n"
 			"				return make_ready_future(boolean)(true))\n"
 			"		got_nothing = () future(boolean)\n"
 			"			return make_ready_future(boolean)(false)\n"
@@ -1305,6 +1451,7 @@ BOOST_AUTO_TEST_CASE(il_interpretation_stdio)
 	assign_uint_type(uint32_type);
 	add_uint_type<boost::uint32_t>(global_info, globals, nl::il::indirect_value{&uint32_type});
 
+	add_constant(global_info, "void", nl::il::map{{}});
 	add_source(global_info, globals);
 	add_async(global_info, globals);
 	add_istream(global_info, globals);
@@ -1316,7 +1463,27 @@ BOOST_AUTO_TEST_CASE(il_interpretation_stdio)
 	{
 		BOOST_REQUIRE(output);
 
-		auto const result = output->call({});
+		std::vector<boost::uint32_t> const originals{1, 2, 3};
+		auto source = Si::make_container_source(originals);
+		auto object_source = Si::make_transforming_source<nl::interpreter::object_ptr>(source, [](boost::uint32_t element)
+		{
+			return std::make_shared<uint_object<boost::uint32_t>>(element);
+		});
+
+		std::vector<nl::interpreter::object_ptr> copies;
+		auto sink = Si::make_container_sink(copies);
+
+		auto const result = output->call({std::make_shared<istream>(object_source), std::make_shared<ostream>(sink)});
 		BOOST_REQUIRE(result);
+
+		auto const result_future = std::dynamic_pointer_cast<future const>(result);
+		BOOST_REQUIRE(result_future);
+		BOOST_REQUIRE(copies.empty());
+
+		auto const nothing = result_future->action->call({});
+		BOOST_REQUIRE(nothing);
+
+		BOOST_REQUIRE(copies.size() == 1);
+		BOOST_CHECK_EQUAL(2U, Si::get(source));
 	});
 }

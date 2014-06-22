@@ -82,6 +82,10 @@ namespace nl
 				, bound(std::move(bound))
 			{
 				assert(this->original->is_set());
+				assert((boost::algorithm::all_of(this->bound, [](object_ptr const &b)
+				{
+					return !!b;
+				})));
 			}
 
 			object_ptr call(std::vector<object_ptr> const &arguments) const SILICIUM_OVERRIDE
@@ -92,11 +96,15 @@ namespace nl
 					switch (id.type)
 					{
 					case il::local::bound:
-						if (id.index >= bound.size())
 						{
-							throw std::logic_error("Invalid bound index access");
+							if (id.index >= bound.size())
+							{
+								throw std::logic_error("Invalid bound index access");
+							}
+							auto b = bound[id.index];
+							assert(b);
+							return b;
 						}
-						return bound[id.index];
 
 					case il::local::argument:
 						if (id.index >= arguments.size())
@@ -114,6 +122,9 @@ namespace nl
 
 					case il::local::this_closure:
 						return shared_from_this();
+
+					case il::local::constant:
+						throw std::logic_error("Constants cannot be retrieved from the bound values");
 					}
 					return object_ptr();
 				};
