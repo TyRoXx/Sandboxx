@@ -1008,7 +1008,7 @@ namespace nl
 					print(m_out, elem.first);
 					Si::append(m_out, ": ");
 					print(m_out, elem.second);
-					Si::append(m_out, "\n");
+					Si::append(m_out, ", ");
 				}
 				Si::append(m_out, "]");
 			}

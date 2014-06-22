@@ -873,6 +873,35 @@ namespace
 		return std::make_shared<future>(arguments[0]);
 	}
 
+	nl::il::indirect_value get_void_future()
+	{
+		static nl::il::value const void_future
+		{
+			nl::il::map
+			{
+				boost::unordered_map<nl::il::value, nl::il::value>
+				{
+					{nl::il::string{"then"}, nl::il::signature{nl::il::indirect_value{&void_future}, {nl::il::signature{nl::il::indirect_value{&void_future}, {}}}}}
+				}
+			}
+		};
+		return {&void_future};
+	}
+
+	nl::il::value my_future(std::vector<nl::il::value> const &arguments)
+	{
+		assert(arguments.size() == 1);
+		auto const element = arguments[0];
+		nl::il::map future
+		{
+			boost::unordered_map<nl::il::value, nl::il::value>
+			{
+				{nl::il::string{"then"}, nl::il::signature{get_void_future(), {nl::il::signature{get_void_future(), {element}}}}}
+			}
+		};
+		return future;
+	}
+
 	void add_async(
 			nl::il::name_space &analyzation_info,
 			std::vector<nl::interpreter::object_ptr> &execution_info)
@@ -881,6 +910,9 @@ namespace
 		nl::il::external string_future_type{"future(string)"};
 		nl::il::signature async_type{string_future_type, {string_generator_type}};
 		add_external(analyzation_info, execution_info, "async", async_type, make_functor(my_async));
+
+		nl::il::generic_signature const my_future_type{nl::il::meta_type{}, {[](nl::il::type const &) { return true; }}};
+		add_constant(analyzation_info, execution_info, "future", nl::il::compile_time_closure{my_future_type, my_future});
 	}
 
 	nl::interpreter::object_ptr my_print(std::vector<nl::interpreter::object_ptr> const &arguments, Si::sink<char> &print_stream)
@@ -905,17 +937,9 @@ namespace
 	void add_print(
 			nl::il::name_space &analyzation_info,
 			std::vector<nl::interpreter::object_ptr> &execution_info,
-			Si::sink<char> &print_stream,
-			nl::il::value &void_future_type)
+			Si::sink<char> &print_stream)
 	{
-		void_future_type = nl::il::map
-		{
-			boost::unordered_map<nl::il::value, nl::il::value>
-			{
-				{nl::il::string{"then"}, nl::il::signature{nl::il::indirect_value{&void_future_type}, {nl::il::signature{nl::il::indirect_value{&void_future_type}, {}}}}}
-			}
-		};
-		nl::il::signature print_type{nl::il::indirect_value{&void_future_type}, {nl::il::string_type{}}};
+		nl::il::signature print_type{get_void_future(), {nl::il::string_type{}}};
 		add_external(analyzation_info, execution_info, "print", print_type, make_functor(std::bind(my_print, std::placeholders::_1, std::ref(print_stream))));
 	}
 }
@@ -968,8 +992,7 @@ BOOST_AUTO_TEST_CASE(il_interpretation_future_then)
 
 	std::string printed;
 	auto print_stream = Si::make_container_sink(printed);
-	nl::il::type void_future;
-	add_print(global_info, globals, print_stream, void_future);
+	add_print(global_info, globals, print_stream);
 
 	run_code(code, global_info, globals, [](nl::interpreter::object_ptr const &output)
 	{
@@ -1094,6 +1117,53 @@ BOOST_AUTO_TEST_CASE(il_interpretation_source_accumulate)
 	});
 }
 
+namespace
+{
+	nl::il::value my_istream(std::vector<nl::il::value> const &arguments)
+	{
+		assert(arguments.size());
+		auto const &element = my_future({arguments[0]});
+		nl::il::map istream
+		{
+			boost::unordered_map<nl::il::value, nl::il::value>
+			{
+				{nl::il::string{"read"}, nl::il::signature{element, {}}}
+			}
+		};
+		return istream;
+	}
+
+	void add_istream(
+			nl::il::name_space &analyzation_info,
+			std::vector<nl::interpreter::object_ptr> &execution_info)
+	{
+		nl::il::generic_signature const my_istream_type{nl::il::meta_type{}, {[](nl::il::type const &) { return true; }}};
+		add_constant(analyzation_info, execution_info, "istream", nl::il::compile_time_closure{my_istream_type, my_istream});
+	}
+
+	nl::il::value my_ostream(std::vector<nl::il::value> const &arguments)
+	{
+		assert(arguments.size());
+		auto const &element = arguments[0];
+		nl::il::map ostream
+		{
+			boost::unordered_map<nl::il::value, nl::il::value>
+			{
+				{nl::il::string{"write"}, nl::il::signature{get_void_future(), {element}}}
+			}
+		};
+		return ostream;
+	}
+
+	void add_ostream(
+			nl::il::name_space &analyzation_info,
+			std::vector<nl::interpreter::object_ptr> &execution_info)
+	{
+		nl::il::generic_signature const my_ostream_type{nl::il::meta_type{}, {[](nl::il::type const &) { return true; }}};
+		add_constant(analyzation_info, execution_info, "ostream", nl::il::compile_time_closure{my_ostream_type, my_ostream});
+	}
+}
+
 BOOST_AUTO_TEST_CASE(il_interpretation_stdio)
 {
 	std::string const code =
@@ -1118,6 +1188,9 @@ BOOST_AUTO_TEST_CASE(il_interpretation_stdio)
 	add_uint_type<boost::uint32_t>(global_info, globals, nl::il::indirect_value{&uint32_type});
 
 	add_source(global_info, globals);
+	add_async(global_info, globals);
+	add_istream(global_info, globals);
+	add_ostream(global_info, globals);
 
 	run_code(code, global_info, globals, [](nl::interpreter::object_ptr const &output)
 	{
