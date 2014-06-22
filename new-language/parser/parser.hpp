@@ -238,7 +238,7 @@ namespace nl
 							}
 							arguments.emplace_back(parse_expression(tokens, indentation));
 						}
-						left = call{std::move(left), std::move(arguments)};
+						left = call{std::move(left), next->begin, std::move(arguments)};
 						break;
 					}
 

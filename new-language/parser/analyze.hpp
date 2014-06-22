@@ -848,6 +848,11 @@ namespace nl
 			return boost::apply_visitor(callability_error_formatter{}, callability_);
 		}
 
+		std::runtime_error make_semantic_error(std::string const &message, character_position where)
+		{
+			return std::runtime_error(message + " (" + boost::str(boost::format("%1%:%2%") % where.line % where.column) + ")");
+		}
+
 		block analyze_block(ast::block const &syntax, name_space &names);
 
 		struct expression_analyzer : boost::static_visitor<expression>
@@ -956,7 +961,7 @@ namespace nl
 					auto const error_message = format_callability_error(callability);
 					if (error_message)
 					{
-						throw std::runtime_error(*error_message);
+						throw make_semantic_error(*error_message, syntax.argument_list);
 					}
 				}
 				return call{std::move(function), std::move(arguments)};

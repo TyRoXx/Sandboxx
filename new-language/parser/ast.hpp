@@ -55,6 +55,7 @@ namespace nl
 		struct call
 		{
 			expression function;
+			character_position argument_list;
 			std::vector<expression> arguments;
 		};
 

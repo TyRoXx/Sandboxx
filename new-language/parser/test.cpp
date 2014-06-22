@@ -249,13 +249,14 @@ BOOST_AUTO_TEST_CASE(analyzer_argument_type_mismatch)
 	auto const f_type = nl::il::type(nl::il::signature{uint32, {nl::il::type(uint64)}});
 	context.definitions.insert(std::make_pair("f", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::definition, 1}, f_type, nl::il::value(f)}));
 	nl::ast::lambda lambda;
-	lambda.body.result = nl::ast::call{nl::ast::identifier{nl::token{nl::token_type::integer, "f", irrelevant_position}}, {nl::ast::identifier{nl::token{nl::token_type::integer, "a", irrelevant_position}}}};
+	lambda.body.result = nl::ast::call{nl::ast::identifier{nl::token{nl::token_type::integer, "f", irrelevant_position}}, irrelevant_position, {nl::ast::identifier{nl::token{nl::token_type::integer, "a", irrelevant_position}}}};
 	lambda.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32", irrelevant_position}}, nl::token{nl::token_type::identifier, "a", irrelevant_position}});
 	BOOST_CHECK_EXCEPTION(nl::il::analyze(lambda, context, nullptr), std::runtime_error, [&](std::runtime_error const &ex)
 	{
 		auto const expected_message = nl::il::format_callability_error(nl::il::argument_type_not_applicable{0, uint64, uint32});
 		BOOST_REQUIRE(expected_message);
-		return ex.what() == *expected_message;
+		BOOST_REQUIRE_EQUAL(*expected_message + " (0:0)", ex.what());
+		return true;
 	});
 }
 
@@ -902,6 +903,19 @@ namespace
 		return future;
 	}
 
+	nl::interpreter::object_ptr my_make_ready_future(std::vector<nl::interpreter::object_ptr> const &arguments)
+	{
+		assert(arguments.size() == 1);
+		auto const &element = arguments[0];
+		return make_functor([element](std::vector<nl::interpreter::object_ptr> const &) -> nl::interpreter::object_ptr
+		{
+			return std::make_shared<future>(make_functor([element](std::vector<nl::interpreter::object_ptr> const &) -> nl::interpreter::object_ptr
+			{
+				return element;
+			}));
+		});
+	}
+
 	void add_async(
 			nl::il::name_space &analyzation_info,
 			std::vector<nl::interpreter::object_ptr> &execution_info)
@@ -917,7 +931,7 @@ namespace
 		}
 
 		{
-			add_constant(
+			add_external(
 				analyzation_info,
 				execution_info,
 				"make_ready_future",
@@ -930,7 +944,8 @@ namespace
 						return nl::il::signature{my_future({element}), {element}};
 					},
 					{[](nl::il::type const &) { return true; }}
-				}
+				},
+				make_functor(my_make_ready_future)
 			);
 		}
 	}
@@ -962,6 +977,34 @@ namespace
 		nl::il::signature print_type{get_void_future(), {nl::il::string_type{}}};
 		add_external(analyzation_info, execution_info, "print", print_type, make_functor(std::bind(my_print, std::placeholders::_1, std::ref(print_stream))));
 	}
+}
+
+BOOST_AUTO_TEST_CASE(il_analyze_make_ready_future_0)
+{
+	std::vector<nl::interpreter::object_ptr> globals;
+	nl::il::name_space global_info;
+	global_info.next = nullptr;
+	add_async(global_info, globals);
+	with_tokenizer("make_ready_future(typeof(\"\"))", [&](nl::ast::parser &parser)
+	{
+		auto expr_ast = nl::ast::parse_expression(parser, 0);
+		auto expr = nl::il::analyze(expr_ast, global_info, nullptr);
+		BOOST_CHECK(nl::il::type{(nl::il::signature{my_future({nl::il::string_type{}}), {nl::il::string_type{}}})} == nl::il::type_of_expression(expr));
+	});
+}
+
+BOOST_AUTO_TEST_CASE(il_analyze_make_ready_future_1)
+{
+	std::vector<nl::interpreter::object_ptr> globals;
+	nl::il::name_space global_info;
+	global_info.next = nullptr;
+	add_async(global_info, globals);
+	with_tokenizer("make_ready_future(typeof(\"\"))(\"str\")", [&](nl::ast::parser &parser)
+	{
+		auto expr_ast = nl::ast::parse_expression(parser, 0);
+		auto expr = nl::il::analyze(expr_ast, global_info, nullptr);
+		BOOST_CHECK(my_future({nl::il::string_type{}}) == nl::il::type_of_expression(expr));
+	});
 }
 
 BOOST_AUTO_TEST_CASE(il_interpretation_hello_future)
