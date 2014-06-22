@@ -813,9 +813,9 @@ namespace
 {
 	struct future : nl::interpreter::object
 	{
-		nl::interpreter::object_ptr action;
+		std::function<nl::interpreter::object_ptr()> action;
 
-		explicit future(nl::interpreter::object_ptr action)
+		explicit future(std::function<nl::interpreter::object_ptr()> action)
 			: action(std::move(action))
 		{
 		}
@@ -840,26 +840,20 @@ namespace
 					auto next_action = arguments[0];
 					assert(next_action);
 
-					auto next_ = make_functor([next_action, action_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
+					auto next_ = [next_action, action_]() -> nl::interpreter::object_ptr
 					{
-						assert(arguments.empty());
-						auto action_result = action_->call({});
+						auto action_result = action_();
 						auto intermediate = std::dynamic_pointer_cast<future const>(action_result);
 						assert(intermediate);
-						auto intermediate_result = intermediate->get();
+						auto intermediate_result = intermediate->action();
 						auto finished = std::dynamic_pointer_cast<future const>(next_action->call({intermediate_result}));
 						assert(finished);
-						return finished->get();
-					});
+						return finished->action();
+					};
 					return std::make_shared<future>(next_);
 				});
 			}
 			throw std::logic_error("Unknown method name");
-		}
-
-		nl::interpreter::object_ptr get() const
-		{
-			return action->call({});
 		}
 	};
 
@@ -869,7 +863,8 @@ namespace
 		{
 			throw std::runtime_error("async requires exactly one argument");
 		}
-		return std::make_shared<future>(arguments[0]);
+		auto action = arguments[0];
+		return std::make_shared<future>(std::bind(&nl::interpreter::object::call, action, std::vector<nl::interpreter::object_ptr>()));
 	}
 
 	nl::il::value my_future(std::vector<nl::il::value> const &arguments)
@@ -940,10 +935,10 @@ namespace
 		auto const &element = arguments[0];
 		return make_functor([element](std::vector<nl::interpreter::object_ptr> const &) -> nl::interpreter::object_ptr
 		{
-			return std::make_shared<future>(make_functor([element](std::vector<nl::interpreter::object_ptr> const &) -> nl::interpreter::object_ptr
+			return std::make_shared<future>([element]() -> nl::interpreter::object_ptr
 			{
 				return element;
-			}));
+			});
 		});
 	}
 
@@ -994,14 +989,14 @@ namespace
 		auto value_obj = std::dynamic_pointer_cast<nl::interpreter::value_object const>(arguments[0]);
 		assert(value_obj);
 		auto printed = value_obj->value;
-		return std::make_shared<future>(make_functor([&print_stream, printed](std::vector<nl::interpreter::object_ptr> const &) -> nl::interpreter::object_ptr
+		return std::make_shared<future>([&print_stream, printed]() -> nl::interpreter::object_ptr
 		{
 			nl::il::print(print_stream, printed);
-			return std::make_shared<future>(make_functor([](std::vector<nl::interpreter::object_ptr> const &) -> nl::interpreter::object_ptr
+			return std::make_shared<future>([]() -> nl::interpreter::object_ptr
 			{
 				return std::make_shared<nl::interpreter::value_object>(nl::il::map{{}});
-			}));
-		}));
+			});
+		});
 	}
 
 	void add_print(
@@ -1064,7 +1059,7 @@ BOOST_AUTO_TEST_CASE(il_interpretation_hello_future)
 		auto const future_output = std::dynamic_pointer_cast<future const>(output);
 		BOOST_REQUIRE(future_output);
 
-		auto const message = future_output->action->call({});
+		auto const message = future_output->action();
 		BOOST_REQUIRE(message);
 
 		auto const message_string = std::dynamic_pointer_cast<nl::interpreter::value_object const>(message);
@@ -1102,13 +1097,13 @@ BOOST_AUTO_TEST_CASE(il_interpretation_future_then)
 		auto const future_output = std::dynamic_pointer_cast<future const>(output);
 		BOOST_REQUIRE(future_output);
 
-		auto const next = future_output->get();
+		auto const next = future_output->action();
 		BOOST_REQUIRE(next);
 
 		auto const next_future = std::dynamic_pointer_cast<future const>(next);
 		BOOST_REQUIRE(next_future);
 
-		auto const zero = next_future->get();
+		auto const zero = next_future->action();
 		BOOST_REQUIRE(zero);
 	});
 
@@ -1342,9 +1337,8 @@ namespace
 			return make_functor([&source_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
 			{
 				assert(arguments.empty());
-				auto act = [&source_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
+				auto act = [&source_]() -> nl::interpreter::object_ptr
 				{
-					assert(arguments.empty());
 					auto next = Si::get(source_);
 					if (next)
 					{
@@ -1352,7 +1346,7 @@ namespace
 					}
 					return my_make_ready_future({std::make_shared<none>()});
 				};
-				return std::make_shared<future>(make_functor(act));
+				return std::make_shared<future>(act);
 			});
 		}
 
@@ -1403,13 +1397,12 @@ namespace
 			{
 				assert(arguments.size() == 1);
 				auto const written = arguments[0];
-				auto act = [written, &sink_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
+				auto act = [written, &sink_]() -> nl::interpreter::object_ptr
 				{
-					assert(arguments.empty());
 					sink_.append(boost::make_iterator_range(&written, &written + 1));
 					return my_make_ready_future({std::make_shared<nl::interpreter::value_object>(nl::il::map{{}})});
 				};
-				return std::make_shared<future>(make_functor(act));
+				return std::make_shared<future>(act);
 			});
 		}
 
@@ -1480,7 +1473,7 @@ BOOST_AUTO_TEST_CASE(il_interpretation_stdio)
 		BOOST_REQUIRE(result_future);
 		BOOST_REQUIRE(copies.empty());
 
-		auto const nothing = result_future->action->call({});
+		auto const nothing = result_future->action();
 		BOOST_REQUIRE(nothing);
 
 		BOOST_REQUIRE(copies.size() == 1);
