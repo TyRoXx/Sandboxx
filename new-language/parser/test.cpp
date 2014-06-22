@@ -1162,19 +1162,47 @@ namespace
 		nl::il::generic_signature const my_ostream_type{nl::il::meta_type{}, {[](nl::il::type const &) { return true; }}};
 		add_constant(analyzation_info, execution_info, "ostream", nl::il::compile_time_closure{my_ostream_type, my_ostream});
 	}
+
+	void add_boolean(
+			nl::il::name_space &analyzation_info,
+			std::vector<nl::interpreter::object_ptr> &execution_info)
+	{
+		add_constant(analyzation_info, execution_info, "true", nl::il::string{"true"});
+		add_constant(analyzation_info, execution_info, "false", nl::il::string{"false"});
+		add_constant(analyzation_info, execution_info, "boolean", nl::il::string_type{});
+	}
+
+	nl::il::type my_optional(std::vector<nl::il::type> const &arguments)
+	{
+		assert(arguments.size() == 1);
+		nl::il::map result
+		{
+			boost::unordered_map<nl::il::value, nl::il::value>
+			{
+			}
+		};
+		return result;
+	}
+
+	void add_optional(
+			nl::il::name_space &analyzation_info,
+			std::vector<nl::interpreter::object_ptr> &execution_info)
+	{
+		add_constant(analyzation_info, execution_info, "optional", nl::il::compile_time_closure{nl::il::generic_signature{nl::il::meta_type{}, {[](nl::il::type const &) { return true; }}}, my_optional});
+	}
 }
 
 BOOST_AUTO_TEST_CASE(il_interpretation_stdio)
 {
 	std::string const code =
 			"copy_element = (istream(uint32) in, ostream(uint32) out) future(boolean)\n"
-			"	return in.read().then((optional(uin32) element) future(boolean)\n"
+			"	return in.read().then((optional(uint32) element) future(boolean)\n"
 			"		got_sth = (uint32 element) future(boolean)\n"
 			"			return out.write(element).then(() future(boolean)\n"
-			"				return make_ready_future(boolean)(boolean.true))\n"
+			"				return make_ready_future(boolean)(true))\n"
 			"		got_nothing = () future(boolean)\n"
-			"			return make_ready_future(boolean)(boolean.false)\n"
-			"		return element.branch(got_sth, got_nothing))\n"
+			"			return make_ready_future(boolean)(false)\n"
+			"		return element.branch(future(boolean))(got_sth, got_nothing))\n"
 			"return copy_element\n"
 			;
 
@@ -1191,6 +1219,8 @@ BOOST_AUTO_TEST_CASE(il_interpretation_stdio)
 	add_async(global_info, globals);
 	add_istream(global_info, globals);
 	add_ostream(global_info, globals);
+	add_boolean(global_info, globals);
+	add_optional(global_info, globals);
 
 	run_code(code, global_info, globals, [](nl::interpreter::object_ptr const &output)
 	{
