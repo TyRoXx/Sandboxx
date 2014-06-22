@@ -1339,7 +1339,7 @@ namespace
 		{
 			assert(method_name == "read");
 			auto &source_ = source;
-			return std::make_shared<future>(make_functor([&source_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
+			return make_functor([&source_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
 			{
 				assert(arguments.empty());
 				auto act = [&source_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
@@ -1353,7 +1353,7 @@ namespace
 					return my_make_ready_future({std::make_shared<none>()});
 				};
 				return std::make_shared<future>(make_functor(act));
-			}));
+			});
 		}
 
 	private:
@@ -1399,7 +1399,7 @@ namespace
 		{
 			assert(method_name == "write");
 			auto &sink_ = sink;
-			return std::make_shared<future>(make_functor([&sink_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
+			return make_functor([&sink_](std::vector<nl::interpreter::object_ptr> const &arguments) -> nl::interpreter::object_ptr
 			{
 				assert(arguments.size() == 1);
 				auto const written = arguments[0];
@@ -1410,7 +1410,7 @@ namespace
 					return my_make_ready_future({std::make_shared<nl::interpreter::value_object>(nl::il::map{{}})});
 				};
 				return std::make_shared<future>(make_functor(act));
-			}));
+			});
 		}
 
 	private:
