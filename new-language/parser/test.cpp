@@ -8,11 +8,96 @@
 
 BOOST_AUTO_TEST_CASE(scan_token_end_of_file)
 {
-	Si::memory_source<char> empty;
+	Si::memory_source<nl::source_char> empty;
 	boost::optional<nl::token> scanned = nl::scan_token(empty);
 	BOOST_REQUIRE(scanned);
 	BOOST_CHECK(nl::token_type::end_of_file == scanned->type);
 	BOOST_CHECK_EQUAL("", scanned->content);
+}
+
+namespace
+{
+	struct source_char_source : Si::source<nl::source_char>
+	{
+		explicit source_char_source(Si::source<char> &original)
+			: original(original)
+		{
+		}
+
+		virtual boost::iterator_range<nl::source_char const *> map_next(std::size_t) override
+		{
+			return {};
+		}
+
+		virtual nl::source_char *copy_next(boost::iterator_range<nl::source_char *> destination) override
+		{
+			auto d = boost::begin(destination);
+			for (; d != boost::end(destination); ++d)
+			{
+				boost::optional<char> next = Si::get(original);
+				if (!next)
+				{
+					break;
+				}
+				*d = nl::source_char{*next, current_pos};
+				current_pos.column++;
+				if (*next == '\n')
+				{
+					current_pos.column = 0;
+					current_pos.line++;
+				}
+			}
+			return d;
+		}
+
+		virtual boost::uintmax_t minimum_size() override
+		{
+			return original.minimum_size();
+		}
+
+		virtual boost::optional<boost::uintmax_t> maximum_size() override
+		{
+			return original.maximum_size();
+		}
+
+		virtual std::size_t skip(std::size_t count) override
+		{
+			std::size_t skipped = 0;
+			for (; (Si::get(*this).is_initialized()) && (skipped < count); ++skipped)
+			{
+			}
+			return skipped;
+		}
+
+	private:
+
+		Si::source<char> &original;
+		nl::character_position current_pos;
+	};
+}
+
+BOOST_AUTO_TEST_CASE(source_char_source_trivial)
+{
+	std::string const input = ". a\n)=";
+	Si::memory_source<char> raw_source(boost::make_iterator_range(input.data(), input.data() + input.size()));
+	source_char_source non_buffered_source(raw_source);
+	auto source = non_buffered_source | Si::buffered(1);
+	std::vector<nl::source_char> const expected_chars
+	{
+		nl::source_char{'.', nl::character_position{0, 0}},
+		nl::source_char{' ', nl::character_position{0, 1}},
+		nl::source_char{'a', nl::character_position{0, 2}},
+		nl::source_char{'\n', nl::character_position{0, 3}},
+		nl::source_char{')', nl::character_position{1, 0}},
+		nl::source_char{'=', nl::character_position{1, 1}}
+	};
+	for (auto const &expected : expected_chars)
+	{
+		boost::optional<nl::source_char> next = Si::get(source);
+		BOOST_REQUIRE(next);
+		BOOST_CHECK(expected == *next);
+	}
+	BOOST_CHECK(!Si::get(source));
 }
 
 BOOST_AUTO_TEST_CASE(scan_token_sequence)
@@ -36,8 +121,10 @@ BOOST_AUTO_TEST_CASE(scan_token_sequence)
 		nl::token_type::return_,
 		nl::token_type::end_of_file
 	};
-	Si::memory_source<char> source(boost::make_iterator_range(input.data(), input.data() + input.size()));
-	for (auto const expected : tokens)
+	Si::memory_source<char> raw_source(boost::make_iterator_range(input.data(), input.data() + input.size()));
+	source_char_source non_buffered_source(raw_source);
+	auto source = non_buffered_source | Si::buffered(1);
+	for (nl::token_type const expected : tokens)
 	{
 		boost::optional<nl::token> const scanned = nl::scan_token(source);
 		BOOST_REQUIRE(scanned);
@@ -49,7 +136,9 @@ BOOST_AUTO_TEST_CASE(scan_token_sequence)
 BOOST_AUTO_TEST_CASE(scan_token_string)
 {
 	std::string const input = "\"abc123\\\"\\\\\"";
-	Si::memory_source<char> source(boost::make_iterator_range(input.data(), input.data() + input.size()));
+	Si::memory_source<char> raw_source(boost::make_iterator_range(input.data(), input.data() + input.size()));
+	source_char_source non_buffered_source(raw_source);
+	auto source = non_buffered_source | Si::buffered(1);
 	boost::optional<nl::token> scanned = nl::scan_token(source);
 	BOOST_REQUIRE(scanned);
 	BOOST_CHECK(nl::token_type::string == scanned->type);
@@ -64,7 +153,9 @@ BOOST_AUTO_TEST_CASE(scan_token_string)
 template <class TokenizerHandler>
 void with_tokenizer(std::string const &code, TokenizerHandler const &handle)
 {
-	Si::memory_source<char> source(boost::make_iterator_range(code.data(), code.data() + code.size()));
+	Si::memory_source<char> raw_source(boost::make_iterator_range(code.data(), code.data() + code.size()));
+	source_char_source non_buffered_source(raw_source);
+	auto source = non_buffered_source | Si::buffered(1);
 	auto lexer = Si::make_generator_source<nl::token>([&source]
 	{
 		auto token = nl::scan_token(source);
@@ -75,13 +166,14 @@ void with_tokenizer(std::string const &code, TokenizerHandler const &handle)
 		return token;
 	});
 	Si::buffering_source<nl::token> buffer(lexer, 1);
-	handle(buffer);
+	nl::ast::parser parser(buffer);
+	handle(parser);
 }
 
 BOOST_AUTO_TEST_CASE(ast_parse_parameters)
 {
 	std::string const input = "uint32 a, unicode.code_point c)";
-	with_tokenizer(input, [](Si::source<nl::token> &tokens)
+	with_tokenizer(input, [](nl::ast::parser &tokens)
 	{
 		auto parsed = nl::ast::parse_parameters(tokens, 0);
 		BOOST_REQUIRE_EQUAL(2, parsed.size());
@@ -95,7 +187,9 @@ BOOST_AUTO_TEST_CASE(ast_lambda)
 			"\ta = 2\n"
 			"\treturn 1\n"
 			;
-	Si::memory_source<char> source(boost::make_iterator_range(input.data(), input.data() + input.size()));
+	Si::memory_source<char> raw_source(boost::make_iterator_range(input.data(), input.data() + input.size()));
+	source_char_source non_buffered_source(raw_source);
+	auto source = non_buffered_source | Si::buffered(1);
 	auto lexer = Si::make_generator_source<nl::token>([&source]
 	{
 		auto token = nl::scan_token(source);
@@ -106,15 +200,18 @@ BOOST_AUTO_TEST_CASE(ast_lambda)
 		return token;
 	});
 	Si::buffering_source<nl::token> buffer(lexer, 1);
-	auto parsed = nl::ast::parse_expression(buffer, 0);
+	nl::ast::parser parser(buffer);
+	auto parsed = nl::ast::parse_expression(parser, 0);
 	nl::ast::lambda const * const lambda = boost::get<nl::ast::lambda>(&parsed);
 	BOOST_REQUIRE(lambda);
 
+	nl::character_position const irrelevant_position;
+
 	nl::ast::lambda expected;
-	expected.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32"}}, nl::token{nl::token_type::identifier, "b"}});
-	expected.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "string"}}, nl::token{nl::token_type::identifier, "s"}});
-	expected.body.elements.emplace_back(nl::ast::definition{nl::token{nl::token_type::identifier, "a"}, nl::ast::integer{nl::token{nl::token_type::integer, "2"}}});
-	expected.body.result = nl::ast::integer{nl::token{nl::token_type::integer, "1"}};
+	expected.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32", irrelevant_position}}, nl::token{nl::token_type::identifier, "b", irrelevant_position}});
+	expected.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "string", irrelevant_position}}, nl::token{nl::token_type::identifier, "s", irrelevant_position}});
+	expected.body.elements.emplace_back(nl::ast::definition{nl::token{nl::token_type::identifier, "a", irrelevant_position}, nl::ast::integer{nl::token{nl::token_type::integer, "2", irrelevant_position}}});
+	expected.body.result = nl::ast::integer{nl::token{nl::token_type::integer, "1", irrelevant_position}};
 	BOOST_CHECK_EQUAL(expected, *lambda);
 
 	std::string back_to_str = boost::lexical_cast<std::string>(*lambda);
@@ -123,13 +220,15 @@ BOOST_AUTO_TEST_CASE(ast_lambda)
 
 BOOST_AUTO_TEST_CASE(analyzer_lambda)
 {
+	nl::character_position const irrelevant_position;
+
 	nl::il::external uint32{"uint32"};
 	nl::il::name_space context;
 	context.next = nullptr;
 	context.definitions.insert(std::make_pair("uint32", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::definition, 0}, nl::il::null(), nl::il::type(uint32)}));
 	nl::ast::lambda lambda;
-	lambda.body.result = nl::ast::identifier{nl::token{nl::token_type::integer, "a"}};
-	lambda.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32"}}, nl::token{nl::token_type::identifier, "a"}});
+	lambda.body.result = nl::ast::identifier{nl::token{nl::token_type::integer, "a", irrelevant_position}};
+	lambda.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32", irrelevant_position}}, nl::token{nl::token_type::identifier, "a", irrelevant_position}});
 	auto analyzed = nl::il::analyze(lambda, context, nullptr);
 	nl::il::make_closure expected;
 	expected.parameters.emplace_back(nl::il::parameter{uint32, "a"});
@@ -139,6 +238,8 @@ BOOST_AUTO_TEST_CASE(analyzer_lambda)
 
 BOOST_AUTO_TEST_CASE(analyzer_argument_type_mismatch)
 {
+	nl::character_position const irrelevant_position;
+
 	nl::il::external uint32{"uint32"};
 	nl::il::external uint64{"uint64"};
 	nl::il::external f{"f"};
@@ -148,8 +249,8 @@ BOOST_AUTO_TEST_CASE(analyzer_argument_type_mismatch)
 	auto const f_type = nl::il::type(nl::il::signature{uint32, {nl::il::type(uint64)}});
 	context.definitions.insert(std::make_pair("f", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::definition, 1}, f_type, nl::il::value(f)}));
 	nl::ast::lambda lambda;
-	lambda.body.result = nl::ast::call{nl::ast::identifier{nl::token{nl::token_type::integer, "f"}}, {nl::ast::identifier{nl::token{nl::token_type::integer, "a"}}}};
-	lambda.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32"}}, nl::token{nl::token_type::identifier, "a"}});
+	lambda.body.result = nl::ast::call{nl::ast::identifier{nl::token{nl::token_type::integer, "f", irrelevant_position}}, {nl::ast::identifier{nl::token{nl::token_type::integer, "a", irrelevant_position}}}};
+	lambda.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32", irrelevant_position}}, nl::token{nl::token_type::identifier, "a", irrelevant_position}});
 	BOOST_CHECK_EXCEPTION(nl::il::analyze(lambda, context, nullptr), std::runtime_error, [&](std::runtime_error const &ex)
 	{
 		auto const expected_message = nl::il::format_callability_error(nl::il::argument_type_not_applicable{0, uint64, uint32});
@@ -163,7 +264,7 @@ namespace
 	nl::ast::block parse(std::string const &code)
 	{
 		nl::ast::block result;
-		with_tokenizer(code, [&result](Si::source<nl::token> &tokens)
+		with_tokenizer(code, [&result](nl::ast::parser &tokens)
 		{
 			result = nl::ast::parse_block(tokens, 0);
 		});
@@ -926,7 +1027,7 @@ namespace
 		{
 		}
 
-		virtual nl::interpreter::object_ptr call(std::vector<nl::interpreter::object_ptr> const &arguments) const override
+		virtual nl::interpreter::object_ptr call(std::vector<nl::interpreter::object_ptr> const &) const override
 		{
 			throw std::logic_error("This object does not support the call operator");
 		}
@@ -990,5 +1091,39 @@ BOOST_AUTO_TEST_CASE(il_interpretation_source_accumulate)
 		auto const result_int = std::dynamic_pointer_cast<uint_object<boost::uint32_t> const>(result);
 		BOOST_REQUIRE(result_int);
 		BOOST_CHECK_EQUAL(15, result_int->value);
+	});
+}
+
+BOOST_AUTO_TEST_CASE(il_interpretation_stdio)
+{
+	std::string const code =
+			"copy_element = (istream(uint32) in, ostream(uint32) out) future(boolean)\n"
+			"	return in.read().then((optional(uin32) element) future(boolean)\n"
+			"		got_sth = (uint32 element) future(boolean)\n"
+			"			return out.write(element).then(() future(boolean)\n"
+			"				return make_ready_future(boolean)(boolean.true))\n"
+			"		got_nothing = () future(boolean)\n"
+			"			return make_ready_future(boolean)(boolean.false)\n"
+			"		return element.branch(got_sth, got_nothing))\n"
+			"return copy_element\n"
+			;
+
+	std::vector<nl::interpreter::object_ptr> globals;
+
+	nl::il::name_space global_info;
+	global_info.next = nullptr;
+
+	nl::il::value uint32_type;
+	assign_uint_type(uint32_type);
+	add_uint_type<boost::uint32_t>(global_info, globals, nl::il::indirect_value{&uint32_type});
+
+	add_source(global_info, globals);
+
+	run_code(code, global_info, globals, [](nl::interpreter::object_ptr const &output)
+	{
+		BOOST_REQUIRE(output);
+
+		auto const result = output->call({});
+		BOOST_REQUIRE(result);
 	});
 }

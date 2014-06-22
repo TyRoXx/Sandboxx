@@ -3,11 +3,45 @@
 
 #include "ast.hpp"
 #include "scanner.hpp"
+#include <boost/format.hpp>
 
 namespace nl
 {
 	namespace ast
 	{
+		struct parser
+		{
+			parser(Si::source<token> &tokens)
+				: tokens(tokens)
+			{
+			}
+
+			boost::optional<token> peek()
+			{
+				return nl::peek(tokens);
+			}
+
+			boost::optional<token> get()
+			{
+				auto got = Si::get(tokens);
+				if (got)
+				{
+					last_token_position_ = got->begin;
+				}
+				return got;
+			}
+
+			character_position last_token_position() const
+			{
+				return last_token_position_;
+			}
+
+		private:
+
+			Si::source<token> &tokens;
+			character_position last_token_position_;
+		};
+
 		struct parser_error : std::runtime_error
 		{
 			explicit parser_error(std::string message)
@@ -16,18 +50,23 @@ namespace nl
 			}
 		};
 
-		inline void expect_token(Si::source<token> &tokens, token_type expected)
+		parser_error make_parser_error(std::string const &message, character_position where)
 		{
-			auto found = peek(tokens);
+			return parser_error(message + " (" + boost::str(boost::format("%1%:%2%") % where.line % where.column) + ")");
+		}
+
+		inline void expect_token(parser &tokens, token_type expected)
+		{
+			auto found = tokens.peek();
 			if (!found ||
 				(found->type != expected))
 			{
-				throw parser_error(std::string("Expected token ") + get_token_name(expected));
+				throw make_parser_error(std::string("Expected token ") + get_token_name(expected), tokens.last_token_position());
 			}
-			Si::get(tokens);
+			tokens.get();
 		}
 
-		inline void expect_indentation(Si::source<token> &tokens, std::size_t indentation)
+		inline void expect_indentation(parser &tokens, std::size_t indentation)
 		{
 			for (size_t i = 0; i < indentation; ++i)
 			{
@@ -35,26 +74,26 @@ namespace nl
 			}
 		}
 
-		inline bool is_next_token(Si::source<token> &tokens, token_type expected)
+		inline bool is_next_token(parser &tokens, token_type expected)
 		{
-			auto &&next = peek(tokens);
+			auto &&next = tokens.peek();
 			return (next && (next->type == expected));
 		}
 
-		expression parse_expression(Si::source<token> &tokens, std::size_t indentation);
+		expression parse_expression(parser &tokens, std::size_t indentation);
 
-		inline definition parse_definition(Si::source<token> &tokens, std::size_t indentation)
+		inline definition parse_definition(parser &tokens, std::size_t indentation)
 		{
-			auto const next = peek(tokens);
+			auto const next = tokens.peek();
 			if (!next)
 			{
-				throw parser_error("definition expected");
+				throw make_parser_error("definition expected", tokens.last_token_position());
 			}
 			switch (next->type)
 			{
 			case token_type::identifier:
 				{
-					auto name = Si::get(tokens);
+					auto name = tokens.get();
 					expect_token(tokens, token_type::space);
 					expect_token(tokens, token_type::assignment);
 					expect_token(tokens, token_type::space);
@@ -64,24 +103,24 @@ namespace nl
 				}
 
 			default:
-				throw parser_error("identifier for definition name expected");
+				throw make_parser_error("identifier for definition name expected", tokens.last_token_position());
 			}
 		}
 
-		inline token expect_identifier(Si::source<token> &tokens)
+		inline token expect_identifier(parser &tokens)
 		{
-			auto found = peek(tokens);
+			auto found = tokens.peek();
 			if (!found ||
 				(found->type != token_type::identifier))
 			{
-				throw parser_error("identifier expected");
+				throw make_parser_error("identifier expected", tokens.last_token_position());
 			}
-			return std::move(*Si::get(tokens));
+			return std::move(*tokens.get());
 		}
 
-		block parse_block(Si::source<token> &tokens, std::size_t indentation);
+		block parse_block(parser &tokens, std::size_t indentation);
 
-		inline parameter parse_parameter(Si::source<token> &tokens, std::size_t indentation)
+		inline parameter parse_parameter(parser &tokens, std::size_t indentation)
 		{
 			auto type = parse_expression(tokens, indentation);
 			expect_token(tokens, token_type::space);
@@ -89,19 +128,19 @@ namespace nl
 			return parameter{std::move(type), std::move(name)};
 		}
 
-		inline std::vector<parameter> parse_parameters(Si::source<token> &tokens, std::size_t indentation)
+		inline std::vector<parameter> parse_parameters(parser &tokens, std::size_t indentation)
 		{
 			std::vector<parameter> parameters;
 			for (;;)
 			{
-				auto closing_parenthesis = peek(tokens);
+				auto closing_parenthesis = tokens.peek();
 				if (!closing_parenthesis)
 				{
-					throw parser_error("premature end of tokens in parameter list");
+					throw make_parser_error("premature end of tokens in parameter list", tokens.last_token_position());
 				}
 				if (closing_parenthesis->type == token_type::right_parenthesis)
 				{
-					Si::get(tokens);
+					tokens.get();
 					break;
 				}
 				if (!parameters.empty())
@@ -114,39 +153,39 @@ namespace nl
 			return parameters;
 		}
 
-		inline expression parse_left_expression(Si::source<token> &tokens, std::size_t indentation)
+		inline expression parse_left_expression(parser &tokens, std::size_t indentation)
 		{
-			auto const next = peek(tokens);
+			auto const next = tokens.peek();
 			if (!next)
 			{
-				throw parser_error("premature end of tokens where an expression is expected");
+				throw make_parser_error("premature end of tokens where an expression is expected", tokens.last_token_position());
 			}
 			switch (next->type)
 			{
 			case token_type::identifier:
 				{
-					return identifier{*Si::get(tokens)};
+					return identifier{*tokens.get()};
 				}
 
 			case token_type::integer:
 				{
-					return integer{*Si::get(tokens)};
+					return integer{*tokens.get()};
 				}
 
 			case token_type::string:
 				{
-					return string{*Si::get(tokens)};
+					return string{*tokens.get()};
 				}
 
 			case token_type::left_parenthesis:
 				{
-					Si::get(tokens);
+					tokens.get();
 					auto parameters = parse_parameters(tokens, indentation);
 					boost::optional<expression> explicit_return_type;
 					if (is_next_token(tokens, token_type::space))
 					{
 						//pop the space
-						Si::get(tokens);
+						tokens.get();
 						explicit_return_type = parse_expression(tokens, indentation);
 					}
 					expect_token(tokens, token_type::newline);
@@ -155,16 +194,16 @@ namespace nl
 				}
 
 			default:
-				throw parser_error("expected an expression");
+				throw make_parser_error("expected an expression", tokens.last_token_position());
 			}
 		}
 
-		inline expression parse_expression(Si::source<token> &tokens, std::size_t indentation)
+		inline expression parse_expression(parser &tokens, std::size_t indentation)
 		{
 			auto left = parse_left_expression(tokens, indentation);
 			for (;;)
 			{
-				auto next = peek(tokens);
+				auto next = tokens.peek();
 				if (!next)
 				{
 					return left;
@@ -173,7 +212,7 @@ namespace nl
 				{
 				case token_type::dot:
 					{
-						Si::get(tokens);
+						tokens.get();
 						auto element = expect_identifier(tokens);
 						left = subscript{std::move(left), std::move(element)};
 						break;
@@ -181,15 +220,15 @@ namespace nl
 
 				case token_type::left_parenthesis:
 					{
-						Si::get(tokens);
+						tokens.get();
 						std::vector<expression> arguments;
 						for (;;)
 						{
-							auto closing_parenthesis = peek(tokens);
+							auto closing_parenthesis = tokens.peek();
 							if (closing_parenthesis &&
 								closing_parenthesis->type == token_type::right_parenthesis)
 							{
-								Si::get(tokens);
+								tokens.get();
 								break;
 							}
 							if (!arguments.empty())
@@ -209,28 +248,28 @@ namespace nl
 			}
 		}
 
-		inline block parse_block(Si::source<token> &tokens, std::size_t indentation)
+		inline block parse_block(parser &tokens, std::size_t indentation)
 		{
 			std::vector<definition> elements;
 			for (;;)
 			{
 				{
-					auto next = peek(tokens);
+					auto next = tokens.peek();
 					if (next &&
 						next->type == token_type::newline)
 					{
-						Si::get(tokens);
+						tokens.get();
 						continue;
 					}
 				}
 
 				expect_indentation(tokens, indentation);
 
-				auto next = peek(tokens);
+				auto next = tokens.peek();
 				if (next &&
 					next->type == token_type::return_)
 				{
-					Si::get(tokens);
+					tokens.get();
 					expect_token(tokens, token_type::space);
 					auto result = parse_expression(tokens, indentation);
 					return block{std::move(elements), std::move(result)};

@@ -47,10 +47,33 @@ namespace nl
 		return nullptr;
 	}
 
+	struct character_position
+	{
+		std::size_t line, column;
+
+		character_position()
+			: line(0)
+			, column(0)
+		{
+		}
+
+		character_position(std::size_t line, std::size_t column)
+			: line(line)
+			, column(column)
+		{
+		}
+	};
+
+	inline bool operator == (character_position const &left, character_position const &right)
+	{
+		return (left.line == right.line) && (left.column == right.column);
+	}
+
 	struct token
 	{
 		token_type type;
 		std::string content;
+		character_position begin;
 	};
 
 	inline bool is_decimal_digit(char c)
@@ -83,12 +106,23 @@ namespace nl
 		return next.front();
 	}
 
-	inline boost::optional<token> scan_token(Si::source<char> &input)
+	struct source_char
+	{
+		char code_unit;
+		character_position where;
+	};
+
+	inline bool operator == (source_char const &left, source_char const &right)
+	{
+		return (left.code_unit == right.code_unit) && (left.where == right.where);
+	}
+
+	inline boost::optional<token> scan_token(Si::source<source_char> &input)
 	{
 		auto const first = Si::get(input);
 		if (!first)
 		{
-			return token{token_type::end_of_file, ""};
+			return token{token_type::end_of_file, "", character_position{}};
 		}
 		static std::unordered_map<char, nl::token_type> const tokens =
 		{
@@ -101,17 +135,17 @@ namespace nl
 			{'\t', nl::token_type::tab},
 			{'\n', nl::token_type::newline}
 		};
-		if (*first == '"')
+		if (first->code_unit == '"')
 		{
 			std::string content;
 			for (;;)
 			{
 				auto const next = Si::get(input);
-				if (*next == '"')
+				if (next->code_unit == '"')
 				{
-					return token{token_type::string, std::move(content)};
+					return token{token_type::string, std::move(content), first->where};
 				}
-				switch (*next)
+				switch (next->code_unit)
 				{
 				case '\\':
 					{
@@ -120,11 +154,11 @@ namespace nl
 						{
 							return boost::none;
 						}
-						switch (*escaped)
+						switch (escaped->code_unit)
 						{
 						case '\\':
 						case '"':
-							content.push_back(*escaped);
+							content.push_back(escaped->code_unit);
 							break;
 
 						default:
@@ -134,21 +168,21 @@ namespace nl
 					}
 
 				default:
-					content.push_back(*next);
+					content.push_back(next->code_unit);
 					break;
 				}
 			}
 		}
 		{
-			auto const single_char_found = tokens.find(*first);
+			auto const single_char_found = tokens.find(first->code_unit);
 			if (single_char_found != end(tokens))
 			{
-				return token{single_char_found->second, std::string(1, *first)};
+				return token{single_char_found->second, std::string(1, first->code_unit), first->where};
 			}
 		}
-		if (is_identifier_head(*first))
+		if (is_identifier_head(first->code_unit))
 		{
-			std::string content(1, *first);
+			std::string content(1, first->code_unit);
 			for (;;)
 			{
 				auto const next = peek(input);
@@ -156,22 +190,22 @@ namespace nl
 				{
 					break;
 				}
-				if (!is_identifier_middle(*next))
+				if (!is_identifier_middle(next->code_unit))
 				{
 					break;
 				}
-				content.push_back(*next);
+				content.push_back(next->code_unit);
 				Si::get(input);
 			}
 			if (content == "return")
 			{
-				return token{token_type::return_, std::move(content)};
+				return token{token_type::return_, std::move(content), first->where};
 			}
-			return token{token_type::identifier, std::move(content)};
+			return token{token_type::identifier, std::move(content), first->where};
 		}
-		else if (is_decimal_digit(*first))
+		else if (is_decimal_digit(first->code_unit))
 		{
-			std::string content(1, *first);
+			std::string content(1, first->code_unit);
 			for (;;)
 			{
 				auto const next = peek(input);
@@ -179,14 +213,14 @@ namespace nl
 				{
 					break;
 				}
-				if (!is_decimal_digit(*next))
+				if (!is_decimal_digit(next->code_unit))
 				{
 					break;
 				}
-				content.push_back(*next);
+				content.push_back(next->code_unit);
 				Si::get(input);
 			}
-			return token{token_type::integer, std::move(content)};
+			return token{token_type::integer, std::move(content), first->where};
 		}
 		return boost::none;
 	}
