@@ -444,7 +444,7 @@ namespace
 	void test_hello_world_printing(std::string const &code)
 	{
 		auto const make_function_type = nl::il::signature{nl::il::signature_type{}, {nl::il::meta_type{}}};
-		auto const my_type_of_type = nl::il::generic_signature{nl::il::meta_type{}, {[](nl::il::type const &) { return true; }}};
+		auto const my_type_of_type = nl::il::generic_signature{[](std::vector<nl::il::type> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 
 		nl::il::value const print_operation{nl::il::external{"print_operation"}};
 
@@ -911,8 +911,28 @@ namespace
 		nl::il::signature async_type{string_future_type, {string_generator_type}};
 		add_external(analyzation_info, execution_info, "async", async_type, make_functor(my_async));
 
-		nl::il::generic_signature const my_future_type{nl::il::meta_type{}, {[](nl::il::type const &) { return true; }}};
-		add_constant(analyzation_info, execution_info, "future", nl::il::compile_time_closure{my_future_type, my_future});
+		{
+			nl::il::generic_signature const my_future_type{[](std::vector<nl::il::type> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
+			add_constant(analyzation_info, execution_info, "future", nl::il::compile_time_closure{my_future_type, my_future});
+		}
+
+		{
+			add_constant(
+				analyzation_info,
+				execution_info,
+				"make_ready_future",
+				nl::il::generic_signature
+				{
+					[](std::vector<nl::il::type> const &arguments) -> nl::il::type
+					{
+						assert(arguments.size() == 1);
+						auto const &element = arguments[0];
+						return nl::il::signature{my_future({element}), {element}};
+					},
+					{[](nl::il::type const &) { return true; }}
+				}
+			);
+		}
 	}
 
 	nl::interpreter::object_ptr my_print(std::vector<nl::interpreter::object_ptr> const &arguments, Si::sink<char> &print_stream)
@@ -1037,7 +1057,7 @@ namespace
 	void add_source(nl::il::name_space &analyzation_info,
 					std::vector<nl::interpreter::object_ptr> &execution_info)
 	{
-		nl::il::generic_signature const source{nl::il::meta_type{}, {[](nl::il::type const &) { return true; }}};
+		nl::il::generic_signature const source{[](std::vector<nl::il::type> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 		add_constant(analyzation_info, execution_info, "source", nl::il::compile_time_closure{source, my_source});
 	}
 
@@ -1137,7 +1157,7 @@ namespace
 			nl::il::name_space &analyzation_info,
 			std::vector<nl::interpreter::object_ptr> &execution_info)
 	{
-		nl::il::generic_signature const my_istream_type{nl::il::meta_type{}, {[](nl::il::type const &) { return true; }}};
+		nl::il::generic_signature const my_istream_type{[](std::vector<nl::il::type> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 		add_constant(analyzation_info, execution_info, "istream", nl::il::compile_time_closure{my_istream_type, my_istream});
 	}
 
@@ -1159,7 +1179,7 @@ namespace
 			nl::il::name_space &analyzation_info,
 			std::vector<nl::interpreter::object_ptr> &execution_info)
 	{
-		nl::il::generic_signature const my_ostream_type{nl::il::meta_type{}, {[](nl::il::type const &) { return true; }}};
+		nl::il::generic_signature const my_ostream_type{[](std::vector<nl::il::type> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 		add_constant(analyzation_info, execution_info, "ostream", nl::il::compile_time_closure{my_ostream_type, my_ostream});
 	}
 
@@ -1175,10 +1195,20 @@ namespace
 	nl::il::type my_optional(std::vector<nl::il::type> const &arguments)
 	{
 		assert(arguments.size() == 1);
+		auto const &element = arguments[0];
+		nl::il::generic_signature::result_resolver const resolve = [element](std::vector<nl::il::type> const &arguments) -> nl::il::type
+		{
+			assert(arguments.size());
+			auto const &result = arguments[0];
+			nl::il::signature const non_empty{result, {element}};
+			nl::il::signature const empty{result, {}};
+			return nl::il::signature{result, {non_empty, empty}};
+		};
 		nl::il::map result
 		{
 			boost::unordered_map<nl::il::value, nl::il::value>
 			{
+				{nl::il::string{"branch"}, nl::il::generic_signature{resolve, {[](nl::il::type const &) { return true; }}}}
 			}
 		};
 		return result;
@@ -1188,7 +1218,7 @@ namespace
 			nl::il::name_space &analyzation_info,
 			std::vector<nl::interpreter::object_ptr> &execution_info)
 	{
-		add_constant(analyzation_info, execution_info, "optional", nl::il::compile_time_closure{nl::il::generic_signature{nl::il::meta_type{}, {[](nl::il::type const &) { return true; }}}, my_optional});
+		add_constant(analyzation_info, execution_info, "optional", nl::il::compile_time_closure{nl::il::generic_signature{[](std::vector<nl::il::type> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}}, my_optional});
 	}
 }
 

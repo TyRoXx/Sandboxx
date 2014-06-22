@@ -182,23 +182,21 @@ namespace nl
 
 		struct generic_signature
 		{
+			typedef std::function<type (std::vector<type> const &)> result_resolver;
 			typedef std::function<bool (type const &)> type_predicate;
 
-			type result;
+			result_resolver resolve;
 			std::vector<type_predicate> parameters;
 		};
 
 		inline bool operator == (generic_signature const &left, generic_signature const &right)
 		{
-			return
-					(left.result == right.result) &&
-					(left.parameters.size() == right.parameters.size()); //TODO cannot really be compared
+			return (left.parameters.size() == right.parameters.size()); //TODO cannot really be compared
 		}
 
 		inline std::size_t hash_value(generic_signature const &value)
 		{
 			std::size_t digest = 0;
-			boost::hash_combine(digest, value.result);
 			boost::hash_combine(digest, value.parameters.size()); //TODO does not really have a hash
 			return digest;
 		}
@@ -517,8 +515,15 @@ namespace nl
 			return boost::apply_visitor(value_type_getter{}, v);
 		}
 
-		struct type_of_call_visitor : boost::static_visitor<boost::optional<type>>
+		struct result_of_call_visitor : boost::static_visitor<boost::optional<type>>
 		{
+			std::vector<type> const &argument_types;
+
+			explicit result_of_call_visitor(std::vector<type> const &argument_types)
+				: argument_types(argument_types)
+			{
+			}
+
 			boost::optional<type> operator()(signature const &s) const
 			{
 				return s.result;
@@ -526,7 +531,17 @@ namespace nl
 
 			boost::optional<type> operator()(generic_signature const &s) const
 			{
-				return s.result;
+				if (argument_types.size() != s.parameters.size())
+				{
+					for (size_t i = 0; i < argument_types.size(); ++i)
+					{
+						if (!s.parameters[i](argument_types[i]))
+						{
+							return boost::none;
+						}
+					}
+				}
+				return s.resolve(argument_types);
 			}
 
 			template <class Other>
@@ -536,9 +551,9 @@ namespace nl
 			}
 		};
 
-		inline boost::optional<type> result_of_call(type const &callee)
+		inline boost::optional<type> result_of_call(type const &callee, std::vector<type> const &argument_types)
 		{
-			return boost::apply_visitor(type_of_call_visitor{}, callee);
+			return boost::apply_visitor(result_of_call_visitor{argument_types}, callee);
 		}
 
 		struct expression_type_visitor : boost::static_visitor<type>
@@ -573,7 +588,9 @@ namespace nl
 			type operator()(call const &expr) const
 			{
 				type function_type = type_of_expression(expr.function);
-				auto result = result_of_call(function_type);
+				std::vector<type> argument_types;
+				boost::range::transform(expr.arguments, std::back_inserter(argument_types), type_of_expression);
+				auto result = result_of_call(function_type, argument_types);
 				if (!result)
 				{
 					throw std::runtime_error("Value cannot be called as a function");
@@ -795,6 +812,7 @@ namespace nl
 			{
 				std::string message;
 				auto sink = Si::make_container_sink(message);
+				Si::append(sink, "Type cannot be called at all: ");
 				print(sink, error.not_callable);
 				return message;
 			}
@@ -1029,8 +1047,7 @@ namespace nl
 			{
 				Si::append(m_out, "-generic_signature-(");
 				Si::append(m_out, boost::lexical_cast<std::string>(value.parameters.size()));
-				Si::append(m_out, ")->");
-				print(m_out, value.result);
+				Si::append(m_out, ")");
 			}
 
 			void operator()(external const &value) const
