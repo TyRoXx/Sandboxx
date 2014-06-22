@@ -442,10 +442,17 @@ namespace
 		execution_info.emplace_back(value);
 	}
 
+	void add_typeof(
+			nl::il::name_space &analyzation_info,
+			std::vector<nl::interpreter::object_ptr> &execution_info)
+	{
+		auto const my_type_of_type = nl::il::generic_signature{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
+		add_constant(analyzation_info, execution_info, "typeof", nl::il::compile_time_closure{my_type_of_type, my_type_of});
+	}
+
 	void test_hello_world_printing(std::string const &code)
 	{
 		auto const make_function_type = nl::il::signature{nl::il::signature_type{}, {nl::il::meta_type{}}};
-		auto const my_type_of_type = nl::il::generic_signature{[](std::vector<nl::il::type> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 
 		nl::il::value const print_operation{nl::il::external{"print_operation"}};
 
@@ -456,7 +463,7 @@ namespace
 		add_external(global_info, globals, "print_line", nl::il::signature{print_operation, {nl::il::string_type{}}}, make_functor(&print_line));
 		add_constant(global_info, globals, "string", nl::il::string_type{});
 		add_constant(global_info, globals, "function", nl::il::compile_time_closure{make_function_type, make_function});
-		add_constant(global_info, globals, "typeof", nl::il::compile_time_closure{my_type_of_type, my_type_of});
+		add_typeof(global_info, globals);
 
 		auto const output = run_code(code, global_info, globals);
 
@@ -926,7 +933,7 @@ namespace
 		add_external(analyzation_info, execution_info, "async", async_type, make_functor(my_async));
 
 		{
-			nl::il::generic_signature const my_future_type{[](std::vector<nl::il::type> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
+			nl::il::generic_signature const my_future_type{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 			add_constant(analyzation_info, execution_info, "future", nl::il::compile_time_closure{my_future_type, my_future});
 		}
 
@@ -937,11 +944,15 @@ namespace
 				"make_ready_future",
 				nl::il::generic_signature
 				{
-					[](std::vector<nl::il::type> const &arguments) -> nl::il::type
+					[](std::vector<nl::il::expression> const &arguments) -> nl::il::type
 					{
 						assert(arguments.size() == 1);
-						auto const &element = arguments[0];
-						return nl::il::signature{my_future({element}), {element}};
+						auto const &element = nl::il::evaluate_const(arguments[0]);
+						if (!element)
+						{
+							throw std::invalid_argument("The argument of make_ready_future needs to be a constant type");
+						}
+						return nl::il::signature{my_future({*element}), {*element}};
 					},
 					{[](nl::il::type const &) { return true; }}
 				},
@@ -985,6 +996,7 @@ BOOST_AUTO_TEST_CASE(il_analyze_make_ready_future_0)
 	nl::il::name_space global_info;
 	global_info.next = nullptr;
 	add_async(global_info, globals);
+	add_typeof(global_info, globals);
 	with_tokenizer("make_ready_future(typeof(\"\"))", [&](nl::ast::parser &parser)
 	{
 		auto expr_ast = nl::ast::parse_expression(parser, 0);
@@ -999,6 +1011,7 @@ BOOST_AUTO_TEST_CASE(il_analyze_make_ready_future_1)
 	nl::il::name_space global_info;
 	global_info.next = nullptr;
 	add_async(global_info, globals);
+	add_typeof(global_info, globals);
 	with_tokenizer("make_ready_future(typeof(\"\"))(\"str\")", [&](nl::ast::parser &parser)
 	{
 		auto expr_ast = nl::ast::parse_expression(parser, 0);
@@ -1100,7 +1113,7 @@ namespace
 	void add_source(nl::il::name_space &analyzation_info,
 					std::vector<nl::interpreter::object_ptr> &execution_info)
 	{
-		nl::il::generic_signature const source{[](std::vector<nl::il::type> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
+		nl::il::generic_signature const source{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 		add_constant(analyzation_info, execution_info, "source", nl::il::compile_time_closure{source, my_source});
 	}
 
@@ -1200,7 +1213,7 @@ namespace
 			nl::il::name_space &analyzation_info,
 			std::vector<nl::interpreter::object_ptr> &execution_info)
 	{
-		nl::il::generic_signature const my_istream_type{[](std::vector<nl::il::type> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
+		nl::il::generic_signature const my_istream_type{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 		add_constant(analyzation_info, execution_info, "istream", nl::il::compile_time_closure{my_istream_type, my_istream});
 	}
 
@@ -1222,7 +1235,7 @@ namespace
 			nl::il::name_space &analyzation_info,
 			std::vector<nl::interpreter::object_ptr> &execution_info)
 	{
-		nl::il::generic_signature const my_ostream_type{[](std::vector<nl::il::type> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
+		nl::il::generic_signature const my_ostream_type{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 		add_constant(analyzation_info, execution_info, "ostream", nl::il::compile_time_closure{my_ostream_type, my_ostream});
 	}
 
@@ -1239,13 +1252,17 @@ namespace
 	{
 		assert(arguments.size() == 1);
 		auto const &element = arguments[0];
-		nl::il::generic_signature::result_resolver const resolve = [element](std::vector<nl::il::type> const &arguments) -> nl::il::type
+		nl::il::generic_signature::result_resolver const resolve = [element](std::vector<nl::il::expression> const &arguments) -> nl::il::type
 		{
 			assert(arguments.size());
-			auto const &result = arguments[0];
-			nl::il::signature const non_empty{result, {element}};
-			nl::il::signature const empty{result, {}};
-			return nl::il::signature{result, {non_empty, empty}};
+			auto const &result = nl::il::evaluate_const(arguments[0]);
+			if (!result)
+			{
+				throw std::invalid_argument("The argument of optional needs to be a constant type");
+			}
+			nl::il::signature const non_empty{*result, {element}};
+			nl::il::signature const empty{*result, {}};
+			return nl::il::signature{*result, {non_empty, empty}};
 		};
 		nl::il::map result
 		{
@@ -1261,7 +1278,7 @@ namespace
 			nl::il::name_space &analyzation_info,
 			std::vector<nl::interpreter::object_ptr> &execution_info)
 	{
-		add_constant(analyzation_info, execution_info, "optional", nl::il::compile_time_closure{nl::il::generic_signature{[](std::vector<nl::il::type> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}}, my_optional});
+		add_constant(analyzation_info, execution_info, "optional", nl::il::compile_time_closure{nl::il::generic_signature{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}}, my_optional});
 	}
 }
 

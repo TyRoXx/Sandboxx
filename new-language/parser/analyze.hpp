@@ -180,27 +180,6 @@ namespace nl
 			return digest;
 		}
 
-		struct generic_signature
-		{
-			typedef std::function<type (std::vector<type> const &)> result_resolver;
-			typedef std::function<bool (type const &)> type_predicate;
-
-			result_resolver resolve;
-			std::vector<type_predicate> parameters;
-		};
-
-		inline bool operator == (generic_signature const &left, generic_signature const &right)
-		{
-			return (left.parameters.size() == right.parameters.size()); //TODO cannot really be compared
-		}
-
-		inline std::size_t hash_value(generic_signature const &value)
-		{
-			std::size_t digest = 0;
-			boost::hash_combine(digest, value.parameters.size()); //TODO does not really have a hash
-			return digest;
-		}
-
 		struct compile_time_closure
 		{
 			il::type type;
@@ -272,6 +251,27 @@ namespace nl
 			boost::recursive_wrapper<call>,
 			local_expression
 		> expression;
+
+		struct generic_signature
+		{
+			typedef std::function<type (std::vector<expression> const &)> result_resolver;
+			typedef std::function<bool (type const &)> type_predicate;
+
+			result_resolver resolve;
+			std::vector<type_predicate> parameters;
+		};
+
+		inline bool operator == (generic_signature const &left, generic_signature const &right)
+		{
+			return (left.parameters.size() == right.parameters.size()); //TODO cannot really be compared
+		}
+
+		inline std::size_t hash_value(generic_signature const &value)
+		{
+			std::size_t digest = 0;
+			boost::hash_combine(digest, value.parameters.size()); //TODO does not really have a hash
+			return digest;
+		}
 
 		struct parameter
 		{
@@ -517,10 +517,10 @@ namespace nl
 
 		struct result_of_call_visitor : boost::static_visitor<boost::optional<type>>
 		{
-			std::vector<type> const &argument_types;
+			std::vector<expression> const &arguments;
 
-			explicit result_of_call_visitor(std::vector<type> const &argument_types)
-				: argument_types(argument_types)
+			explicit result_of_call_visitor(std::vector<expression> const &arguments)
+				: arguments(arguments)
 			{
 			}
 
@@ -531,17 +531,18 @@ namespace nl
 
 			boost::optional<type> operator()(generic_signature const &s) const
 			{
-				if (argument_types.size() != s.parameters.size())
+				if (arguments.size() != s.parameters.size())
 				{
-					for (size_t i = 0; i < argument_types.size(); ++i)
+					return boost::none;
+				}
+				for (size_t i = 0; i < arguments.size(); ++i)
+				{
+					if (!s.parameters[i](type_of_expression(arguments[i])))
 					{
-						if (!s.parameters[i](argument_types[i]))
-						{
-							return boost::none;
-						}
+						return boost::none;
 					}
 				}
-				return s.resolve(argument_types);
+				return s.resolve(arguments);
 			}
 
 			template <class Other>
@@ -551,9 +552,9 @@ namespace nl
 			}
 		};
 
-		inline boost::optional<type> result_of_call(type const &callee, std::vector<type> const &argument_types)
+		inline boost::optional<type> result_of_call(type const &callee, std::vector<expression> const &arguments)
 		{
-			return boost::apply_visitor(result_of_call_visitor{argument_types}, callee);
+			return boost::apply_visitor(result_of_call_visitor{arguments}, callee);
 		}
 
 		struct expression_type_visitor : boost::static_visitor<type>
@@ -588,9 +589,7 @@ namespace nl
 			type operator()(call const &expr) const
 			{
 				type function_type = type_of_expression(expr.function);
-				std::vector<type> argument_types;
-				boost::range::transform(expr.arguments, std::back_inserter(argument_types), type_of_expression);
-				auto result = result_of_call(function_type, argument_types);
+				auto result = result_of_call(function_type, expr.arguments);
 				if (!result)
 				{
 					throw std::runtime_error("Value cannot be called as a function");
@@ -1020,12 +1019,12 @@ namespace nl
 
 			void operator()(null) const
 			{
-				Si::append(m_out, "-null-");
+				Si::append(m_out, "null");
 			}
 
 			void operator()(map const &value) const
 			{
-				Si::append(m_out, "-map-[\n");
+				Si::append(m_out, "map[");
 				for (auto &elem : value.elements)
 				{
 					print(m_out, elem.first);
@@ -1038,7 +1037,7 @@ namespace nl
 
 			void operator()(signature const &value) const
 			{
-				Si::append(m_out, "-signature-(");
+				Si::append(m_out, "signature(");
 				for (auto &param : value.parameters)
 				{
 					print(m_out, param);
@@ -1050,7 +1049,7 @@ namespace nl
 
 			void operator()(generic_signature const &value) const
 			{
-				Si::append(m_out, "-generic_signature-(");
+				Si::append(m_out, "generic_signature(");
 				Si::append(m_out, boost::lexical_cast<std::string>(value.parameters.size()));
 				Si::append(m_out, ")");
 			}
@@ -1072,37 +1071,32 @@ namespace nl
 
 			void operator()(meta_type const &) const
 			{
-				Si::append(m_out, "-meta_type-");
+				Si::append(m_out, "meta_type");
 			}
 
 			void operator()(string_type const &) const
 			{
-				Si::append(m_out, "-string-");
+				Si::append(m_out, "string");
 			}
 
 			void operator()(integer_type const &) const
 			{
-				Si::append(m_out, "-integer-");
+				Si::append(m_out, "integer");
 			}
 
 			void operator()(signature_type const &) const
 			{
-				Si::append(m_out, "-signature-");
+				Si::append(m_out, "signature");
 			}
 
 			void operator()(compile_time_closure const &) const
 			{
-				Si::append(m_out, "-ctclosure-");
+				Si::append(m_out, "ctclosure");
 			}
 
-			void operator()(indirect_value const &v) const
+			void operator()(indirect_value const &) const
 			{
-				Si::append(m_out, "-indirect-(");
-				if (v.actual)
-				{
-					print(m_out, *v.actual);
-				}
-				Si::append(m_out, ")");
+				Si::append(m_out, "indirect");
 			}
 
 		private:
