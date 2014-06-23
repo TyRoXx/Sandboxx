@@ -309,6 +309,13 @@ namespace nl
 		{
 			expression function;
 			std::vector<expression> arguments;
+
+			call(expression function, std::vector<expression> arguments)
+				: function(std::move(function))
+				, arguments(std::move(arguments))
+			{
+				assert(!boost::get<constant_expression>(&this->function));
+			}
 		};
 
 		inline bool operator == (local_expression const &left, local_expression const &right)
