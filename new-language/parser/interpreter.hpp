@@ -300,7 +300,10 @@ namespace nl
 				if (expr.which.type == nl::il::local::constant)
 				{
 					assert(expr.const_value);
-					assert(!boost::get<il::compile_time_closure>(&*expr.const_value));
+					if (boost::get<il::compile_time_closure>(&*expr.const_value))
+					{
+						throw std::invalid_argument("A compile_time_closure is not a runtime expression");
+					}
 					return std::make_shared<std::unique_ptr<expression>>(make_unique<constant_expression>(*expr.const_value));
 				}
 				return std::make_shared<std::unique_ptr<expression>>(make_unique<local_expression>(expr.which));
