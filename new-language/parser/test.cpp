@@ -433,8 +433,7 @@ namespace
 	}
 
 	void add_typeof(
-			nl::il::name_space &analyzation_info,
-			std::vector<nl::interpreter::object_ptr> &execution_info)
+			nl::il::name_space &analyzation_info)
 	{
 		auto const my_type_of_type = nl::il::generic_signature{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 		add_constant(analyzation_info, "typeof", nl::il::compile_time_closure{my_type_of_type, my_type_of});
@@ -453,7 +452,7 @@ namespace
 		add_external(global_info, globals, "print_line", nl::il::signature{print_operation, {nl::il::string_type{}}}, make_functor(&print_line));
 		add_constant(global_info, "string", nl::il::string_type{});
 		add_constant(global_info, "function", nl::il::compile_time_closure{make_function_type, make_function});
-		add_typeof(global_info, globals);
+		add_typeof(global_info);
 
 		auto const output = run_code(code, global_info, globals);
 
@@ -1015,7 +1014,7 @@ BOOST_AUTO_TEST_CASE(il_analyze_make_ready_future_0)
 	nl::il::name_space global_info;
 	global_info.next = nullptr;
 	add_async(global_info, globals);
-	add_typeof(global_info, globals);
+	add_typeof(global_info);
 	with_tokenizer("make_ready_future(typeof(\"\"))", [&](nl::ast::parser &parser)
 	{
 		auto expr_ast = nl::ast::parse_expression(parser, 0);
@@ -1030,7 +1029,7 @@ BOOST_AUTO_TEST_CASE(il_analyze_make_ready_future_1)
 	nl::il::name_space global_info;
 	global_info.next = nullptr;
 	add_async(global_info, globals);
-	add_typeof(global_info, globals);
+	add_typeof(global_info);
 	with_tokenizer("make_ready_future(typeof(\"\"))(\"str\")", [&](nl::ast::parser &parser)
 	{
 		auto expr_ast = nl::ast::parse_expression(parser, 0);
@@ -1130,8 +1129,7 @@ namespace
 		return source_methods;
 	}
 
-	void add_source(nl::il::name_space &analyzation_info,
-					std::vector<nl::interpreter::object_ptr> &execution_info)
+	void add_source(nl::il::name_space &analyzation_info)
 	{
 		nl::il::generic_signature const source{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 		add_constant(analyzation_info, "source", nl::il::compile_time_closure{source, my_source});
@@ -1192,7 +1190,7 @@ BOOST_AUTO_TEST_CASE(il_interpretation_source_accumulate)
 	assign_uint_type(uint32_type);
 	add_uint_type<boost::uint32_t>(global_info, globals, nl::il::indirect_value{&uint32_type});
 
-	add_source(global_info, globals);
+	add_source(global_info);
 
 	run_code(code, global_info, globals, [](nl::interpreter::object_ptr const &output)
 	{
@@ -1242,8 +1240,7 @@ namespace
 	}
 
 	void add_optional(
-			nl::il::name_space &analyzation_info,
-			std::vector<nl::interpreter::object_ptr> &execution_info)
+			nl::il::name_space &analyzation_info)
 	{
 		add_constant(analyzation_info, "optional", nl::il::compile_time_closure{nl::il::generic_signature{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}}, my_optional});
 	}
@@ -1311,8 +1308,7 @@ namespace
 	}
 
 	void add_istream(
-			nl::il::name_space &analyzation_info,
-			std::vector<nl::interpreter::object_ptr> &execution_info)
+			nl::il::name_space &analyzation_info)
 	{
 		nl::il::generic_signature const my_istream_type{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 		add_constant(analyzation_info, "istream", nl::il::compile_time_closure{my_istream_type, my_istream});
@@ -1370,8 +1366,7 @@ namespace
 	}
 
 	void add_ostream(
-			nl::il::name_space &analyzation_info,
-			std::vector<nl::interpreter::object_ptr> &execution_info)
+			nl::il::name_space &analyzation_info)
 	{
 		nl::il::generic_signature const my_ostream_type{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 		add_constant(analyzation_info, "ostream", nl::il::compile_time_closure{my_ostream_type, my_ostream});
@@ -1412,8 +1407,7 @@ namespace
 	};
 
 	void add_boolean(
-			nl::il::name_space &analyzation_info,
-			std::vector<nl::interpreter::object_ptr> &execution_info)
+			nl::il::name_space &analyzation_info)
 	{
 		add_constant(analyzation_info, "true", nl::il::string{"true"});
 		add_constant(analyzation_info, "false", nl::il::string{"false"});
@@ -1445,12 +1439,12 @@ BOOST_AUTO_TEST_CASE(il_interpretation_stdio)
 	add_uint_type<boost::uint32_t>(global_info, globals, nl::il::indirect_value{&uint32_type});
 
 	add_constant(global_info, "void", nl::il::map{{}});
-	add_source(global_info, globals);
+	add_source(global_info);
 	add_async(global_info, globals);
-	add_istream(global_info, globals);
-	add_ostream(global_info, globals);
-	add_boolean(global_info, globals);
-	add_optional(global_info, globals);
+	add_istream(global_info);
+	add_ostream(global_info);
+	add_boolean(global_info);
+	add_optional(global_info);
 
 	run_code(code, global_info, globals, [](nl::interpreter::object_ptr const &output)
 	{
