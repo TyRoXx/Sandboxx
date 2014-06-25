@@ -1415,6 +1415,37 @@ namespace
 	}
 }
 
+BOOST_AUTO_TEST_CASE(il_interpretation_optional)
+{
+	std::string const code =
+			"optional = (type T)\n"
+			"	return map.empty.insert(\"branch\", (type R)\n"
+			"		return signature(signature(R, T), signature(R)))\n"
+			"some = (type T)\n"
+			"	return (T value)\n"
+			"		return map.empty.insert(\"branch\", (type R)\n"
+			"			return (signature(R, T) handle_some, signature(R) handle_none)\n"
+			"				return handle_some(value))\n"
+			"none = (type T)\n"
+			"	return map.empty.insert(\"branch\", (type R)\n"
+			"		return (signature(R, T) handle_some, signature(R) handle_none)\n"
+			"			return handle_none())\n"
+			"return some(uint32)(make_uint32(12)).branch(uint32)((uint32 value)\n"
+			"	return value, ()\n"
+			"	return 0)\n"
+			;
+
+	std::vector<nl::interpreter::object_ptr> globals;
+
+	nl::il::name_space global_info;
+	global_info.next = nullptr;
+
+	run_code(code, global_info, globals, [](nl::interpreter::object_ptr const &output)
+	{
+
+	});
+}
+
 BOOST_AUTO_TEST_CASE(il_interpretation_stdio)
 {
 	std::string const code =
