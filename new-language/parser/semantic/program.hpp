@@ -13,21 +13,6 @@ namespace nl
 		struct signature;
 		struct generic_signature;
 
-		struct external
-		{
-			void const *payload;
-		};
-
-		inline bool operator == (external const &left, external const &right)
-		{
-			return (left.payload == right.payload);
-		}
-
-		inline std::size_t hash_value(external const &value)
-		{
-			return boost::hash_value(value.payload);
-		}
-
 		struct integer
 		{
 			std::string value;
@@ -90,13 +75,14 @@ namespace nl
 
 		struct compile_time_closure;
 		struct indirect_value;
+		struct external;
 
 		typedef boost::variant<
 			null,
 			boost::recursive_wrapper<map>,
 			boost::recursive_wrapper<signature>,
 			boost::recursive_wrapper<generic_signature>,
-			external,
+			boost::recursive_wrapper<external>,
 			integer,
 			string,
 			meta_type,
@@ -108,6 +94,22 @@ namespace nl
 		> value;
 
 		typedef value type;
+
+		struct external
+		{
+			void const *payload;
+			il::type type;
+		};
+
+		inline bool operator == (external const &left, external const &right)
+		{
+			return (left.payload == right.payload);
+		}
+
+		inline std::size_t hash_value(external const &value)
+		{
+			return boost::hash_value(value.payload);
+		}
 
 		struct indirect_value
 		{
@@ -223,6 +225,14 @@ namespace nl
 					(left.index == right.index);
 		}
 
+		inline std::size_t hash_value(local_identifier const &value)
+		{
+			std::size_t digest = 0;
+			boost::hash_combine(digest, value.type);
+			boost::hash_combine(digest, value.index);
+			return digest;
+		}
+
 		struct local_expression
 		{
 			local_identifier which;
@@ -248,9 +258,11 @@ namespace nl
 			local_expression
 		> expression;
 
+		struct name_space;
+
 		struct generic_signature
 		{
-			typedef std::function<type (std::vector<expression> const &)> result_resolver;
+			typedef std::function<type (std::vector<expression> const &, name_space const &)> result_resolver;
 			typedef std::function<bool (type const &)> type_predicate;
 
 			result_resolver resolve;
@@ -309,7 +321,7 @@ namespace nl
 				: function(std::move(function))
 				, arguments(std::move(arguments))
 			{
-				assert(!boost::get<constant_expression>(&this->function));
+//				assert(!boost::get<constant_expression>(&this->function));
 			}
 		};
 

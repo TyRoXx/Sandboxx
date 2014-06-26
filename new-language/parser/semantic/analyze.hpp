@@ -5,6 +5,7 @@
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/range/algorithm/transform.hpp>
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/bind.hpp>
 
 namespace nl
 {
@@ -19,9 +20,19 @@ namespace nl
 
 		struct name_space
 		{
-			name_space *next;
+			name_space *next = nullptr;
 			boost::unordered_map<std::string, name_space_entry> definitions;
+			boost::unordered_map<local_identifier, value> constant_locals;
 			std::vector<local_identifier> bind_from_parent;
+
+			BOOST_DEFAULTED_FUNCTION(name_space(), {})
+
+			name_space(name_space &next, boost::unordered_map<std::string, name_space_entry> definitions, std::vector<local_identifier> bind_from_parent)
+				: next(&next)
+				, definitions(std::move(definitions))
+				, bind_from_parent(std::move(bind_from_parent))
+			{
+			}
 		};
 
 		inline boost::optional<local_expression> require_local_identifier(name_space &where, std::string const &symbol)
@@ -54,7 +65,7 @@ namespace nl
 			return local_expression{local_identifier{type, bound_index}, in_parent->type, in_parent->name, in_parent->const_value};
 		}
 
-		type type_of_expression(expression const &expr);
+		type type_of_expression(expression const &expr, name_space const &environment);
 
 		struct subscription_visitor : boost::static_visitor<boost::optional<type>>
 		{
@@ -118,9 +129,9 @@ namespace nl
 				return meta_type{};
 			}
 
-			type operator()(external const &) const
+			type operator()(external const &v) const
 			{
-				throw std::logic_error("not implemented");
+				return v.type;
 			}
 
 			type operator()(integer const &) const
@@ -173,9 +184,11 @@ namespace nl
 		struct result_of_call_visitor : boost::static_visitor<boost::optional<type>>
 		{
 			std::vector<expression> const &arguments;
+			name_space const &environment;
 
-			explicit result_of_call_visitor(std::vector<expression> const &arguments)
+			explicit result_of_call_visitor(std::vector<expression> const &arguments, name_space const &environment)
 				: arguments(arguments)
+				, environment(environment)
 			{
 			}
 
@@ -192,12 +205,12 @@ namespace nl
 				}
 				for (size_t i = 0; i < arguments.size(); ++i)
 				{
-					if (!s.parameters[i](type_of_expression(arguments[i])))
+					if (!s.parameters[i](type_of_expression(arguments[i], environment)))
 					{
 						return boost::none;
 					}
 				}
-				return s.resolve(arguments);
+				return s.resolve(arguments, environment);
 			}
 
 			template <class Other>
@@ -207,13 +220,20 @@ namespace nl
 			}
 		};
 
-		inline boost::optional<type> result_of_call(type const &callee, std::vector<expression> const &arguments)
+		inline boost::optional<type> result_of_call(type const &callee, std::vector<expression> const &arguments, name_space const &environment)
 		{
-			return boost::apply_visitor(result_of_call_visitor{arguments}, callee);
+			return boost::apply_visitor(result_of_call_visitor{arguments, environment}, callee);
 		}
 
 		struct expression_type_visitor : boost::static_visitor<type>
 		{
+			name_space const &environment;
+
+			explicit expression_type_visitor(name_space const &environment)
+				: environment(environment)
+			{
+			}
+
 			type operator()(constant_expression const &expr) const
 			{
 				return type_of_value(expr.constant);
@@ -222,7 +242,7 @@ namespace nl
 			type operator()(make_closure const &closure) const
 			{
 				signature sig;
-				sig.result = type_of_expression(closure.body.result);
+				sig.result = type_of_expression(closure.body.result, environment);
 				for (parameter const &param : closure.parameters)
 				{
 					sig.parameters.emplace_back(param.type);
@@ -232,7 +252,7 @@ namespace nl
 
 			type operator()(subscript const &expr) const
 			{
-				auto left = type_of_expression(expr.left);
+				auto left = type_of_expression(expr.left, environment);
 				auto element_type = boost::apply_visitor(subscription_visitor{expr.element}, left);
 				if (!element_type)
 				{
@@ -243,8 +263,8 @@ namespace nl
 
 			type operator()(call const &expr) const
 			{
-				type function_type = type_of_expression(expr.function);
-				auto result = result_of_call(function_type, expr.arguments);
+				type function_type = type_of_expression(expr.function, environment);
+				auto result = result_of_call(function_type, expr.arguments, environment);
 				if (!result)
 				{
 					throw std::runtime_error("Value cannot be called as a function");
@@ -258,9 +278,9 @@ namespace nl
 			}
 		};
 
-		inline type type_of_expression(expression const &expr)
+		inline type type_of_expression(expression const &expr, name_space const &environment)
 		{
-			return boost::apply_visitor(expression_type_visitor{}, expr);
+			return boost::apply_visitor(expression_type_visitor{environment}, expr);
 		}
 
 		struct convertible
@@ -422,11 +442,11 @@ namespace nl
 			}
 		};
 
-		inline callability is_callable(expression const &function, std::vector<expression> const &arguments)
+		inline callability is_callable(expression const &function, std::vector<expression> const &arguments, name_space const &environment)
 		{
-			type function_type = type_of_expression(function);
+			type function_type = type_of_expression(function, environment);
 			std::vector<type> argument_types;
-			std::transform(begin(arguments), end(arguments), std::back_inserter(argument_types), type_of_expression);
+			std::transform(begin(arguments), end(arguments), std::back_inserter(argument_types), boost::bind(type_of_expression, _1, boost::ref(environment)));
 			return boost::apply_visitor(callability_visitor{argument_types}, function_type);
 		}
 
@@ -458,23 +478,71 @@ namespace nl
 
 		expression analyze(ast::expression const &syntax, name_space &names, std::string const *defined_name);
 
-		boost::optional<value> evaluate_const(expression const &expr);
+		boost::optional<value> evaluate_const(expression const &expr, name_space const &environment);
 
 		struct const_expression_evaluator : boost::static_visitor<boost::optional<value>>
 		{
+			name_space const &environment;
+
+			explicit const_expression_evaluator(name_space const &environment)
+				: environment(environment)
+			{
+			}
+
 			boost::optional<value> operator()(constant_expression const &expr) const
 			{
 				return expr.constant;
 			}
 
-			boost::optional<value> operator()(make_closure const &) const
+			boost::optional<value> operator()(make_closure const &closure) const
 			{
-				return boost::none;
+				signature sig;
+				sig.result = type_of_expression(closure.body.result, environment);
+				for (il::parameter const &parameter : closure.parameters)
+				{
+					sig.parameters.emplace_back(parameter.type);
+				}
+				std::vector<value> bound;
+				for (local_identifier const &bound_value : closure.bind_from_parent)
+				{
+					auto const found = environment.constant_locals.find(bound_value);
+					if (found == environment.constant_locals.end())
+					{
+						return boost::none;
+					}
+					bound.emplace_back(found->second);
+				}
+				auto body = closure.body;
+				auto call = [bound, body](std::vector<value> const &arguments) -> value
+				{
+					name_space locals;
+					for (size_t i = 0; i < bound.size(); ++i)
+					{
+						locals.constant_locals.insert(std::make_pair(local_identifier{local::bound, i}, bound[i]));
+					}
+					for (size_t i = 0; i < arguments.size(); ++i)
+					{
+						locals.constant_locals.insert(std::make_pair(local_identifier{local::argument, i}, arguments[i]));
+					}
+					std::vector<value> definitions;
+					for (il::definition const &definition : body.definitions)
+					{
+						auto defined_value = evaluate_const(definition.value, locals);
+						assert(defined_value);
+						auto const definition_index = definitions.size();
+						locals.constant_locals.insert(std::make_pair(local_identifier{local::definition, definition_index}, *defined_value));
+						definitions.emplace_back(*defined_value);
+					}
+					auto result = evaluate_const(body.result, locals);
+					assert(result);
+					return *result;
+				};
+				return value{compile_time_closure{type{sig}, call}};
 			}
 
 			boost::optional<value> operator()(subscript const &expr) const
 			{
-				auto left = evaluate_const(expr.left);
+				auto left = evaluate_const(expr.left, environment);
 				if (!left)
 				{
 					return boost::none;
@@ -489,12 +557,12 @@ namespace nl
 
 			boost::optional<value> operator()(call const &expr) const
 			{
-				auto function = evaluate_const(expr.function);
+				auto function = evaluate_const(expr.function, environment);
 				if (!function)
 				{
 					return boost::none;
 				}
-				auto arguments = expr.arguments | boost::adaptors::transformed(evaluate_const);
+				auto arguments = expr.arguments | boost::adaptors::transformed(boost::bind(evaluate_const, _1, boost::ref(environment)));
 				if (!boost::algorithm::all_of(arguments, [](boost::optional<value> const &v) -> bool
 				{
 					return v.is_initialized();
@@ -514,15 +582,20 @@ namespace nl
 			{
 				if (!expr.const_value)
 				{
+					auto const found = environment.constant_locals.find(expr.which);
+					if (found != environment.constant_locals.end())
+					{
+						return found->second;
+					}
 					return boost::none;
 				}
 				return *expr.const_value;
 			}
 		};
 
-		inline boost::optional<value> evaluate_const(expression const &expr)
+		inline boost::optional<value> evaluate_const(expression const &expr, name_space const &environment)
 		{
-			return boost::apply_visitor(const_expression_evaluator{}, expr);
+			return boost::apply_visitor(const_expression_evaluator{environment}, expr);
 		}
 
 		void print(Si::sink<char> &sink, value const &v);
@@ -616,13 +689,13 @@ namespace nl
 
 			expression operator()(ast::lambda const &syntax) const
 			{
-				name_space locals{&m_names, boost::unordered_map<std::string, name_space_entry>{}, {}};
+				name_space locals{m_names, boost::unordered_map<std::string, name_space_entry>{}, {}};
 
 				std::vector<type> parameter_types;
 				for (ast::parameter const &parameter_syntax : syntax.parameters)
 				{
 					auto type_expr = analyze(parameter_syntax.type, locals, nullptr);
-					auto type = evaluate_const(type_expr);
+					auto type = evaluate_const(type_expr, m_names);
 					if (!type)
 					{
 						throw std::runtime_error("Type of parameter is not constant: " + parameter_syntax.name.content);
@@ -635,7 +708,7 @@ namespace nl
 					syntax.explicit_return_type)
 				{
 					auto explicit_return_type_expr = analyze(*syntax.explicit_return_type, m_names, nullptr);
-					explicit_return_type = evaluate_const(explicit_return_type_expr);
+					explicit_return_type = evaluate_const(explicit_return_type_expr, m_names);
 					if (!explicit_return_type)
 					{
 						throw std::runtime_error("An explicit return type has to be a constant");
@@ -663,7 +736,7 @@ namespace nl
 
 				if (explicit_return_type)
 				{
-					auto const returned_type = type_of_expression(body.result);
+					auto const returned_type = type_of_expression(body.result, locals);
 					if (!is_convertible(returned_type, *explicit_return_type))
 					{
 						throw std::runtime_error("The return value type is not convertible into the explicit return type");
@@ -688,7 +761,7 @@ namespace nl
 					arguments.emplace_back(analyze(argument, m_names, nullptr));
 				}
 				{
-					auto const callability = is_callable(function, arguments);
+					auto const callability = is_callable(function, arguments, m_names);
 					auto const error_message = format_callability_error(callability);
 					if (error_message)
 					{
@@ -706,7 +779,13 @@ namespace nl
 
 		inline expression analyze(ast::expression const &syntax, name_space &names, std::string const *defined_name)
 		{
-			return boost::apply_visitor(expression_analyzer{names, defined_name}, syntax);
+			auto analyzed = boost::apply_visitor(expression_analyzer{names, defined_name}, syntax);
+			auto constant = evaluate_const(analyzed, names);
+			if (constant)
+			{
+				return constant_expression{*constant};
+			}
+			return analyzed;
 		}
 
 		inline block analyze_block(ast::block const &syntax, name_space &locals)
@@ -719,7 +798,7 @@ namespace nl
 				boost::optional<il::value> const_value;
 				try
 				{
-					const_value = evaluate_const(value);
+					const_value = evaluate_const(value, locals);
 				}
 				catch (std::runtime_error const &) //TODO
 				{
@@ -728,7 +807,7 @@ namespace nl
 					auto simplified_value = (const_value ? expression{constant_expression{*const_value}} : value);
 					body.definitions.emplace_back(definition{definition_syntax.name.content, std::move(simplified_value)});
 				}
-				name_space_entry entry{local_identifier{local::definition, definition_index}, type_of_expression(value), const_value};
+				name_space_entry entry{local_identifier{local::definition, definition_index}, type_of_expression(value, locals), const_value};
 				if (!locals.definitions.insert(std::make_pair(definition_syntax.name.content, entry)).second)
 				{
 					throw std::runtime_error("Cannot redefine " + definition_syntax.name.content);

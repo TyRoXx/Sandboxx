@@ -149,7 +149,7 @@ namespace nl
 			explicit value_object(il::value value)
 				: value(std::move(value))
 			{
-				assert(!boost::get<il::compile_time_closure>(&this->value));
+//				assert(!boost::get<il::compile_time_closure>(&this->value));
 			}
 
 			object_ptr call(std::vector<object_ptr> const &) const SILICIUM_OVERRIDE
@@ -226,7 +226,7 @@ namespace nl
 			explicit constant_expression(il::value value)
 				: value(std::move(value))
 			{
-				assert(!boost::get<il::compile_time_closure>(&value));
+//				assert(!boost::get<il::compile_time_closure>(&value));
 			}
 
 			virtual object_ptr evaluate(local_context const &) const SILICIUM_OVERRIDE

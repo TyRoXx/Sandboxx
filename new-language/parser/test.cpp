@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(analyzer_lambda)
 {
 	nl::character_position const irrelevant_position;
 
-	nl::il::external uint32{"uint32"};
+	nl::il::external uint32{"uint32", nl::il::null{}};
 	nl::il::name_space context;
 	context.next = nullptr;
 	context.definitions.insert(std::make_pair("uint32", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::definition, 0}, nl::il::null(), nl::il::type(uint32)}));
@@ -241,14 +241,15 @@ BOOST_AUTO_TEST_CASE(analyzer_argument_type_mismatch)
 {
 	nl::character_position const irrelevant_position;
 
-	nl::il::external uint32{"uint32"};
-	nl::il::external uint64{"uint64"};
-	nl::il::external f{"f"};
+	nl::il::external uint32{"uint32", nl::il::null{}};
+	nl::il::external uint64{"uint64", nl::il::null{}};
+	auto const f_type = nl::il::type(nl::il::signature{uint32, {nl::il::type(uint64)}});
+	nl::il::external f{"f", f_type};
+
 	nl::il::name_space context;
 	context.next = nullptr;
 	context.definitions.insert(std::make_pair("uint32", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::definition, 0}, nl::il::null(), nl::il::type(uint32)}));
-	auto const f_type = nl::il::type(nl::il::signature{uint32, {nl::il::type(uint64)}});
-	context.definitions.insert(std::make_pair("f", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::definition, 1}, f_type, nl::il::value(f)}));
+	context.definitions.insert(std::make_pair("f", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::definition, 1}, f.type, nl::il::value(f)}));
 	nl::ast::lambda lambda;
 	lambda.body.result = nl::ast::call{nl::ast::identifier{nl::token{nl::token_type::integer, "f", irrelevant_position}}, irrelevant_position, {nl::ast::identifier{nl::token{nl::token_type::integer, "a", irrelevant_position}}}};
 	lambda.parameters.emplace_back(nl::ast::parameter{nl::ast::identifier{nl::token{nl::token_type::identifier, "uint32", irrelevant_position}}, nl::token{nl::token_type::identifier, "a", irrelevant_position}});
@@ -279,19 +280,19 @@ BOOST_AUTO_TEST_CASE(analyzer_chaining)
 	std::string const code = "return f(g())\n";
 	auto const parsed = parse(code);
 
-	nl::il::type const uint32{nl::il::external{"uint32"}};
-	nl::il::value const f{nl::il::external{"f"}};
-	nl::il::value const g{nl::il::external{"g"}};
+	nl::il::type const uint32{nl::il::external{"uint32", nl::il::null{}}};
+	nl::il::external const f{"f", nl::il::signature{uint32, {uint32}}};
+	nl::il::external const g{"g", nl::il::signature{uint32, {}}};
 
 	nl::il::name_space globals;
 	globals.next = nullptr;
-	globals.definitions.insert(std::make_pair("f", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::bound, 0}, nl::il::signature{uint32, {uint32}}, f}));
-	globals.definitions.insert(std::make_pair("g", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::bound, 1}, nl::il::signature{uint32, {}}, g}));
+	globals.definitions.insert(std::make_pair("f", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::bound, 0}, f.type}));
+	globals.definitions.insert(std::make_pair("g", nl::il::name_space_entry{nl::il::local_identifier{nl::il::local::bound, 1}, g.type}));
 
 	nl::il::block const analyzed = nl::il::analyze_block(parsed, globals);
 	nl::il::block expected;
-	auto g_call = nl::il::call{nl::il::local_expression{nl::il::local_identifier{nl::il::local::bound, 1}, nl::il::signature{uint32, {}}, "g", g}, {}};
-	auto f_call = nl::il::call{nl::il::local_expression{nl::il::local_identifier{nl::il::local::bound, 0}, nl::il::signature{uint32, {uint32}}, "f", f}, {g_call}};
+	auto g_call = nl::il::call{nl::il::local_expression{nl::il::local_identifier{nl::il::local::bound, 1}, nl::il::signature{uint32, {}}, "g"}, {}};
+	auto f_call = nl::il::call{nl::il::local_expression{nl::il::local_identifier{nl::il::local::bound, 0}, nl::il::signature{uint32, {uint32}}, "f"}, {g_call}};
 	expected.result = f_call;
 	BOOST_CHECK_EQUAL(expected, analyzed);
 }
@@ -436,7 +437,7 @@ namespace
 	void add_typeof(
 			nl::il::name_space &analyzation_info)
 	{
-		auto const my_type_of_type = nl::il::generic_signature{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
+		auto const my_type_of_type = nl::il::generic_signature{[](std::vector<nl::il::expression> const &, nl::il::name_space const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 		add_constant(analyzation_info, "typeof", nl::il::compile_time_closure{my_type_of_type, my_type_of});
 	}
 
@@ -444,7 +445,7 @@ namespace
 	{
 		auto const make_function_type = nl::il::signature{nl::il::signature_type{}, {nl::il::meta_type{}}};
 
-		nl::il::value const print_operation{nl::il::external{"print_operation"}};
+		nl::il::value const print_operation{nl::il::external{"print_operation", nl::il::null{}}};
 
 		nl::il::name_space global_info;
 		global_info.next = nullptr;
@@ -877,10 +878,10 @@ namespace
 			{
 				{nl::il::string{"then"}, nl::il::generic_signature
 					{
-						[element](std::vector<nl::il::expression> const &arguments) -> nl::il::type
+						[element](std::vector<nl::il::expression> const &arguments, nl::il::name_space const &environment) -> nl::il::type
 						{
 							assert(arguments.size() == 1);
-							auto const callback_type = nl::il::type_of_expression(arguments[0]);
+							auto const callback_type = nl::il::type_of_expression(arguments[0], environment);
 							auto const callback_signature = nl::il::get_signature(callback_type);
 							if (!callback_signature)
 							{
@@ -947,12 +948,12 @@ namespace
 			std::vector<nl::interpreter::object_ptr> &execution_info)
 	{
 		nl::il::signature string_generator_type{nl::il::string_type{}, {}};
-		nl::il::external string_future_type{"future(string)"};
+		nl::il::external string_future_type{"future(string)", nl::il::null{}};
 		nl::il::signature async_type{string_future_type, {string_generator_type}};
 		add_external(analyzation_info, execution_info, "async", async_type, make_functor(my_async));
 
 		{
-			nl::il::generic_signature const my_future_type{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
+			nl::il::generic_signature const my_future_type{[](std::vector<nl::il::expression> const &, nl::il::name_space const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 			add_constant(analyzation_info, "future", nl::il::compile_time_closure{my_future_type, my_future});
 		}
 
@@ -963,10 +964,10 @@ namespace
 				"make_ready_future",
 				nl::il::generic_signature
 				{
-					[](std::vector<nl::il::expression> const &arguments) -> nl::il::type
+					[](std::vector<nl::il::expression> const &arguments, nl::il::name_space const &environment) -> nl::il::type
 					{
 						assert(arguments.size() == 1);
-						auto const &element = nl::il::evaluate_const(arguments[0]);
+						auto const &element = nl::il::evaluate_const(arguments[0], environment);
 						if (!element)
 						{
 							throw std::invalid_argument("The argument of make_ready_future needs to be a constant type");
@@ -1020,7 +1021,8 @@ BOOST_AUTO_TEST_CASE(il_analyze_make_ready_future_0)
 	{
 		auto expr_ast = nl::ast::parse_expression(parser, 0);
 		auto expr = nl::il::analyze(expr_ast, global_info, nullptr);
-		BOOST_CHECK(nl::il::type{(nl::il::signature{my_future({nl::il::string_type{}}), {nl::il::string_type{}}})} == nl::il::type_of_expression(expr));
+		nl::il::name_space const empty;
+		BOOST_CHECK(nl::il::type{(nl::il::signature{my_future({nl::il::string_type{}}), {nl::il::string_type{}}})} == nl::il::type_of_expression(expr, empty));
 	});
 }
 
@@ -1035,7 +1037,8 @@ BOOST_AUTO_TEST_CASE(il_analyze_make_ready_future_1)
 	{
 		auto expr_ast = nl::ast::parse_expression(parser, 0);
 		auto expr = nl::il::analyze(expr_ast, global_info, nullptr);
-		BOOST_CHECK(my_future({nl::il::string_type{}}) == nl::il::type_of_expression(expr));
+		nl::il::name_space const empty;
+		BOOST_CHECK(my_future({nl::il::string_type{}}) == nl::il::type_of_expression(expr, empty));
 	});
 }
 
@@ -1132,7 +1135,7 @@ namespace
 
 	void add_source(nl::il::name_space &analyzation_info)
 	{
-		nl::il::generic_signature const source{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
+		nl::il::generic_signature const source{[](std::vector<nl::il::expression> const &, nl::il::name_space const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 		add_constant(analyzation_info, "source", nl::il::compile_time_closure{source, my_source});
 	}
 
@@ -1218,10 +1221,10 @@ namespace
 	{
 		assert(arguments.size() == 1);
 		auto const &element = arguments[0];
-		nl::il::generic_signature::result_resolver const resolve = [element](std::vector<nl::il::expression> const &arguments) -> nl::il::type
+		nl::il::generic_signature::result_resolver const resolve = [element](std::vector<nl::il::expression> const &arguments, nl::il::name_space const &environment) -> nl::il::type
 		{
 			assert(arguments.size());
-			auto const &result = nl::il::evaluate_const(arguments[0]);
+			auto const &result = nl::il::evaluate_const(arguments[0], environment);
 			if (!result)
 			{
 				throw std::invalid_argument("The argument of optional needs to be a constant type");
@@ -1243,7 +1246,7 @@ namespace
 	void add_optional(
 			nl::il::name_space &analyzation_info)
 	{
-		add_constant(analyzation_info, "optional", nl::il::compile_time_closure{nl::il::generic_signature{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}}, my_optional});
+		add_constant(analyzation_info, "optional", nl::il::compile_time_closure{nl::il::generic_signature{[](std::vector<nl::il::expression> const &, nl::il::name_space const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}}, my_optional});
 	}
 
 	struct some : nl::interpreter::object
@@ -1311,7 +1314,7 @@ namespace
 	void add_istream(
 			nl::il::name_space &analyzation_info)
 	{
-		nl::il::generic_signature const my_istream_type{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
+		nl::il::generic_signature const my_istream_type{[](std::vector<nl::il::expression> const &, nl::il::name_space const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 		add_constant(analyzation_info, "istream", nl::il::compile_time_closure{my_istream_type, my_istream});
 	}
 
@@ -1369,7 +1372,7 @@ namespace
 	void add_ostream(
 			nl::il::name_space &analyzation_info)
 	{
-		nl::il::generic_signature const my_ostream_type{[](std::vector<nl::il::expression> const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
+		nl::il::generic_signature const my_ostream_type{[](std::vector<nl::il::expression> const &, nl::il::name_space const &) { return nl::il::meta_type{}; }, {[](nl::il::type const &) { return true; }}};
 		add_constant(analyzation_info, "ostream", nl::il::compile_time_closure{my_ostream_type, my_ostream});
 	}
 
