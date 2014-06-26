@@ -20,6 +20,7 @@ if(NOT SILICIUM_INCLUDE_DIR)
 endif()
 include_directories(SYSTEM ${SILICIUM_INCLUDE_DIR})
 
-file(GLOB headers "*.hpp")
+include_directories(.)
+file(GLOB headers "ast/*.hpp" "*.hpp")
 add_executable(test ${headers} test.cpp)
 target_link_libraries(test ${Boost_LIBRARIES})

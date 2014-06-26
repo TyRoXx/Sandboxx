@@ -5,6 +5,7 @@
 #include "interpreter.hpp"
 #include <unordered_map>
 #include <boost/lexical_cast.hpp>
+#include "ast/print_expression.hpp"
 
 BOOST_AUTO_TEST_CASE(scan_token_end_of_file)
 {
@@ -1413,6 +1414,31 @@ namespace
 		add_constant(analyzation_info, "false", nl::il::string{"false"});
 		add_constant(analyzation_info, "boolean", nl::il::string_type{});
 	}
+}
+
+BOOST_AUTO_TEST_CASE(il_interpretation_compile_time_call)
+{
+	std::string const code =
+			"get_uint = ()\n"
+			"	return uint32\n"
+			"f = (get_uint() a)\n"
+			"	return a\n"
+			"return f(make_uint32(7))\n"
+			;
+
+	std::vector<nl::interpreter::object_ptr> globals;
+
+	nl::il::name_space global_info;
+	global_info.next = nullptr;
+
+	nl::il::value uint32_type;
+	assign_uint_type(uint32_type);
+	add_uint_type<boost::uint32_t>(global_info, globals, nl::il::indirect_value{&uint32_type});
+
+	run_code(code, global_info, globals, [](nl::interpreter::object_ptr const &output)
+	{
+
+	});
 }
 
 BOOST_AUTO_TEST_CASE(il_interpretation_optional)

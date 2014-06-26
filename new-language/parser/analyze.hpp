@@ -1,7 +1,7 @@
 #ifndef NEW_LANG_ANALYZE_HPP
 #define NEW_LANG_ANALYZE_HPP
 
-#include "ast.hpp"
+#include "ast/ast.hpp"
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/lexical_cast.hpp>

@@ -1,7 +1,7 @@
 #ifndef NEW_LANG_PARSER_HPP
 #define NEW_LANG_PARSER_HPP
 
-#include "ast.hpp"
+#include "ast/ast.hpp"
 #include "scanner.hpp"
 #include <boost/format.hpp>
 
