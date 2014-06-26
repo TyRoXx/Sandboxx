@@ -1,7 +1,7 @@
 #define BOOST_TEST_MAIN
 #include <boost/test/unit_test.hpp>
 #include "parser.hpp"
-#include "analyze.hpp"
+#include "semantic/analyze.hpp"
 #include "interpreter.hpp"
 #include <unordered_map>
 #include <boost/lexical_cast.hpp>

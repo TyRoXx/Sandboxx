@@ -1,7 +1,7 @@
 #ifndef NEW_LANG_INTERPRETER_HPP
 #define NEW_LANG_INTERPRETER_HPP
 
-#include "analyze.hpp"
+#include "semantic/program.hpp"
 
 namespace nl
 {
