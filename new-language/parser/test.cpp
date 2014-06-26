@@ -2,10 +2,10 @@
 #include <boost/test/unit_test.hpp>
 #include "parser.hpp"
 #include "semantic/analyze.hpp"
-#include "interpreter.hpp"
+#include "interpreter/prepare.hpp"
+#include "ast/print_expression.hpp"
 #include <unordered_map>
 #include <boost/lexical_cast.hpp>
-#include "ast/print_expression.hpp"
 
 BOOST_AUTO_TEST_CASE(scan_token_end_of_file)
 {

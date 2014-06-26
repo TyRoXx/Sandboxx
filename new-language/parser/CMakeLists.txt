@@ -21,6 +21,6 @@ endif()
 include_directories(SYSTEM ${SILICIUM_INCLUDE_DIR})
 
 include_directories(.)
-file(GLOB headers "ast/*.hpp" "semantic/*.hpp" "*.hpp")
+file(GLOB headers "ast/*.hpp" "semantic/*.hpp" "interpreter/*.hpp" "*.hpp")
 add_executable(test ${headers} test.cpp)
 target_link_libraries(test ${Boost_LIBRARIES})
