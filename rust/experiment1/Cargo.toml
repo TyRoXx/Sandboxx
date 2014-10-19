@@ -1,0 +1,8 @@
+[package]
+name = "experiment1"
+version = "0.0.1"
+authors = ["TyRoXx <tyroxxxx@gmail.com>"]
+
+[lib]
+name = "hello"
+path = "src/hello.rs"
