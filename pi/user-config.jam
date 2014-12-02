@@ -1,0 +1,2 @@
+
+using gcc : arm : /usr/bin/arm-linux-gnueabi-g++-4.7 : <compileflags>-I /home/virtual/Desktop/arm/sysroot/usr/include -I/home/virtual/Desktop/arm/sysroot/usr/include/c++/4.7 -I/home/virtual/Desktop/arm/sysroot/usr/include/c++/4.7/arm-linux-gnueabihf -I/home/virtual/Desktop/arm/sysroot/usr/include/arm-linux-gnueabihf ;
