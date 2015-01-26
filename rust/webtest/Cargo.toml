@@ -1,0 +1,8 @@
+[dependencies]
+hyper = "0.1.7"
+
+[package]
+
+name = "webtest"
+version = "0.0.1"
+authors = ["virtual"]
