@@ -1,5 +1,5 @@
 [dependencies]
-hyper = "0.1.7"
+hyper = "0.14.10"
 
 [package]
 
